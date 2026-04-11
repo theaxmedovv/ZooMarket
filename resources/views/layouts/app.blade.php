@@ -64,6 +64,12 @@
                             Salom, <strong>{{ auth()->user()->name }}</strong>
                         </span>
 
+                        @role('seller')
+                            <a href="{{ route('admin.dashboard') }}" class="nav-link mx-2">
+                                <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                            </a>
+                        @endrole
+
                         <a href="{{ route('posts.index') }}" class="nav-link mx-2">
                             <i class="bi bi-journal-text me-1"></i> Postlar
                         </a>
@@ -77,6 +83,9 @@
                     @else
                         <a href="{{ route('login') }}" class="nav-link">
                             <i class="bi bi-person-circle me-1"></i> Kirish
+                        </a>
+                        <a href="{{ route('register') }}" class="nav-link">
+                            <i class="bi bi-person-plus me-1"></i> Ro'yxatdan o'tish
                         </a>
                     @endauth
                 </div>

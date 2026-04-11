@@ -75,7 +75,11 @@ class PostController extends Controller
     public function show(string $id)
     {
         $post = Post::with('user')->findOrFail($id);
-        Gate::authorize('read posts');
+
+        if (auth()->check()) {
+            Gate::authorize('read posts');
+        }
+
         return view('posts.show', compact('post'));
     }
 
@@ -127,7 +131,7 @@ class PostController extends Controller
         abort_unless(
             $user && (
                 $user->can('delete posts')
-                || $user->hasRole('admin')
+                || $user->hasRole('seller')
                 || $post->user_id === $user->id
             ),
             403

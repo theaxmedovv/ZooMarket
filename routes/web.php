@@ -1,27 +1,41 @@
 <?php
 
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\PostController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return auth()->check() ? redirect()->route('posts.index') : redirect()->route('login');
+    return redirect()->route('posts.index');
 });
 
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
-Route::post('/login', function (\Illuminate\Http\Request $request) {
-    $credentials = $request->only('email', 'password');
-    if (auth()->attempt($credentials)) {
-        return redirect()->intended('/posts');
-    }
-    return back()->withErrors(['email' => 'Invalid credentials']);
-})->name('login.post');
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+});
 
-Route::post('/logout', function () {
-    auth()->logout();
-    return redirect('/');
-})->name('logout');
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
 
-Route::resource('posts', PostController::class)->middleware('auth');
+Route::get('/admin', [AdminController::class, 'index'])
+    ->middleware(['auth', 'role:seller'])
+    ->name('admin.dashboard');
+
+Route::get('/home', function () {
+    return redirect()->route('posts.index');
+})->middleware(['auth', 'role:user'])->name('home');
+
+Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+
+Route::middleware(['auth', 'role:seller'])->group(function () {
+    Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+    Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+});

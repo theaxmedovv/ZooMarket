@@ -26,15 +26,17 @@
                         @csrf
                         <div class="mb-3">
                             <label for="email" class="form-label fw-semibold">Email manzili</label>
-                            <input type="email" name="email" class="form-control form-control-lg bg-light border-0" placeholder="example@mail.com" required>
+                            <input type="email" name="email" value="{{ old('email') }}" class="form-control form-control-lg bg-light border-0" placeholder="example@mail.com" required>
                         </div>
 
                         <div class="mb-4">
-                            <div class="d-flex justify-content-between">
-                                <label for="password" class="form-label fw-semibold">Parol</label>
-                                <a href="#" class="text-decoration-none small">Parolni unutdingizmi?</a>
-                            </div>
+                            <label for="password" class="form-label fw-semibold">Parol</label>
                             <input type="password" name="password" class="form-control form-control-lg bg-light border-0" placeholder="••••••••" required>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                            <label class="form-check-label" for="remember">Meni eslab qol</label>
                         </div>
 
                         <div class="d-grid gap-2">
@@ -44,11 +46,16 @@
                         </div>
                     </form>
 
+                    <p class="text-center text-muted mt-4 mb-0">
+                        Hisobingiz yo'qmi?
+                        <a href="{{ route('register') }}" class="text-decoration-none fw-semibold">Ro'yxatdan o'ting</a>
+                    </p>
+
                     <div class="mt-5 p-3 bg-light rounded-3 border-start border-primary border-4">
                         <p class="small fw-bold mb-2 text-secondary"><i class="bi bi-info-circle"></i> Test ma'lumotlari:</p>
                         <ul class="list-unstyled mb-0" style="font-size: 0.85rem;">
-                            <li><span class="badge bg-white text-dark border">Editor</span> test@example.com / password</li>
-                            <li><span class="badge bg-white text-dark border mt-1">Viewer</span> viewer@example.com / password</li>
+                            <li><span class="badge bg-white text-dark border">Seller</span> seller@example.com / password</li>
+                            <li><span class="badge bg-white text-dark border mt-1">User</span> user@example.com / password</li>
                         </ul>
                     </div>
 
@@ -69,7 +76,7 @@
     }
     .form-control:focus {
         background-color: #fff !important;
-        box-shadow: 0 0 0 0.25 dark;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
         border-color: #0d6efd;
     }
     .card {

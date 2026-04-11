@@ -17,9 +17,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        // Permissions yaratish
         $permissions = [
             'create posts',
             'read posts',
@@ -31,34 +28,26 @@ class DatabaseSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permissionName, 'guard_name' => 'web']);
         }
 
-        // Rol yaratish va permissions berish
-        $role = Role::firstOrCreate(['name' => 'editor', 'guard_name' => 'web']);
-        $role->givePermissionTo(['create posts', 'read posts', 'edit posts']);
+        $sellerRole = Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web']);
+        $sellerRole->syncPermissions($permissions);
 
-        $viewerRole = Role::firstOrCreate(['name' => 'viewer', 'guard_name' => 'web']);
-        $viewerRole->givePermissionTo('read posts');
+        $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        $userRole->syncPermissions(['read posts']);
 
-        // Admin rol
-        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-        $adminRole->givePermissionTo(Permission::all());
+        $seller = User::firstOrCreate([
+            'email' => 'seller@example.com',
+        ], [
+            'name' => 'Seller User',
+            'password' => bcrypt('password'),
+        ]);
+        $seller->syncRoles(['seller']);
 
-        // Userlar yaratish
         $user = User::firstOrCreate([
-            'email' => 'test@example.com',
+            'email' => 'user@example.com',
         ], [
-            'name' => 'Test User',
+            'name' => 'Regular User',
             'password' => bcrypt('password'),
         ]);
-        $user->assignRole('editor');
-
-        $viewerUser = User::firstOrCreate([
-            'email' => 'viewer@example.com',
-        ], [
-            'name' => 'Viewer User',
-            'password' => bcrypt('password'),
-        ]);
-        $viewerUser->assignRole('viewer');
-
-        // auth()->logout(); // Bu seederda ishlamaydi, chunki auth web uchun
+        $user->syncRoles(['user']);
     }
 }

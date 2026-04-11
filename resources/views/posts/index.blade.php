@@ -90,7 +90,7 @@
                                 </a>
 
                                 <div class="d-flex gap-2">
-                                    @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->user()->hasRole('admin') || auth()->id() === $post->user_id))
+                                    @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->user()->hasRole('seller') || auth()->id() === $post->user_id))
                                         <form action="{{ route('posts.destroy', $post) }}" method="POST" class="d-inline" onsubmit="return confirmPostDelete(this)">
                                             @csrf
                                             @method('DELETE')
