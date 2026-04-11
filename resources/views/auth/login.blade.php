@@ -1,41 +1,79 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">Login</div>
-                <div class="card-body">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-body p-5">
+
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold text-primary">Xush Kelibsiz!</h3>
+                        <p class="text-muted small">Tizimga kirish uchun ma'lumotlarni kiriting</p>
+                    </div>
+
                     @if($errors->any())
-                        <div class="alert alert-danger">
-                            <ul>
+                        <div class="alert alert-danger border-0 small rounded-3">
+                            <ul class="mb-0">
                                 @foreach($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
                             </ul>
                         </div>
                     @endif
+
                     <form action="{{ route('login.post') }}" method="POST">
                         @csrf
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" name="email" class="form-control" required>
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-semibold">Email manzili</label>
+                            <input type="email" name="email" class="form-control form-control-lg bg-light border-0" placeholder="example@mail.com" required>
                         </div>
-                        <div class="form-group">
-                            <label for="password">Password</label>
-                            <input type="password" name="password" class="form-control" required>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between">
+                                <label for="password" class="form-label fw-semibold">Parol</label>
+                                <a href="#" class="text-decoration-none small">Parolni unutdingizmi?</a>
+                            </div>
+                            <input type="password" name="password" class="form-control form-control-lg bg-light border-0" placeholder="••••••••" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Login</button>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm rounded-3">
+                                Kirish
+                            </button>
+                        </div>
                     </form>
-                    <p>Test users:</p>
-                    <ul>
-                        <li>Editor: test@example.com / password</li>
-                        <li>Viewer: viewer@example.com / password</li>
-                    </ul>
+
+                    <div class="mt-5 p-3 bg-light rounded-3 border-start border-primary border-4">
+                        <p class="small fw-bold mb-2 text-secondary"><i class="bi bi-info-circle"></i> Test ma'lumotlari:</p>
+                        <ul class="list-unstyled mb-0" style="font-size: 0.85rem;">
+                            <li><span class="badge bg-white text-dark border">Editor</span> test@example.com / password</li>
+                            <li><span class="badge bg-white text-dark border mt-1">Viewer</span> viewer@example.com / password</li>
+                        </ul>
+                    </div>
+
                 </div>
             </div>
+
+            <p class="text-center text-muted mt-4 small">
+                © {{ date('Y') }} Barcha huquqlar himoyalangan.
+            </p>
         </div>
     </div>
 </div>
+
+<style>
+    /* Bir oz estetika qo'shamiz */
+    body {
+        background-color: #f8f9fa;
+    }
+    .form-control:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 0.25 dark;
+        border-color: #0d6efd;
+    }
+    .card {
+        transition: transform 0.3s ease;
+    }
+</style>
 @endsection

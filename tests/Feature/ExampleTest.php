@@ -2,17 +2,26 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
     /**
-     * A basic test example.
+     * Test that home page redirects to posts page
      */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_home_redirects_to_posts(): void
     {
         $response = $this->get('/');
+
+        $response->assertRedirect(route('posts.index'));
+    }
+
+    /**
+     * Test that posts page loads successfully
+     */
+    public function test_posts_page_loads(): void
+    {
+        $response = $this->get('/posts');
 
         $response->assertStatus(200);
     }

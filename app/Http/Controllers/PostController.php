@@ -13,10 +13,29 @@ class PostController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $posts = Post::with('user')->get();
-        return view('posts.index', compact('posts'));
+        if (auth()->check()) {
+            Gate::authorize('read posts');
+        }
+
+        $search = trim((string) $request->query('q', ''));
+
+        $posts = Post::with('user')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->latest()
+            ->paginate(9)
+            ->withQueryString();
+
+        return view('posts.index', compact('posts', 'search'));
     }
 
     /**
@@ -45,9 +64,7 @@ class PostController extends Controller
             $data['image'] = $request->file('image')->store('posts', 'public');
         }
 
-        $data['user_id'] = auth()->id();
-
-        Post::create($data);
+        $request->user()->posts()->create($data);
 
         return redirect()->route('posts.index')->with('success', 'Post created successfully.');
     }
@@ -89,7 +106,7 @@ class PostController extends Controller
         if ($request->hasFile('image')) {
             // Delete old image if exists
             if ($post->image) {
-                \Storage::disk('public')->delete($post->image);
+                Storage::disk('public')->delete($post->image);
             }
             $data['image'] = $request->file('image')->store('posts', 'public');
         }
@@ -105,7 +122,20 @@ class PostController extends Controller
     public function destroy(string $id)
     {
         $post = Post::findOrFail($id);
-        Gate::authorize('delete posts');
+        $user = auth()->user();
+
+        abort_unless(
+            $user && (
+                $user->can('delete posts')
+                || $user->hasRole('admin')
+                || $post->user_id === $user->id
+            ),
+            403
+        );
+
+        if ($post->image) {
+            Storage::disk('public')->delete($post->image);
+        }
 
         $post->delete();
 
