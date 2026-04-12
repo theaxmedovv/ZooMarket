@@ -64,6 +64,16 @@
                             Salom, <strong>{{ auth()->user()->name }}</strong>
                         </span>
 
+                        @if(auth()->user()->hasRole('user'))
+                            <a href="{{ route('user.profile.show') }}" class="nav-link mx-2">
+                                <i class="bi bi-person-circle me-1"></i> Profil
+                            </a>
+                        @else
+                            <a href="{{ route('profile.show') }}" class="nav-link mx-2">
+                                <i class="bi bi-person-circle me-1"></i> Profil
+                            </a>
+                        @endif
+
                         @role('seller')
                             <a href="{{ route('admin.dashboard') }}" class="nav-link mx-2">
                                 <i class="bi bi-speedometer2 me-1"></i> Dashboard

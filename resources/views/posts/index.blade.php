@@ -89,7 +89,16 @@
                                     O'qish <i class="bi bi-arrow-right-short ms-1"></i>
                                 </a>
 
-                                <div class="d-flex gap-2">
+                                <div class="d-flex gap-2 align-items-center">
+                                    @if(auth()->check() && auth()->user()->hasRole('user'))
+                                        <form action="{{ route('posts.like', $post) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn-like {{ in_array($post->id, $likedPostIds ?? []) ? 'is-liked' : '' }}" title="Yoqtirish">
+                                                <i class="bi {{ in_array($post->id, $likedPostIds ?? []) ? 'bi-heart-fill' : 'bi-heart' }}"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+
                                     @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->user()->hasRole('seller') || auth()->id() === $post->user_id))
                                         <form action="{{ route('posts.destroy', $post) }}" method="POST" class="d-inline" onsubmit="return confirmPostDelete(this)">
                                             @csrf
@@ -228,6 +237,26 @@
     .btn-soft-danger { background: #fff5f5; color: #ff4d4d; border: none; width: 34px; height: 34px; }
     .btn-soft-warning:hover { background: #ffc107; color: #fff; }
     .btn-soft-danger:hover { background: #ff4d4d; color: #fff; }
+
+    .btn-like {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: none;
+        background: #fff0f3;
+        color: #e11d48;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s ease;
+    }
+
+    .btn-like:hover,
+    .btn-like.is-liked {
+        background: #e11d48;
+        color: #fff;
+        transform: translateY(-1px);
+    }
 
     .empty-state {
         border: 1px solid rgba(67, 97, 238, 0.1);

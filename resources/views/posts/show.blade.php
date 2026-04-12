@@ -28,6 +28,17 @@
                         </div>
 
                         <div class="post-actions">
+                            @if(auth()->check() && auth()->user()->hasRole('user'))
+                                <form action="{{ route('posts.like', $post) }}" method="POST" class="d-inline me-2">
+                                    @csrf
+                                    <button type="submit" class="btn btn-soft-like btn-sm rounded-pill px-3">
+                                        <i class="bi {{ $isLiked ? 'bi-heart-fill' : 'bi-heart' }} me-1"></i>
+                                        {{ $isLiked ? 'Yoqtirilgan' : 'Yoqtirish' }}
+                                        <span class="ms-1">({{ $post->liked_by_users_count }})</span>
+                                    </button>
+                                </form>
+                            @endif
+
                             @if(auth()->check() && auth()->user()->can('edit posts'))
                                 <a href="{{ route('posts.edit', $post) }}" class="btn btn-light btn-sm rounded-pill px-3 shadow-sm border">
                                     <i class="bi bi-pencil me-1"></i> Tahrirlash
@@ -100,6 +111,19 @@
     .btn-soft-primary:hover {
         background: #4361ee;
         color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-soft-like {
+        background: #fff0f3;
+        color: #e11d48;
+        border: 1px solid rgba(225, 29, 72, 0.15);
+        transition: all 0.25s ease;
+    }
+
+    .btn-soft-like:hover {
+        background: #e11d48;
+        color: #fff;
         transform: translateY(-2px);
     }
 

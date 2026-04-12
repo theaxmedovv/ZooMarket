@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -21,6 +22,18 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
+Route::get('/profile', [ProfileController::class, 'show'])
+    ->middleware('auth')
+    ->name('profile.show');
+
+Route::get('/user/profile', [ProfileController::class, 'user'])
+    ->middleware('auth')
+    ->name('user.profile.show');
+
+Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
+    ->middleware('auth')
+    ->name('profile.password.update');
+
 Route::get('/admin', [AdminController::class, 'index'])
     ->middleware(['auth', 'role:seller'])
     ->name('admin.dashboard');
@@ -31,6 +44,9 @@ Route::get('/home', function () {
 
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+Route::post('/posts/{post}/like', [PostController::class, 'toggleLike'])
+    ->middleware(['auth', 'role:user'])
+    ->name('posts.like');
 
 Route::middleware(['auth', 'role:seller'])->group(function () {
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');

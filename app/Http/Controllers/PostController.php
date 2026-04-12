@@ -21,7 +21,7 @@ class PostController extends Controller
 
         $search = trim((string) $request->query('q', ''));
 
-        $posts = Post::with('user')
+        $postsQuery = Post::with('user')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -31,11 +31,19 @@ class PostController extends Controller
                         });
                 });
             })
-            ->latest()
-            ->paginate(9)
-            ->withQueryString();
+            ->latest();
 
-        return view('posts.index', compact('posts', 'search'));
+        if (auth()->check()) {
+            $postsQuery->withCount('likedByUsers');
+        }
+
+        $posts = $postsQuery->paginate(9)->withQueryString();
+
+        $likedPostIds = auth()->check()
+            ? auth()->user()->likedPosts()->pluck('posts.id')->all()
+            : [];
+
+        return view('posts.index', compact('posts', 'search', 'likedPostIds'));
     }
 
     /**
@@ -74,13 +82,18 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        $post = Post::with('user')->findOrFail($id);
+        $post = Post::with(['user'])
+            ->withCount('likedByUsers')
+            ->findOrFail($id);
 
         if (auth()->check()) {
             Gate::authorize('read posts');
         }
 
-        return view('posts.show', compact('post'));
+        $isLiked = auth()->check()
+            && auth()->user()->likedPosts()->whereKey($post->id)->exists();
+
+        return view('posts.show', compact('post', 'isLiked'));
     }
 
     /**
@@ -144,6 +157,23 @@ class PostController extends Controller
         $post->delete();
 
         return redirect()->route('posts.index')->with('success', 'Post deleted successfully.');
+    }
+
+    public function toggleLike(Request $request, Post $post)
+    {
+        $user = $request->user();
+
+        abort_unless($user && $user->hasRole('user'), 403);
+
+        if ($user->likedPosts()->whereKey($post->id)->exists()) {
+            $user->likedPosts()->detach($post->id);
+            $message = 'Post unlike qilindi.';
+        } else {
+            $user->likedPosts()->attach($post->id);
+            $message = 'Post yoqtirildi.';
+        }
+
+        return back()->with('success', $message);
     }
 
 }
