@@ -3,13 +3,24 @@
 namespace App\Http\Controllers;
 
 
+use App\Models\Category;
 use App\Models\Post;
+use App\Models\PurchaseRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
+    private function canCreatePosts(): bool
+    {
+        $user = auth()->user();
+
+        return (bool) $user && (
+            $user->hasRole('seller') || $user->can('create posts')
+        );
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -21,13 +32,18 @@ class PostController extends Controller
 
         $search = trim((string) $request->query('q', ''));
 
-        $postsQuery = Post::with('user')
+        $postsQuery = Post::with(['user', 'category'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
-                        ->orWhere('content', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('breed', 'like', "%{$search}%")
+                        ->orWhere('location', 'like', "%{$search}%")
                         ->orWhereHas('user', function ($userQuery) use ($search) {
                             $userQuery->where('name', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('category', function ($categoryQuery) use ($search) {
+                            $categoryQuery->where('name', 'like', "%{$search}%");
                         });
                 });
             })
@@ -43,7 +59,14 @@ class PostController extends Controller
             ? auth()->user()->likedPosts()->pluck('posts.id')->all()
             : [];
 
-        return view('posts.index', compact('posts', 'search', 'likedPostIds'));
+        $requestedAnimalIds = auth()->check() && auth()->user()->hasRole('user')
+            ? PurchaseRequest::query()
+                ->where('user_id', auth()->id())
+                ->pluck('animal_id')
+                ->all()
+            : [];
+
+        return view('posts.index', compact('posts', 'search', 'likedPostIds', 'requestedAnimalIds'));
     }
 
     /**
@@ -51,8 +74,11 @@ class PostController extends Controller
      */
     public function create()
     {
-        Gate::authorize('create posts');
-        return view('posts.create');
+        abort_unless($this->canCreatePosts(), 403);
+
+        $categories = Category::query()->orderBy('name')->get();
+
+        return view('posts.create', compact('categories'));
     }
 
     /**
@@ -60,13 +86,26 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        Gate::authorize('create posts');
+        abort_unless($this->canCreatePosts(), 403);
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'content' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'breed' => 'required|string|max:255',
+            'gender' => 'required|in:male,female',
+            'age' => 'required|string|max:50',
+            'color' => 'nullable|string|max:100',
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
+            'currency' => 'required|in:UZS,USD,EUR,RUB',
+            'is_negotiable' => 'nullable|boolean',
+            'location' => 'required|string|max:255',
+            'status' => 'required|in:active,reserved,sold',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $data['is_negotiable'] = $request->boolean('is_negotiable');
+        $data['content'] = $data['description'];
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('posts', 'public');
@@ -82,7 +121,7 @@ class PostController extends Controller
      */
     public function show(string $id)
     {
-        $post = Post::with(['user'])
+        $post = Post::with(['user', 'category'])
             ->withCount('likedByUsers')
             ->findOrFail($id);
 
@@ -93,7 +132,14 @@ class PostController extends Controller
         $isLiked = auth()->check()
             && auth()->user()->likedPosts()->whereKey($post->id)->exists();
 
-        return view('posts.show', compact('post', 'isLiked'));
+        $hasPurchaseRequest = auth()->check()
+            && auth()->user()->hasRole('user')
+            && PurchaseRequest::query()
+                ->where('user_id', auth()->id())
+                ->where('animal_id', $post->id)
+                ->exists();
+
+        return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest'));
     }
 
     /**
@@ -103,7 +149,10 @@ class PostController extends Controller
     {
         $post = Post::findOrFail($id);
         Gate::authorize('edit posts');
-        return view('posts.edit', compact('post'));
+
+        $categories = Category::query()->orderBy('name')->get();
+
+        return view('posts.edit', compact('post', 'categories'));
     }
 
     /**
@@ -116,9 +165,22 @@ class PostController extends Controller
 
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'content' => 'required|string',
+            'category_id' => 'required|exists:categories,id',
+            'breed' => 'required|string|max:255',
+            'gender' => 'required|in:male,female',
+            'age' => 'required|string|max:50',
+            'color' => 'nullable|string|max:100',
+            'description' => 'required|string',
+            'price' => 'required|numeric|min:0',
+            'currency' => 'required|in:UZS,USD,EUR,RUB',
+            'is_negotiable' => 'nullable|boolean',
+            'location' => 'required|string|max:255',
+            'status' => 'required|in:active,reserved,sold',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $data['is_negotiable'] = $request->boolean('is_negotiable');
+        $data['content'] = $data['description'];
 
         if ($request->hasFile('image')) {
             // Delete old image if exists

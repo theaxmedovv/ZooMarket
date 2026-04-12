@@ -29,6 +29,22 @@
 
                         <div class="post-actions">
                             @if(auth()->check() && auth()->user()->hasRole('user'))
+                                @if($post->status === 'sold')
+                                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3 me-2" disabled>
+                                        Sotilgan
+                                    </button>
+                                @elseif($hasPurchaseRequest)
+                                    <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 me-2" disabled>
+                                        So'rov yuborilgan
+                                    </button>
+                                @else
+                                    <button type="button" class="btn btn-success btn-sm rounded-pill px-3 me-2" data-bs-toggle="modal" data-bs-target="#buyModalDetail">
+                                        <i class="bi bi-cart-check me-1"></i> Sotib olish
+                                    </button>
+                                @endif
+                            @endif
+
+                            @if(auth()->check() && auth()->user()->hasRole('user'))
                                 <form action="{{ route('posts.like', $post) }}" method="POST" class="d-inline me-2">
                                     @csrf
                                     <button type="submit" class="btn btn-soft-like btn-sm rounded-pill px-3">
@@ -58,8 +74,19 @@
                     </div>
                 @endif
 
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6"><div class="small text-muted">Kategoriya</div><div class="fw-semibold">{{ $post->category?->name ?? 'Boshqa' }}</div></div>
+                    <div class="col-md-6"><div class="small text-muted">Zot</div><div class="fw-semibold">{{ $post->breed ?: '-' }}</div></div>
+                    <div class="col-md-6"><div class="small text-muted">Jinsi</div><div class="fw-semibold">{{ $post->gender === 'female' ? 'Urg\'ochi' : ($post->gender === 'male' ? 'Erkak' : '-') }}</div></div>
+                    <div class="col-md-6"><div class="small text-muted">Yoshi</div><div class="fw-semibold">{{ $post->age ?: '-' }}</div></div>
+                    <div class="col-md-6"><div class="small text-muted">Rangi</div><div class="fw-semibold">{{ $post->color ?: '-' }}</div></div>
+                    <div class="col-md-6"><div class="small text-muted">Joylashuv</div><div class="fw-semibold">{{ $post->location ?: '-' }}</div></div>
+                    <div class="col-md-6"><div class="small text-muted">Narx</div><div class="fw-semibold">{{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}</div></div>
+                    <div class="col-md-6"><div class="small text-muted">Kelishuv</div><div class="fw-semibold">{{ $post->is_negotiable ? 'Kelishiladi' : 'Qat\'iy narx' }}</div></div>
+                </div>
+
                 <div class="post-content fs-5 leading-relaxed text-secondary mb-5">
-                    {!! nl2br(e($post->content)) !!}
+                    {!! nl2br(e($post->description ?? $post->content)) !!}
                 </div>
 
                 <footer class="post-footer pt-5 border-top d-flex justify-content-between align-items-center">
@@ -79,6 +106,27 @@
         </div>
     </div>
 </article>
+
+@if(auth()->check() && auth()->user()->hasRole('user') && $post->status !== 'sold' && ! $hasPurchaseRequest)
+    <div class="modal fade" id="buyModalDetail" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-body p-4">
+                    <h5 class="fw-bold mb-3">Tasdiqlash</h5>
+                    <p class="text-muted mb-4">Siz rostdan ham ushbu hayvonni sotib olishni xohlaysizmi?</p>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Yo'q</button>
+                        <form action="{{ route('purchase-requests.store') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="animal_id" value="{{ $post->id }}">
+                            <button type="submit" class="btn btn-success rounded-pill px-4">Ha</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
 
 <style>
     /* Premium Tipografiya */

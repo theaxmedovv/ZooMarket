@@ -1,133 +1,173 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-5">
-    <div class="row mb-5 align-items-end animate-fade-in">
+<div class="container py-4">
+    <div class="row mb-5 g-4 align-items-end animate-fade-in">
+        <div class="col-lg-7">
+            <h2 class="fw-black display-6 mb-1 tracking-tight">Barcha mahsulotlar</h2>
+            <p class="text-muted mb-0 fs-5 opacity-75">Eng so'nggi e'lonlar va eksklyuziv takliflar bir joyda.</p>
+        </div>
+
         <div class="col-lg-5">
-            <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill mb-3 fw-bold text-uppercase">
-                <i class="bi bi-lightning-charge-fill me-1"></i> Blog va Yangiliklar
-            </span>
-            <h1 class="display-4 fw-black text-dark tracking-tight">Eng so'nggi maqolalar</h1>
-        </div>
+            <div class="d-flex flex-column flex-md-row gap-3 justify-content-lg-end align-items-md-center">
+                <form action="{{ route('posts.index') }}" method="GET" class="search-bar-wrapper flex-grow-1">
+                    <div class="input-group input-group-lg shadow-sm border rounded-pill overflow-hidden bg-white">
+                        <span class="input-group-text border-0 bg-transparent ps-4 text-muted">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" name="q" value="{{ $search ?? '' }}"
+                               class="form-control border-0 shadow-none fs-6 py-3"
+                               placeholder="Mahsulot yoki brend qidirish...">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">Qidirish</button>
+                    </div>
+                </form>
 
-        <div class="col-lg-4 mt-3 mt-lg-0">
-            <form action="{{ route('posts.index') }}" method="GET" class="search-glass p-2 rounded-pill d-flex align-items-center gap-2">
-                <i class="bi bi-search text-primary ms-2"></i>
-                <input
-                    type="text"
-                    name="q"
-                    value="{{ $search ?? '' }}"
-                    class="form-control border-0 shadow-none bg-transparent"
-                    placeholder="Maqola nomi yoki muallif..."
-                    aria-label="Post qidirish"
-                >
-                <button type="submit" class="btn btn-primary rounded-pill px-3">Qidirish</button>
-            </form>
-        </div>
-
-        <div class="col-lg-3 text-lg-end mt-3 mt-lg-0">
-            @if(auth()->check() && auth()->user()->can('create posts'))
-                <a href="{{ route('posts.create') }}" class="btn btn-primary btn-lg shadow-blue px-5 rounded-pill hover-lift">
-                    <i class="bi bi-plus-lg me-2"></i> Yangi post
-                </a>
-            @endif
+                @if(auth()->check() && (auth()->user()->hasRole('seller') || auth()->user()->hasRole('admin')))
+                    <a href="{{ route('posts.create') }}" class="btn btn-dark btn-lg shadow-sm px-4 rounded-pill hover-lift shrink-0">
+                        <i class="bi bi-plus-lg me-2"></i> Sotish
+                    </a>
+                @endif
+            </div>
         </div>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-custom border-0 shadow-sm rounded-4 d-flex align-items-center mb-5 p-3 slide-down" role="alert">
-            <div class="icon-box bg-success text-white rounded-circle me-3">
+        <div class="alert alert-custom border-0 shadow-sm rounded-4 d-flex align-items-center mb-5 p-3 slide-down bg-white border-start border-success border-4">
+            <div class="icon-box bg-success text-white rounded-circle me-3 p-2 d-flex align-items-center justify-content-center" style="width:35px; height:35px;">
                 <i class="bi bi-check2"></i>
             </div>
-            <div class="fw-medium text-success">{{ session('success') }}</div>
-            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="fw-semibold text-dark">{{ session('success') }}</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
     <div class="row g-4">
         @forelse($posts as $post)
-            <div class="col-md-6 col-xl-4 animate-up" style="animation-delay: {{ $loop->index * 0.1 }}s">
+            <div class="col-md-6 col-lg-4 animate-up" style="animation-delay: {{ $loop->index * 0.05 }}s">
                 <article class="post-card h-100">
-                    <div class="card h-100 border-0 rounded-5 shadow-hover overflow-hidden bg-white">
+                    <div class="card h-100 border-0 rounded-5 shadow-sm overflow-hidden bg-white transition-all border-hover position-relative">
 
-                        <div class="post-image-wrapper position-relative overflow-hidden">
-                            @if($post->image)
-                                <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="post-img">
-                            @else
-                                <div class="no-image-placeholder">
-                                    <i class="bi bi-brush fs-1 opacity-25"></i>
-                                </div>
-                            @endif
-
-                            <div class="post-badge glass-effect">
-                                <div class="avatar-xs me-2">
-                                    {{ strtoupper(substr($post->user->name, 0, 1)) }}
-                                </div>
-                                <span class="text-white small fw-bold">{{ $post->user->name }}</span>
-                            </div>
+                        <div class="position-absolute top-0 start-0 m-3" style="z-index: 10;">
+                            <span class="badge bg-white text-primary shadow-sm rounded-pill px-3 py-2 fw-bold small border">
+                                <i class="bi bi-tag-fill me-1"></i> {{ $post->category?->name ?? 'Mahsulot' }}
+                            </span>
                         </div>
 
-                        <div class="card-body p-4 pt-4">
+                        <div class="post-image-wrapper position-relative overflow-hidden" style="height: 250px;">
+                            @if($post->image)
+                                <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="post-img w-100 h-100 object-fit-cover">
+                            @else
+                                <div class="no-image-placeholder h-100 bg-light d-flex flex-column align-items-center justify-content-center text-muted opacity-50">
+                                    <i class="bi bi-image fs-1 mb-2"></i>
+                                    <span class="small fw-bold">Rasm mavjud emas</span>
+                                </div>
+                            @endif
+                            <div class="image-overlay"></div>
+                        </div>
+
+                        <div class="card-body p-4 d-flex flex-column">
                             <div class="d-flex align-items-center mb-3">
-                                <span class="text-muted x-small">
-                                    <i class="bi bi-clock me-1"></i> {{ $post->created_at->diffForHumans() }}
-                                </span>
+                                <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle me-2 d-flex align-items-center justify-content-center fw-bold border border-primary border-opacity-10" style="width: 34px; height: 34px; font-size: 13px;">
+                                    {{ strtoupper(substr($post->user->name, 0, 1)) }}
+                                </div>
+                                <div class="lh-1">
+                                    <div class="text-dark small fw-bold d-block">{{ $post->user->name }}</div>
+                                    <span class="text-muted x-small">{{ $post->created_at->diffForHumans() }}</span>
+                                </div>
                             </div>
 
-                            <h4 class="card-title mb-3">
-                                <a href="{{ route('posts.show', $post) }}" class="text-dark text-decoration-none post-link fw-bold">
+                            <h5 class="card-title mb-2">
+                                <a href="{{ route('posts.show', $post) }}" class="text-dark text-decoration-none post-link fw-bold line-clamp-2 fs-5">
                                     {{ $post->title }}
                                 </a>
-                            </h4>
+                            </h5>
 
-                            <p class="text-secondary mb-4 line-clamp-3 small-medium">
-                                {{ Str::limit($post->content, 110) }}
+                            <p class="text-muted mb-4 small line-clamp-2 flex-grow-1 opacity-75">
+                                {{ Str::limit($post->description ?? $post->content, 85) }}
                             </p>
 
-                            <div class="d-flex justify-content-between align-items-center border-top pt-3 mt-auto">
-                                <a href="{{ route('posts.show', $post) }}" class="btn-read-more">
-                                    O'qish <i class="bi bi-arrow-right-short ms-1"></i>
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+                                <a href="{{ route('posts.show', $post) }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold">
+                                    Batafsil
                                 </a>
 
-                                <div class="d-flex gap-2 align-items-center">
+                                <div class="d-flex gap-2">
                                     @if(auth()->check() && auth()->user()->hasRole('user'))
-                                        <form action="{{ route('posts.like', $post) }}" method="POST" class="d-inline">
+                                        @if($post->status === 'sold')
+                                            <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3 fw-bold" disabled>
+                                                Sotilgan
+                                            </button>
+                                        @elseif(in_array($post->id, $requestedAnimalIds ?? []))
+                                            <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold" disabled>
+                                                So'rov yuborilgan
+                                            </button>
+                                        @else
+                                            <button type="button" class="btn btn-success btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#buyModal{{ $post->id }}">
+                                                <i class="bi bi-cart-check me-1"></i> Sotib olish
+                                            </button>
+                                        @endif
+                                    @endif
+
+                                    @if(auth()->check() && auth()->user()->hasRole('user'))
+                                        <form action="{{ route('posts.like', $post) }}" method="POST">
                                             @csrf
-                                            <button type="submit" class="btn-like {{ in_array($post->id, $likedPostIds ?? []) ? 'is-liked' : '' }}" title="Yoqtirish">
+                                            <button type="submit" class="btn-market-action {{ in_array($post->id, $likedPostIds ?? []) ? 'active' : '' }}">
                                                 <i class="bi {{ in_array($post->id, $likedPostIds ?? []) ? 'bi-heart-fill' : 'bi-heart' }}"></i>
                                             </button>
                                         </form>
                                     @endif
 
-                                    @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->user()->hasRole('seller') || auth()->id() === $post->user_id))
-                                        <form action="{{ route('posts.destroy', $post) }}" method="POST" class="d-inline" onsubmit="return confirmPostDelete(this)">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-soft-danger btn-sm rounded-circle shadow-none">
-                                                <i class="bi bi-trash3-fill"></i>
+                                    @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->id() === $post->user_id))
+                                        <div class="dropdown">
+                                            <button class="btn-market-action" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots-vertical"></i>
                                             </button>
-                                        </form>
-                                    @endif
-
-                                    @if(auth()->check() && auth()->user()->can('edit posts'))
-                                        <a href="{{ route('posts.edit', $post) }}" class="btn btn-soft-warning btn-sm rounded-circle shadow-none">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </a>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2">
+                                                <li><a class="dropdown-item rounded-3 py-2 small fw-bold" href="{{ route('posts.edit', $post) }}"><i class="bi bi-pencil me-2"></i> Tahrirlash</a></li>
+                                                <li><hr class="dropdown-divider opacity-50"></li>
+                                                <li>
+                                                    <form action="{{ route('posts.destroy', $post) }}" method="POST" onsubmit="return confirm('Oʻchirilsinmi?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="dropdown-item rounded-3 py-2 small text-danger fw-bold"><i class="bi bi-trash me-2"></i> O'chirish</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
                         </div>
                     </div>
                 </article>
+
+                @if(auth()->check() && auth()->user()->hasRole('user') && $post->status !== 'sold' && !in_array($post->id, $requestedAnimalIds ?? []))
+                    <div class="modal fade" id="buyModal{{ $post->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-4 border-0 shadow">
+                                <div class="modal-body p-4">
+                                    <h5 class="fw-bold mb-3">Tasdiqlash</h5>
+                                    <p class="text-muted mb-4">Siz rostdan ham ushbu hayvonni sotib olishni xohlaysizmi?</p>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Yo'q</button>
+                                        <form action="{{ route('purchase-requests.store') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="animal_id" value="{{ $post->id }}">
+                                            <button type="submit" class="btn btn-success rounded-pill px-4">Ha</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         @empty
-            <div class="col-12 animate-up">
-                <div class="empty-state rounded-5 p-5 text-center bg-white shadow-sm border-0">
-                    <div class="empty-icon mx-auto mb-3">
-                        <i class="bi bi-journal-x"></i>
-                    </div>
-                    <h3 class="fw-bold mb-2">Hozircha maqolalar yo'q</h3>
-                    <p class="text-secondary mb-0">Yangi maqolalar tez orada shu yerda ko'rinadi.</p>
+            <div class="col-12 py-5 text-center">
+                <div class="bg-white p-5 rounded-5 shadow-sm border border-dashed">
+                    <i class="bi bi-search fs-1 text-muted opacity-25 mb-3 d-block"></i>
+                    <h4 class="fw-bold">Hech narsa topilmadi</h4>
+                    <p class="text-muted">Qidiruv natijalari bo'yicha hech qanday mahsulot topilmadi. Boshqa so'z bilan urinib ko'ring.</p>
+                    <a href="{{ route('posts.index') }}" class="btn btn-primary rounded-pill px-4 fw-bold">Barcha postlar</a>
                 </div>
             </div>
         @endforelse
@@ -135,183 +175,87 @@
 
     @if($posts->hasPages())
         <div class="d-flex justify-content-center mt-5">
-            <div class="pagination-glass px-3 py-2 rounded-pill shadow-sm">
-                {{ $posts->links() }}
-            </div>
+            {{ $posts->links() }}
         </div>
     @endif
-
-    <script>
-        function confirmPostDelete(form) {
-            return window.confirm("Rostdan ham bu postni o'chirmoqchimisiz?");
-        }
-    </script>
 </div>
 
 <style>
-    /* 1. Global & Typography */
+    /* Brend ranglari */
     :root {
-        --primary-color: #4361ee;
-        --success-color: #2ec4b6;
+        --market-primary: #4361ee;
     }
-    .fw-black { font-weight: 900; }
+
+    .fw-black { font-weight: 800; }
     .tracking-tight { letter-spacing: -1.5px; }
     .x-small { font-size: 0.75rem; }
-    .small-medium { font-size: 0.92rem; line-height: 1.6; }
 
-    /* 2. Card Styling */
-    .post-card {
-        perspective: 1000px;
+    /* Search Bar Styling */
+    .search-bar-wrapper .input-group {
+        border-color: rgba(0,0,0,0.08) !important;
+        transition: 0.3s ease;
     }
-    .shadow-hover {
+    .search-bar-wrapper .input-group:focus-within {
+        border-color: var(--market-primary) !important;
+        box-shadow: 0 10px 25px -5px rgba(67, 97, 238, 0.15) !important;
+    }
+
+    /* Card Animations & Effects */
+    .post-card .card {
         transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
     }
-    .post-card:hover .shadow-hover {
-        transform: translateY(-12px);
-        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.12);
-    }
-
-    /* 3. Image Styling */
-    .post-image-wrapper { height: 240px; }
-    .post-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.8s ease;
-    }
-    .post-card:hover .post-img { transform: scale(1.08); }
-
-    .no-image-placeholder {
-        height: 100%;
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .post-card:hover .card {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
     }
 
-    /* 4. Badges & Buttons */
-    .bg-primary-soft { background-color: rgba(67, 97, 238, 0.1); }
-    .search-glass {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(67, 97, 238, 0.15);
-        box-shadow: 0 10px 30px rgba(67, 97, 238, 0.1);
-    }
-    .glass-effect {
+    .post-image-wrapper { background: #f1f5f9; }
+    .image-overlay {
         position: absolute;
-        bottom: 15px;
-        left: 15px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 6px 14px;
-        border-radius: 50px;
-        display: flex;
-        align-items: center;
-    }
-    .avatar-xs {
-        width: 24px;
-        height: 24px;
-        background: var(--primary-color);
-        color: white;
-        border-radius: 50%;
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        bottom: 0; left: 0; right: 0; height: 50%;
+        background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
     }
 
-    .btn-read-more {
-        font-weight: 700;
-        color: var(--primary-color);
-        text-decoration: none;
-        font-size: 0.9rem;
-        transition: all 0.3s;
-    }
-    .btn-read-more:hover { color: #000; }
-    .btn-read-more:hover i { padding-left: 5px; }
-
-    /* Soft Buttons */
-    .btn-soft-warning { background: #fff9e6; color: #ffc107; border: none; width: 34px; height: 34px; }
-    .btn-soft-danger { background: #fff5f5; color: #ff4d4d; border: none; width: 34px; height: 34px; }
-    .btn-soft-warning:hover { background: #ffc107; color: #fff; }
-    .btn-soft-danger:hover { background: #ff4d4d; color: #fff; }
-
-    .btn-like {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        border: none;
-        background: #fff0f3;
-        color: #e11d48;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.25s ease;
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
-    .btn-like:hover,
-    .btn-like.is-liked {
-        background: #e11d48;
-        color: #fff;
-        transform: translateY(-1px);
-    }
-
-    .empty-state {
-        border: 1px solid rgba(67, 97, 238, 0.1);
-        background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
-    }
-    .empty-icon {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
+    /* Action Buttons */
+    .btn-market-action {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid #f1f5f9;
+        background: #f8fafc;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(67, 97, 238, 0.12);
-        color: var(--primary-color);
-        font-size: 1.8rem;
+        color: #64748b;
+        transition: 0.3s;
     }
-
-    .pagination-glass {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(8px);
-        border: 1px solid rgba(67, 97, 238, 0.12);
-    }
-    .pagination-glass nav {
-        margin-bottom: 0;
-    }
-    .pagination-glass .pagination {
-        margin-bottom: 0;
-    }
-
-    /* 5. Animations */
-    .animate-up {
-        opacity: 0;
-        animation: fadeInUp 0.8s forwards;
-    }
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .hover-lift:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3) !important;
-    }
-
-    /* 6. Alerts Custom */
-    .alert-custom {
+    .btn-market-action:hover {
         background: #fff;
-        border-left: 5px solid var(--success-color) !important;
+        color: var(--market-primary);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
-    .icon-box {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .btn-market-action.active {
+        background: #fee2e2;
+        color: #ef4444;
+        border-color: #fecaca;
+    }
+
+    /* Hover lift effect for buttons */
+    .hover-lift { transition: transform 0.2s; }
+    .hover-lift:hover { transform: translateY(-2px); }
+
+    /* Custom Scrollbar in Dropdowns */
+    .dropdown-menu { animation: slideIn 0.3s ease; }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
 @endsection
