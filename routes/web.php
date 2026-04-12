@@ -74,6 +74,10 @@ Route::post('/purchase-requests', [PurchaseRequestController::class, 'store'])
     ->middleware(['auth', 'role:user'])
     ->name('purchase-requests.store');
 
+Route::get('/user/purchase-requests', [PurchaseRequestController::class, 'userIndex'])
+    ->middleware(['auth', 'role:user'])
+    ->name('user.purchase-requests.index');
+
 Route::middleware(['auth', 'role:seller'])->group(function () {
     Route::get('/admin/purchase-requests', [PurchaseRequestController::class, 'index'])
         ->name('admin.purchase-requests.index');

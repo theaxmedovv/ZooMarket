@@ -239,8 +239,8 @@
                     <h4 class="fw-black mb-3 tracking-tight">Yordam kerakmi?</h4>
                     <p class="opacity-75 small mb-4">Profil bilan bog'liq muammolar bo'lsa, qo'llab-quvvatlash xizmatiga murojaat qiling.</p>
                     <div class="d-grid gap-2">
-                        <a href="{{ route('posts.index') }}" class="btn btn-white bg-white text-primary rounded-pill py-2 fw-bold shadow-sm">
-                            <i class="bi bi-grid-1x2 me-1"></i> E'lonlarni ko'rish
+                        <a href="{{ route('user.purchase-requests.index') }}" class="btn btn-white bg-white text-primary rounded-pill py-2 fw-bold shadow-sm">
+                            <i class="bi bi-bag-check me-1"></i> So'rovlarim
                         </a>
                     </div>
                 </div>

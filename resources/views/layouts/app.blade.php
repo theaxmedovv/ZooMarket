@@ -128,6 +128,12 @@
                             <i class="bi bi-grid-1x2 me-1"></i> Postlar
                         </a>
 
+                        @if(auth()->user()->hasRole('user'))
+                            <a href="{{ route('user.purchase-requests.index') }}" class="nav-link {{ request()->is('user/purchase-requests*') ? 'active' : '' }}">
+                                <i class="bi bi-bag-check me-1"></i> So'rovlarim
+                            </a>
+                        @endif
+
                         @if(auth()->user()->hasRole('seller'))
                             <a href="{{ route('admin.purchase-requests.index') }}" class="nav-link {{ request()->is('admin/purchase-requests*') ? 'active' : '' }}">
                                 <i class="bi bi-bag-check me-1"></i> So'rovlar

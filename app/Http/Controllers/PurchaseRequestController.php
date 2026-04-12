@@ -10,6 +10,16 @@ use Illuminate\Validation\Rule;
 
 class PurchaseRequestController extends Controller
 {
+    public function userIndex(Request $request)
+    {
+        $requests = PurchaseRequest::with(['animal'])
+            ->where('user_id', $request->user()->id)
+            ->latest()
+            ->paginate(20);
+
+        return view('profile.purchase-requests', compact('requests'));
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
