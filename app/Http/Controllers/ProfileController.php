@@ -12,6 +12,7 @@ class ProfileController extends Controller
     {
         $user = $request->user()->loadCount('posts');
         $recentPosts = $user->posts()
+            ->where('status', '!=', 'sold')
             ->latest()
             ->take(5)
             ->get();

@@ -81,6 +81,8 @@ Route::get('/user/purchase-requests', [PurchaseRequestController::class, 'userIn
 Route::middleware(['auth', 'role:seller'])->group(function () {
     Route::get('/admin/purchase-requests', [PurchaseRequestController::class, 'index'])
         ->name('admin.purchase-requests.index');
+    Route::get('/admin/sold-animals', [PurchaseRequestController::class, 'soldAnimals'])
+        ->name('admin.sold-animals.index');
     Route::post('/admin/purchase-requests/{purchaseRequest}/approve', [PurchaseRequestController::class, 'approve'])
         ->name('admin.purchase-requests.approve');
     Route::post('/admin/purchase-requests/{purchaseRequest}/reject', [PurchaseRequestController::class, 'reject'])

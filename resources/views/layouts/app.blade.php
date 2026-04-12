@@ -138,6 +138,10 @@
                             <a href="{{ route('admin.purchase-requests.index') }}" class="nav-link {{ request()->is('admin/purchase-requests*') ? 'active' : '' }}">
                                 <i class="bi bi-bag-check me-1"></i> So'rovlar
                             </a>
+
+                            <a href="{{ route('admin.sold-animals.index') }}" class="nav-link {{ request()->is('admin/sold-animals*') ? 'active' : '' }}">
+                                <i class="bi bi-check2-square me-1"></i> Sotilgan hayvonlar
+                            </a>
                         @endif
 
                         <div class="ms-lg-2 ps-lg-2 border-start-lg">

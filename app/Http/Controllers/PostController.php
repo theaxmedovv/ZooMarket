@@ -33,6 +33,7 @@ class PostController extends Controller
         $search = trim((string) $request->query('q', ''));
 
         $postsQuery = Post::with(['user', 'category'])
+            ->where('status', '!=', 'sold')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -62,6 +63,7 @@ class PostController extends Controller
         $requestedAnimalIds = auth()->check() && auth()->user()->hasRole('user')
             ? PurchaseRequest::query()
                 ->where('user_id', auth()->id())
+                ->whereIn('status', ['pending', 'approved'])
                 ->pluck('animal_id')
                 ->all()
             : [];
@@ -125,6 +127,8 @@ class PostController extends Controller
             ->withCount('likedByUsers')
             ->findOrFail($id);
 
+        abort_if($post->status === 'sold', 404);
+
         if (auth()->check()) {
             Gate::authorize('read posts');
         }
@@ -137,6 +141,7 @@ class PostController extends Controller
             && PurchaseRequest::query()
                 ->where('user_id', auth()->id())
                 ->where('animal_id', $post->id)
+                ->whereIn('status', ['pending', 'approved'])
                 ->exists();
 
         return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest'));
