@@ -31,9 +31,62 @@ class PostController extends Controller
         }
 
         $search = trim((string) $request->query('q', ''));
+        $canUseFilters = !auth()->check() || auth()->user()->hasRole('user');
+        $categoryId = $request->integer('category_id');
+        $gender = (string) $request->query('gender', '');
+        $location = trim((string) $request->query('location', ''));
+        $currency = (string) $request->query('currency', '');
+        $priceMin = $request->query('price_min');
+        $priceMax = $request->query('price_max');
+
+        if (! $canUseFilters) {
+            $categoryId = null;
+            $gender = '';
+            $location = '';
+            $currency = '';
+            $priceMin = null;
+            $priceMax = null;
+        }
+
+        $availableCategoryIds = Category::query()->pluck('id')->all();
+        $allowedGenders = ['male', 'female'];
+        $allowedCurrencies = ['UZS', 'USD', 'EUR', 'RUB'];
+
+        if (! in_array($categoryId, $availableCategoryIds, true)) {
+            $categoryId = null;
+        }
+
+        if (! in_array($gender, $allowedGenders, true)) {
+            $gender = '';
+        }
+
+        if (! in_array($currency, $allowedCurrencies, true)) {
+            $currency = '';
+        }
+
+        $priceMin = is_numeric($priceMin) ? (float) $priceMin : null;
+        $priceMax = is_numeric($priceMax) ? (float) $priceMax : null;
 
         $postsQuery = Post::with(['user', 'category'])
             ->where('status', '!=', 'sold')
+            ->when($categoryId, function ($query) use ($categoryId) {
+                $query->where('category_id', $categoryId);
+            })
+            ->when($gender !== '', function ($query) use ($gender) {
+                $query->where('gender', $gender);
+            })
+            ->when($location !== '', function ($query) use ($location) {
+                $query->where('location', 'like', "%{$location}%");
+            })
+            ->when($currency !== '', function ($query) use ($currency) {
+                $query->where('currency', $currency);
+            })
+            ->when($priceMin !== null, function ($query) use ($priceMin) {
+                $query->where('price', '>=', $priceMin);
+            })
+            ->when($priceMax !== null, function ($query) use ($priceMax) {
+                $query->where('price', '<=', $priceMax);
+            })
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -68,7 +121,18 @@ class PostController extends Controller
                 ->all()
             : [];
 
-        return view('posts.index', compact('posts', 'search', 'likedPostIds', 'requestedAnimalIds'));
+        $categories = Category::query()->orderBy('name')->get();
+
+        $activeFilters = [
+            'category_id' => $categoryId,
+            'gender' => $gender,
+            'location' => $location,
+            'currency' => $currency,
+            'price_min' => $priceMin,
+            'price_max' => $priceMax,
+        ];
+
+        return view('posts.index', compact('posts', 'search', 'likedPostIds', 'requestedAnimalIds', 'categories', 'activeFilters'));
     }
 
     /**

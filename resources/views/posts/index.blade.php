@@ -10,7 +10,17 @@
 
         <div class="col-lg-5">
             <div class="d-flex flex-column flex-md-row gap-3 justify-content-lg-end align-items-md-center">
-                <form action="{{ route('posts.index') }}" method="GET" class="search-bar-wrapper flex-grow-1">
+                <form action="{{ route('posts.index') }}" method="GET" class="search-bar-wrapper flex-grow-1 d-grid gap-3">
+                    @php
+                        $showFilters = !auth()->check() || auth()->user()->hasRole('user');
+                        $hasActiveFilters = !empty($activeFilters['category_id'])
+                            || !empty($activeFilters['gender'])
+                            || !empty($activeFilters['location'])
+                            || !empty($activeFilters['currency'])
+                            || ($activeFilters['price_min'] ?? null) !== null
+                            || ($activeFilters['price_max'] ?? null) !== null;
+                    @endphp
+
                     <div class="input-group input-group-lg shadow-sm border rounded-pill overflow-hidden bg-white">
                         <span class="input-group-text border-0 bg-transparent ps-4 text-muted">
                             <i class="bi bi-search"></i>
@@ -19,7 +29,79 @@
                                class="form-control border-0 shadow-none fs-6 py-3"
                                placeholder="Mahsulot yoki brend qidirish...">
                         <button type="submit" class="btn btn-primary px-4 fw-bold">Qidirish</button>
+                        @if($showFilters)
+                            <button
+                                class="btn btn-outline-primary px-4 fw-bold"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#postFilters"
+                                aria-expanded="{{ $hasActiveFilters ? 'true' : 'false' }}"
+                                aria-controls="postFilters"
+                            >
+                                <i class="bi bi-sliders me-1"></i> Filter
+                            </button>
+                        @endif
                     </div>
+
+                    @if($showFilters)
+                        <div id="postFilters" class="collapse {{ $hasActiveFilters ? 'show' : '' }}">
+                            <div class="filter-panel p-3 p-md-4 bg-white border rounded-4 shadow-sm">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="category_id" class="form-label small fw-bold text-muted mb-1">Kategoriya</label>
+                                        <select name="category_id" id="category_id" class="form-select">
+                                            <option value="">Barchasi</option>
+                                            @foreach($categories as $category)
+                                                <option value="{{ $category->id }}" @selected((string) ($activeFilters['category_id'] ?? '') === (string) $category->id)>
+                                                    {{ $category->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="gender" class="form-label small fw-bold text-muted mb-1">Jinsi</label>
+                                        <select name="gender" id="gender" class="form-select">
+                                            <option value="">Barchasi</option>
+                                            <option value="male" @selected(($activeFilters['gender'] ?? '') === 'male')>Erkak</option>
+                                            <option value="female" @selected(($activeFilters['gender'] ?? '') === 'female')>Urg'ochi</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="location" class="form-label small fw-bold text-muted mb-1">Joylashuv</label>
+                                        <input type="text" name="location" id="location" class="form-control" value="{{ $activeFilters['location'] ?? '' }}" placeholder="Masalan: Samarqand">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="currency" class="form-label small fw-bold text-muted mb-1">Valyuta</label>
+                                        <select name="currency" id="currency" class="form-select">
+                                            <option value="">Barchasi</option>
+                                            <option value="UZS" @selected(($activeFilters['currency'] ?? '') === 'UZS')>UZS</option>
+                                            <option value="USD" @selected(($activeFilters['currency'] ?? '') === 'USD')>USD</option>
+                                            <option value="EUR" @selected(($activeFilters['currency'] ?? '') === 'EUR')>EUR</option>
+                                            <option value="RUB" @selected(($activeFilters['currency'] ?? '') === 'RUB')>RUB</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="price_min" class="form-label small fw-bold text-muted mb-1">Min narx</label>
+                                        <input type="number" name="price_min" id="price_min" min="0" step="0.01" class="form-control" value="{{ $activeFilters['price_min'] ?? '' }}" placeholder="0">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="price_max" class="form-label small fw-bold text-muted mb-1">Maks narx</label>
+                                        <input type="number" name="price_max" id="price_max" min="0" step="0.01" class="form-control" value="{{ $activeFilters['price_max'] ?? '' }}" placeholder="1000000">
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2 mt-3">
+                                    <button type="submit" class="btn btn-primary px-4 fw-bold">Filterlash</button>
+                                    <a href="{{ route('posts.index') }}" class="btn btn-outline-secondary px-4 fw-bold">Tozalash</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </form>
 
                 @if(auth()->check() && (auth()->user()->hasRole('seller') || auth()->user()->hasRole('admin')))
@@ -198,6 +280,22 @@
     .search-bar-wrapper .input-group:focus-within {
         border-color: var(--market-primary) !important;
         box-shadow: 0 10px 25px -5px rgba(67, 97, 238, 0.15) !important;
+    }
+
+    .filter-panel {
+        border-color: rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .filter-panel .form-control,
+    .filter-panel .form-select {
+        border-radius: 12px;
+        border-color: #e2e8f0;
+    }
+
+    .filter-panel .form-control:focus,
+    .filter-panel .form-select:focus {
+        border-color: var(--market-primary);
+        box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
     }
 
     /* Card Animations & Effects */
