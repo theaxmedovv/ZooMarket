@@ -28,19 +28,18 @@
                     <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data" class="row g-4">
                         @csrf
 
-                        <div class="col-md-6">
-                            <label for="title" class="form-label fw-semibold">Sarlavha</label>
-                            <input type="text" name="title" id="title" value="{{ old('title') }}" class="form-control form-control-lg bg-light border-0" required>
+                        <!-- Title is fixed as a hidden field -->
+                        <input type="hidden" name="title" value="🐾 YANGI E'LON">
+
+                        <div class="col-md-12">
+                            <div class="alert alert-info border-0 rounded-4 mb-0">
+                                <h4 class="mb-0"><strong>🐾 YANGI E'LON</strong></h4>
+                            </div>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="category_id" class="form-label fw-semibold">Kategoriya</label>
-                            <select name="category_id" id="category_id" class="form-select form-select-lg bg-light border-0" required>
-                                <option value="">Tanlang</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" @selected((string) old('category_id') === (string) $category->id)>{{ $category->name }}</option>
-                                @endforeach
-                            </select>
+                            <label for="category" class="form-label fw-semibold">Kategoriya</label>
+                            <input type="text" name="category" id="category" value="{{ old('category') }}" class="form-control form-control-lg bg-light border-0" placeholder="Kategoriya kiriting" required>
                         </div>
 
                         <div class="col-md-6">
@@ -48,11 +47,17 @@
                             <input type="text" name="breed" id="breed" value="{{ old('breed') }}" class="form-control form-control-lg bg-light border-0" required>
                         </div>
 
+                        <div class="col-md-6">
+                            <label for="quantity" class="form-label fw-semibold">Hayvonlar Soni</label>
+                            <input type="number" name="quantity" id="quantity" value="{{ old('quantity', 1) }}" class="form-control form-control-lg bg-light border-0" min="1" required>
+                        </div>
+
                         <div class="col-md-3">
                             <label for="gender" class="form-label fw-semibold">Jinsi</label>
                             <select name="gender" id="gender" class="form-select form-select-lg bg-light border-0" required>
                                 <option value="male" @selected(old('gender') === 'male')>Erkak</option>
-                                <option value="female" @selected(old('gender') === 'female')>Urg'ochi</option>
+                                <option value="female" @selected(old('gender') === 'female')>Ayol</option>
+                                <option value="mixed" @selected(old('gender') === 'mixed')>Erkak va Ayol</option>
                             </select>
                         </div>
 
@@ -62,13 +67,18 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label for="color" class="form-label fw-semibold">Rangi</label>
-                            <input type="text" name="color" id="color" value="{{ old('color') }}" class="form-control form-control-lg bg-light border-0">
+                            <label for="health" class="form-label fw-semibold">Sog'lig'i</label>
+                            <input type="text" name="health" id="health" value="{{ old('health') }}" class="form-control form-control-lg bg-light border-0" placeholder="Masalan: Sog'lom, Vaksinalar..." required>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="location" class="form-label fw-semibold">Joylashuv</label>
+                            <label for="location" class="form-label fw-semibold">Manzil</label>
                             <input type="text" name="location" id="location" value="{{ old('location') }}" class="form-control form-control-lg bg-light border-0" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="delivery" class="form-label fw-semibold">Dostavka</label>
+                            <input type="text" name="delivery" id="delivery" value="{{ old('delivery') }}" class="form-control form-control-lg bg-light border-0" placeholder="Masalan: Bepul, To'lanadigan..." required>
                         </div>
 
                         <div class="col-md-4">
@@ -103,8 +113,8 @@
                         </div>
 
                         <div class="col-12">
-                            <label for="description" class="form-label fw-semibold">Tavsif</label>
-                            <textarea name="description" id="description" rows="5" class="form-control bg-light border-0" required>{{ old('description') }}</textarea>
+                            <label for="additional" class="form-label fw-semibold">Qo'shimcha</label>
+                            <textarea name="additional" id="additional" rows="3" class="form-control bg-light border-0" placeholder="Qo'shimcha ma'lumotlar...">{{ old('additional') }}</textarea>
                         </div>
 
                         <div class="col-12">
@@ -130,4 +140,28 @@
         border-color: #4361ee;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInput = document.getElementById('quantity');
+        const genderSelect = document.getElementById('gender');
+        const mixedOption = genderSelect.querySelector('option[value="mixed"]');
+
+        function updateGenderOptions() {
+            const quantity = parseInt(quantityInput.value) || 1;
+            if (quantity > 1) {
+                mixedOption.style.display = 'block';
+            } else {
+                mixedOption.style.display = 'none';
+                if (genderSelect.value === 'mixed') {
+                    genderSelect.value = 'male';
+                }
+            }
+        }
+
+        quantityInput.addEventListener('change', updateGenderOptions);
+        quantityInput.addEventListener('input', updateGenderOptions);
+        updateGenderOptions();
+    });
+</script>
 @endsection
