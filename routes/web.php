@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ProfileController;
@@ -78,6 +79,12 @@ Route::post('/purchase-requests', [PurchaseRequestController::class, 'store'])
 Route::get('/user/purchase-requests', [PurchaseRequestController::class, 'userIndex'])
     ->middleware(['auth', 'role:user'])
     ->name('user.purchase-requests.index');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/chats', [ChatController::class, 'index'])->name('chats.index');
+    Route::get('/chats/{chat}', [ChatController::class, 'show'])->name('chats.show');
+    Route::post('/chats/{chat}/messages', [ChatController::class, 'store'])->name('chats.messages.store');
+});
 
 Route::middleware(['auth', 'role:seller'])->group(function () {
     Route::get('/admin/purchase-requests', [PurchaseRequestController::class, 'index'])

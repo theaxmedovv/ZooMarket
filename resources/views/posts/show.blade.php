@@ -143,6 +143,16 @@
                         <i class="bi bi-pencil me-1"></i> Tahrirlash
                     </a>
                 @endif
+
+                @if($chat)
+                    @php $unread = $chat->unreadCountFor(auth()->id()); @endphp
+                    <a href="{{ route('chats.show', $chat) }}" class="btn-action btn-chat">
+                        <i class="bi bi-chat-dots me-1"></i> Chatga o'tish
+                        @if($unread > 0)
+                            <span class="ms-1 badge bg-white text-success" style="font-size:0.65rem;">{{ $unread }}</span>
+                        @endif
+                    </a>
+                @endif
             </div>
 
             <a href="{{ route('posts.index') }}" class="back-link">
@@ -424,6 +434,9 @@
 
 .btn-edit { background: #f8fafc; color: var(--text-2); border: 1px solid var(--border); }
 .btn-edit:hover { background: #e2e8f0; color: var(--text); }
+
+.btn-chat { background: var(--g-soft); color: var(--g); border: 1px solid var(--g-border); }
+.btn-chat:hover { background: var(--g-pale); }
 
 .back-link {
     font-size: 0.82rem;

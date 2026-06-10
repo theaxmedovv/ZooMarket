@@ -6,6 +6,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Chat;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -67,6 +68,16 @@ class User extends Authenticatable
     public function purchaseRequests(): HasMany
     {
         return $this->hasMany(PurchaseRequest::class);
+    }
+
+    public function buyerChats(): HasMany
+    {
+        return $this->hasMany(Chat::class, 'buyer_id');
+    }
+
+    public function sellerChats(): HasMany
+    {
+        return $this->hasMany(Chat::class, 'seller_id');
     }
 
 }

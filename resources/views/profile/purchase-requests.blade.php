@@ -48,11 +48,25 @@
                             </td>
                             <td>{{ $request->created_at->format('d.m.Y H:i') }}</td>
                             <td class="text-end">
-                                @if($request->animal)
-                                    <a href="{{ route('posts.show', $request->animal) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Batafsil</a>
-                                @else
-                                    <span class="text-muted small">Mavjud emas</span>
-                                @endif
+                                <div class="d-inline-flex gap-2">
+                                    @if($request->animal)
+                                        <a href="{{ route('posts.show', $request->animal) }}"
+                                           class="btn btn-sm btn-outline-secondary rounded-pill px-3">Batafsil</a>
+                                    @endif
+                                    @if($request->status === 'approved' && $request->chat)
+                                        @php $unread = $request->chat->unreadCountFor(auth()->id()); @endphp
+                                        <a href="{{ route('chats.show', $request->chat) }}"
+                                           class="btn btn-sm btn-success rounded-pill px-3 d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-chat-dots"></i> Chat
+                                            @if($unread > 0)
+                                                <span class="badge bg-white text-success" style="font-size:0.65rem;">{{ $unread }}</span>
+                                            @endif
+                                        </a>
+                                    @endif
+                                    @if(!$request->animal && $request->status !== 'approved')
+                                        <span class="text-muted small">Mavjud emas</span>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty

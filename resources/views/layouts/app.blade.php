@@ -255,6 +255,25 @@
             margin: 0;
         }
 
+        /* ── CHAT BADGE ── */
+        .chat-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ef4444;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 700;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
         /* ── SCROLLBAR ── */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -346,6 +365,16 @@
                         </a>
                     </li>
                     @endif
+
+                    <li class="nav-item">
+                        <a href="{{ route('chats.index') }}"
+                           class="nav-link {{ request()->is('chats*') ? 'active' : '' }} position-relative">
+                            <i class="bi bi-chat-dots"></i> Xabarlar
+                            @if(!empty($globalUnreadCount) && $globalUnreadCount > 0)
+                                <span class="chat-badge">{{ $globalUnreadCount > 99 ? '99+' : $globalUnreadCount }}</span>
+                            @endif
+                        </a>
+                    </li>
 
                     @if(auth()->user()->hasRole('seller'))
                     <li class="nav-item">

@@ -52,19 +52,30 @@
                             </td>
                             <td>{{ $request->created_at->format('d.m.Y H:i') }}</td>
                             <td class="text-end">
-                                <div class="d-inline-flex gap-2">
-                                    <form action="{{ route('admin.purchase-requests.approve', $request) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3" @disabled($request->status !== 'pending')>
-                                            Tasdiqlash
-                                        </button>
-                                    </form>
-                                    <form action="{{ route('admin.purchase-requests.reject', $request) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3" @disabled($request->status !== 'pending')>
-                                            Rad etish
-                                        </button>
-                                    </form>
+                                <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
+                                    @if($request->status === 'pending')
+                                        <form action="{{ route('admin.purchase-requests.approve', $request) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">Tasdiqlash</button>
+                                        </form>
+                                        <form action="{{ route('admin.purchase-requests.reject', $request) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3">Rad etish</button>
+                                        </form>
+                                    @endif
+                                    @if($request->status === 'approved' && $request->chat)
+                                        @php $unread = $request->chat->unreadCountFor(auth()->id()); @endphp
+                                        <a href="{{ route('chats.show', $request->chat) }}"
+                                           class="btn btn-sm btn-primary rounded-pill px-3 d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-chat-dots"></i> Chat
+                                            @if($unread > 0)
+                                                <span class="badge bg-white text-primary" style="font-size:0.65rem;">{{ $unread }}</span>
+                                            @endif
+                                        </a>
+                                    @endif
+                                    @if($request->status === 'rejected')
+                                        <span class="text-muted small fst-italic">Rad etilgan</span>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

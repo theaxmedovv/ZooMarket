@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chat;
 use App\Models\Post;
 use App\Models\PurchaseRequest;
 use Illuminate\Http\RedirectResponse;
@@ -13,7 +14,7 @@ class PurchaseRequestController extends Controller
 {
     public function userIndex(Request $request)
     {
-        $requests = PurchaseRequest::with(['animal'])
+        $requests = PurchaseRequest::with(['animal', 'chat'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->paginate(20);
@@ -71,7 +72,7 @@ class PurchaseRequestController extends Controller
 
     public function index()
     {
-        $requests = PurchaseRequest::with(['user', 'animal'])
+        $requests = PurchaseRequest::with(['user', 'animal', 'chat'])
             ->latest()
             ->paginate(20);
 
@@ -115,7 +116,16 @@ class PurchaseRequestController extends Controller
             $animal->update(['status' => 'sold']);
         });
 
-        return back()->with('success', 'So\'rov tasdiqlandi.');
+        Chat::firstOrCreate(
+            ['purchase_request_id' => $purchaseRequest->id],
+            [
+                'post_id'   => $purchaseRequest->animal_id,
+                'buyer_id'  => $purchaseRequest->user_id,
+                'seller_id' => $animal->user_id,
+            ]
+        );
+
+        return back()->with('success', 'So\'rov tasdiqlandi. Chat yaratildi.');
     }
 
     public function reject(PurchaseRequest $purchaseRequest): RedirectResponse

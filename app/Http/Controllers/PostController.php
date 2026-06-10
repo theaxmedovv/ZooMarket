@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 
 use App\Models\Category;
+use App\Models\Chat;
 use App\Models\Post;
 use App\Models\PurchaseRequest;
 use Illuminate\Http\Request;
@@ -199,7 +200,18 @@ class PostController extends Controller
             ->withCount('likedByUsers')
             ->findOrFail($id);
 
-        abort_if($post->status === 'sold', 404);
+        if ($post->status === 'sold') {
+            $user = auth()->user();
+            if (! $user) {
+                abort(404);
+            }
+            $isPostOwner     = $post->user_id === $user->id;
+            $isApprovedBuyer = PurchaseRequest::where('user_id', $user->id)
+                ->where('animal_id', $post->id)
+                ->where('status', 'approved')
+                ->exists();
+            abort_unless($isPostOwner || $isApprovedBuyer, 404);
+        }
 
         if (auth()->check()) {
             Gate::authorize('read posts');
@@ -216,7 +228,16 @@ class PostController extends Controller
                 ->whereIn('status', ['pending', 'approved'])
                 ->exists();
 
-        return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest'));
+        $chat = null;
+        if (auth()->check()) {
+            $uid  = auth()->id();
+            $chat = Chat::where('post_id', $post->id)
+                ->where(function ($q) use ($uid) {
+                    $q->where('buyer_id', $uid)->orWhere('seller_id', $uid);
+                })->first();
+        }
+
+        return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest', 'chat'));
     }
 
     /**
