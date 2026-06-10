@@ -1,125 +1,174 @@
 @extends('layouts.app')
 
 @section('content')
-<article class="post-details py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
+@php $allImages = $post->allImages(); @endphp
 
-                <nav aria-label="breadcrumb" class="mb-4">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="{{ route('posts.index') }}" class="text-decoration-none text-primary">Blog</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">{{ Str::limit($post->title, 30) }}</li>
-                    </ol>
-                </nav>
+<div class="container py-4">
 
-                <header class="post-header mb-5">
-                    <h1 class="display-4 fw-black text-dark tracking-tight mb-4">{{ $post->title }}</h1>
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0" style="font-size:0.82rem;">
+            <li class="breadcrumb-item"><a href="{{ route('posts.index') }}" class="text-decoration-none text-success">E'lonlar</a></li>
+            <li class="breadcrumb-item active">{{ Str::limit($post->title, 40) }}</li>
+        </ol>
+    </nav>
 
-                    <div class="d-flex align-items-center justify-content-between border-bottom border-top py-3">
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-md bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style="width: 48px; height: 48px;">
-                                {{ strtoupper(substr($post->user->name, 0, 1)) }}
-                            </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold text-dark">{{ $post->user->name }}</h6>
-                                <span class="text-muted small">{{ $post->created_at->format('d-M, Y') }} • 5 min o'qish</span>
-                            </div>
-                        </div>
+    <div class="ad-layout">
 
-                        <div class="post-actions">
-                            @if(auth()->check() && auth()->user()->hasRole('user'))
-                                @if($post->status === 'sold')
-                                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3 me-2" disabled>
-                                        Sotilgan
-                                    </button>
-                                @elseif($hasPurchaseRequest)
-                                    <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 me-2" disabled>
-                                        So'rov yuborilgan
-                                    </button>
-                                @else
-                                    <button type="button" class="btn btn-success btn-sm rounded-pill px-3 me-2" data-bs-toggle="modal" data-bs-target="#buyModalDetail">
-                                        <i class="bi bi-cart-check me-1"></i> Sotib olish
-                                    </button>
-                                @endif
-                            @endif
-
-                            @if(auth()->check() && auth()->user()->hasRole('user'))
-                                <form action="{{ route('posts.like', $post) }}" method="POST" class="d-inline me-2">
-                                    @csrf
-                                    <button type="submit" class="btn btn-soft-like btn-sm rounded-pill px-3">
-                                        <i class="bi {{ $isLiked ? 'bi-heart-fill' : 'bi-heart' }} me-1"></i>
-                                        {{ $isLiked ? 'Yoqtirilgan' : 'Yoqtirish' }}
-                                        <span class="ms-1">({{ $post->liked_by_users_count }})</span>
-                                    </button>
-                                </form>
-                            @endif
-
-                            @if(auth()->check() && auth()->user()->can('edit posts'))
-                                <a href="{{ route('posts.edit', $post) }}" class="btn btn-light btn-sm rounded-pill px-3 shadow-sm border">
-                                    <i class="bi bi-pencil me-1"></i> Tahrirlash
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </header>
-
-                @if($post->image)
-                    <div class="post-hero-image mb-5">
-                        <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="img-fluid rounded-5 shadow-lg w-100">
-                    </div>
+        {{-- ── LEFT: IMAGE GALLERY ── --}}
+        <div class="ad-gallery">
+            <div class="gallery-main" id="galleryMain">
+                @if(!empty($allImages))
+                    <img src="{{ asset('storage/' . $allImages[0]) }}"
+                         alt="{{ $post->title }}"
+                         class="gallery-main-img" id="mainImg">
                 @else
-                    <div class="bg-light rounded-5 d-flex align-items-center justify-content-center mb-5" style="height: 300px; border: 2px dashed #dee2e6;">
-                        <i class="bi bi-image text-muted display-1 opacity-25"></i>
+                    <div class="gallery-placeholder">
+                        <i class="bi bi-image"></i>
+                        <span>Rasm yo'q</span>
                     </div>
                 @endif
 
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6"><div class="small text-muted">Kategoriya</div><div class="fw-semibold">{{ $post->category?->name ?? 'Boshqa' }}</div></div>
-                    <div class="col-md-6"><div class="small text-muted">Zot</div><div class="fw-semibold">{{ $post->breed ?: '-' }}</div></div>
-                    <div class="col-md-6"><div class="small text-muted">Jinsi</div><div class="fw-semibold">{{ $post->gender === 'female' ? 'Urg\'ochi' : ($post->gender === 'male' ? 'Erkak' : '-') }}</div></div>
-                    <div class="col-md-6"><div class="small text-muted">Yoshi</div><div class="fw-semibold">{{ $post->age ?: '-' }}</div></div>
-                    <div class="col-md-6"><div class="small text-muted">Rangi</div><div class="fw-semibold">{{ $post->color ?: '-' }}</div></div>
-                    <div class="col-md-6"><div class="small text-muted">Joylashuv</div><div class="fw-semibold">{{ $post->location ?: '-' }}</div></div>
-                    <div class="col-md-6"><div class="small text-muted">Narx</div><div class="fw-semibold">{{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}</div></div>
-                    <div class="col-md-6"><div class="small text-muted">Kelishuv</div><div class="fw-semibold">{{ $post->is_negotiable ? 'Kelishiladi' : 'Qat\'iy narx' }}</div></div>
-                </div>
-
-                <div class="post-content fs-5 leading-relaxed text-secondary mb-5">
-                    {!! nl2br(e($post->description ?? $post->content)) !!}
-                </div>
-
-                <footer class="post-footer pt-5 border-top d-flex justify-content-between align-items-center">
-                    <a href="{{ route('posts.index') }}" class="btn btn-outline-dark rounded-pill px-4">
-                        <i class="bi bi-arrow-left me-2"></i> Barcha maqolalar
-                    </a>
-
-                    <div class="share-buttons d-flex gap-2">
-                        <span class="text-muted small me-2 mt-1">Ulashish:</span>
-                        <button class="btn btn-soft-primary btn-sm rounded-circle"><i class="bi bi-telegram"></i></button>
-                        <button class="btn btn-soft-primary btn-sm rounded-circle"><i class="bi bi-facebook"></i></button>
-                        <button class="btn btn-soft-primary btn-sm rounded-circle"><i class="bi bi-twitter-x"></i></button>
-                    </div>
-                </footer>
-
+                @if($post->status === 'reserved')
+                    <span class="gallery-status-badge badge-reserved">Rezerv</span>
+                @endif
             </div>
+
+            @if(count($allImages) > 1)
+                <div class="gallery-thumbs">
+                    @foreach($allImages as $i => $img)
+                        <button class="thumb-btn {{ $i === 0 ? 'active' : '' }}"
+                                onclick="switchImage('{{ asset('storage/' . $img) }}', this)">
+                            <img src="{{ asset('storage/' . $img) }}" alt="Rasm {{ $i + 1 }}">
+                        </button>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        {{-- ── RIGHT: DETAILS PANEL ── --}}
+        <div class="ad-panel">
+
+            {{-- Title & price --}}
+            <div class="panel-header">
+                <h1 class="ad-title">{{ $post->title }}</h1>
+
+                <div class="ad-price-row">
+                    <span class="ad-price">
+                        {{ number_format((float) $post->price, 0, '.', ' ') }}
+                        <span class="ad-currency">{{ $post->currency }}</span>
+                    </span>
+                    @if($post->is_negotiable)
+                        <span class="negotiable-badge">Kelishiladi</span>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Seller info --}}
+            <div class="seller-row">
+                <div class="seller-avatar">{{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}</div>
+                <div>
+                    <div class="seller-name">{{ $post->user->name }}</div>
+                    <div class="seller-date">{{ $post->created_at->format('d.m.Y') }}</div>
+                </div>
+            </div>
+
+            {{-- Info grid --}}
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-tag"></i> Kategoriya</span>
+                    <span class="info-val">{{ $post->category?->name ?? '—' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-award"></i> Zot</span>
+                    <span class="info-val">{{ $post->breed ?: '—' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-gender-ambiguous"></i> Jinsi</span>
+                    <span class="info-val">{{ $post->gender === 'female' ? 'Urg\'ochi' : ($post->gender === 'male' ? 'Erkak' : '—') }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-clock"></i> Yoshi</span>
+                    <span class="info-val">{{ $post->age ?: '—' }}</span>
+                </div>
+                @if($post->color)
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-palette"></i> Rangi</span>
+                    <span class="info-val">{{ $post->color }}</span>
+                </div>
+                @endif
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-geo-alt"></i> Manzil</span>
+                    <span class="info-val">{{ $post->location ?: '—' }}</span>
+                </div>
+            </div>
+
+            {{-- Description --}}
+            @if($post->description ?? $post->content)
+            <div class="ad-desc">
+                <div class="ad-desc-label">Tavsif</div>
+                <div class="ad-desc-text">{!! nl2br(e($post->description ?? $post->content)) !!}</div>
+            </div>
+            @endif
+
+            {{-- Actions --}}
+            <div class="ad-actions">
+                @if(auth()->check() && auth()->user()->hasRole('user'))
+                    @if($post->status === 'sold')
+                        <button class="btn-action btn-sold" disabled>
+                            <i class="bi bi-x-circle me-1"></i> Sotilgan
+                        </button>
+                    @elseif($hasPurchaseRequest)
+                        <button class="btn-action btn-pending" disabled>
+                            <i class="bi bi-hourglass-split me-1"></i> So'rov yuborilgan
+                        </button>
+                    @else
+                        <button class="btn-action btn-buy"
+                                data-bs-toggle="modal" data-bs-target="#buyModalDetail">
+                            <i class="bi bi-cart-check me-1"></i> Sotib olish
+                        </button>
+                    @endif
+
+                    <form action="{{ route('posts.like', $post) }}" method="POST" class="d-contents">
+                        @csrf
+                        <button type="submit" class="btn-action btn-like {{ $isLiked ? 'liked' : '' }}">
+                            <i class="bi {{ $isLiked ? 'bi-heart-fill' : 'bi-heart' }} me-1"></i>
+                            {{ $isLiked ? 'Yoqtirilgan' : 'Yoqtirish' }}
+                            <span class="ms-1 opacity-75">({{ $post->liked_by_users_count }})</span>
+                        </button>
+                    </form>
+                @endif
+
+                @if(auth()->check() && auth()->user()->can('edit posts'))
+                    <a href="{{ route('posts.edit', $post) }}" class="btn-action btn-edit">
+                        <i class="bi bi-pencil me-1"></i> Tahrirlash
+                    </a>
+                @endif
+            </div>
+
+            <a href="{{ route('posts.index') }}" class="back-link">
+                <i class="bi bi-arrow-left me-1"></i> Barcha e'lonlar
+            </a>
         </div>
     </div>
-</article>
+</div>
 
+{{-- Buy Modal --}}
 @if(auth()->check() && auth()->user()->hasRole('user') && $post->status !== 'sold' && ! $hasPurchaseRequest)
     <div class="modal fade" id="buyModalDetail" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-body p-4">
-                    <h5 class="fw-bold mb-3">Tasdiqlash</h5>
-                    <p class="text-muted mb-4">Siz rostdan ham ushbu hayvonni sotib olishni xohlaysizmi?</p>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Yo'q</button>
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-body p-4 text-center">
+                    <div class="modal-icon mb-3"><i class="bi bi-cart-check"></i></div>
+                    <h5 class="fw-bold mb-2">Tasdiqlash</h5>
+                    <p class="text-muted small mb-4">
+                        <strong>{{ $post->title }}</strong> uchun so'rov yuborilsinmi?
+                    </p>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Yo'q</button>
                         <form action="{{ route('purchase-requests.store') }}" method="POST">
                             @csrf
                             <input type="hidden" name="animal_id" value="{{ $post->id }}">
-                            <button type="submit" class="btn btn-success rounded-pill px-4">Ha</button>
+                            <button type="submit" class="btn btn-success rounded-pill px-4">Ha, yuborish</button>
                         </form>
                     </div>
                 </div>
@@ -129,61 +178,296 @@
 @endif
 
 <style>
-    /* Premium Tipografiya */
-    .fw-black { font-weight: 900; }
-    .tracking-tight { letter-spacing: -1px; }
-    .leading-relaxed { line-height: 1.8; }
+:root {
+    --g: #16a34a;
+    --g-mid: #15803d;
+    --g-soft: #f0fdf4;
+    --g-pale: #dcfce7;
+    --g-border: #bbf7d0;
+    --text: #0f172a;
+    --text-2: #475569;
+    --text-3: #94a3b8;
+    --border: rgba(15,23,42,0.08);
+    --radius: 14px;
+    --radius-sm: 9px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.07);
+}
 
-    .post-content {
-        color: #374151;
-        letter-spacing: -0.01em;
-    }
+/* ── LAYOUT ── */
+.ad-layout {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 24px;
+    align-items: start;
+}
 
-    .post-hero-image img {
-        max-height: 500px;
-        object-fit: cover;
-    }
+@media (max-width: 900px) {
+    .ad-layout { grid-template-columns: 1fr; }
+}
 
-    .btn-soft-primary {
-        background: #f0f3ff;
-        color: #4361ee;
-        border: none;
-        width: 35px;
-        height: 35px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s;
-    }
+/* ── GALLERY ── */
+.ad-gallery { position: sticky; top: 80px; }
 
-    .btn-soft-primary:hover {
-        background: #4361ee;
-        color: white;
-        transform: translateY(-2px);
-    }
+.gallery-main {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #f1f5f9;
+    aspect-ratio: 4/3;
+    margin-bottom: 8px;
+}
 
-    .btn-soft-like {
-        background: #fff0f3;
-        color: #e11d48;
-        border: 1px solid rgba(225, 29, 72, 0.15);
-        transition: all 0.25s ease;
-    }
+.gallery-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.2s;
+}
 
-    .btn-soft-like:hover {
-        background: #e11d48;
-        color: #fff;
-        transform: translateY(-2px);
-    }
+.gallery-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-3);
+    font-size: 0.9rem;
+}
+.gallery-placeholder i { font-size: 2.5rem; }
 
-    .breadcrumb-item + .breadcrumb-item::before {
-        content: "→";
-        font-size: 0.8rem;
-        vertical-align: middle;
-    }
+.gallery-status-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 100px;
+}
+.badge-reserved {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
 
-    /* Maqola ichidagi paragraflar orasini ochish */
-    .post-content p {
-        margin-bottom: 1.5rem;
-    }
+.gallery-thumbs {
+    display: flex;
+    gap: 8px;
+}
+
+.thumb-btn {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 2px solid transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    flex-shrink: 0;
+}
+.thumb-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb-btn.active { border-color: var(--g); }
+.thumb-btn:hover { border-color: #86efac; }
+
+/* ── PANEL ── */
+.ad-panel {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-shadow: var(--shadow);
+}
+
+.panel-header { display: flex; flex-direction: column; gap: 8px; }
+
+.ad-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.35;
+    margin: 0;
+}
+
+.ad-price-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.ad-price {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--g);
+    line-height: 1;
+}
+.ad-currency { font-size: 1rem; font-weight: 600; }
+
+.negotiable-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--g-soft);
+    color: var(--g-mid);
+    border: 1px solid var(--g-border);
+    padding: 3px 10px;
+    border-radius: 100px;
+}
+
+/* Seller */
+.seller-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--g-soft);
+    border-radius: var(--radius-sm);
+}
+.seller-avatar {
+    width: 36px;
+    height: 36px;
+    background: var(--g);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.seller-name { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+.seller-date { font-size: 0.75rem; color: var(--text-3); }
+
+/* Info grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: var(--radius-sm);
+}
+.info-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-3);
+}
+.info-label i { margin-right: 4px; }
+.info-val { font-size: 0.875rem; font-weight: 600; color: var(--text); }
+
+/* Description */
+.ad-desc-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-3);
+    margin-bottom: 6px;
+}
+.ad-desc-text {
+    font-size: 0.9rem;
+    color: var(--text-2);
+    line-height: 1.65;
+    max-height: 130px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Actions */
+.ad-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.d-contents { display: contents; }
+
+.btn-action {
+    width: 100%;
+    height: 44px;
+    border-radius: 100px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    text-decoration: none;
+}
+
+.btn-buy    { background: var(--g); color: white; }
+.btn-buy:hover { background: var(--g-mid); }
+
+.btn-pending { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; cursor: not-allowed; }
+.btn-sold    { background: #f1f5f9; color: var(--text-3); cursor: not-allowed; }
+
+.btn-like { background: #fff0f3; color: #e11d48; border: 1px solid rgba(225,29,72,0.15); }
+.btn-like:hover, .btn-like.liked { background: #e11d48; color: white; border-color: #e11d48; }
+
+.btn-edit { background: #f8fafc; color: var(--text-2); border: 1px solid var(--border); }
+.btn-edit:hover { background: #e2e8f0; color: var(--text); }
+
+.back-link {
+    font-size: 0.82rem;
+    color: var(--text-3);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+    margin-top: -4px;
+}
+.back-link:hover { color: var(--g); }
+
+/* Modal */
+.modal-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--g-soft);
+    border: 1px solid var(--g-border);
+    border-radius: 14px;
+    color: var(--g);
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+/* Breadcrumb arrow */
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    font-size: 1rem;
+    vertical-align: middle;
+}
 </style>
+
+<script>
+function switchImage(src, btn) {
+    document.getElementById('mainImg').style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('mainImg').src = src;
+        document.getElementById('mainImg').style.opacity = '1';
+    }, 120);
+    document.querySelectorAll('.thumb-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+</script>
 @endsection

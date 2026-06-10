@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('content')
@@ -108,25 +109,31 @@
                             </div>
 
                             <div class="mb-5">
-                                <label class="form-label fw-bold text-dark">Muqova rasmi</label>
-
-                                <div class="p-3 border-2 border-dashed rounded-4 bg-light text-center position-relative mb-3">
-                                    @if($post->image)
-                                        <div class="current-image-preview mb-3">
-                                            <p class="small text-muted mb-2">Hozirgi rasm:</p>
-                                            <img src="{{ asset('storage/' . $post->image) }}" class="rounded-3 shadow-sm" style="max-height: 120px;">
-                                        </div>
-                                    @endif
-
-                                    <div class="upload-btn-wrapper">
-                                        <i class="bi bi-cloud-arrow-up fs-2 text-primary"></i>
-                                        <p class="small text-muted mt-2">Yangi rasm tanlash uchun bosing yoki faylni bu yerga tashlang</p>
-                                        <input type="file" name="image" class="form-control stretched-link opacity-0" accept="image/*" style="cursor: pointer;">
+                                <label class="form-label fw-bold text-dark">Rasmlar (maksimum 3 ta)</label>
+                                @php $currentImages = $post->allImages(); @endphp
+                                @if(!empty($currentImages))
+                                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                                        @foreach($currentImages as $img)
+                                            <img src="{{ asset('storage/' . $img) }}" class="rounded-3 shadow-sm" style="height:80px;width:80px;object-fit:cover;">
+                                        @endforeach
+                                    </div>
+                                    <p class="small text-muted mb-3">Yangi rasmlar yuklasangiz, mavjud rasmlar almashtiriladi.</p>
+                                @endif
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="small text-muted mb-1 d-block">1-rasm (asosiy)</label>
+                                        <input type="file" name="images[]" class="form-control border-0 bg-light" accept="image/*">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="small text-muted mb-1 d-block">2-rasm</label>
+                                        <input type="file" name="images[]" class="form-control border-0 bg-light" accept="image/*">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="small text-muted mb-1 d-block">3-rasm</label>
+                                        <input type="file" name="images[]" class="form-control border-0 bg-light" accept="image/*">
                                     </div>
                                 </div>
-                                <div class="text-muted" style="font-size: 0.75rem;">
-                                    <i class="bi bi-info-circle me-1"></i> Tavsiya etilgan o'lcham: 1200x630px (Max: 2MB)
-                                </div>
+                                <p class="text-muted mt-2" style="font-size:0.75rem;"><i class="bi bi-info-circle me-1"></i>Max: 2MB har bir rasm</p>
                             </div>
 
                             <div class="d-flex gap-3">

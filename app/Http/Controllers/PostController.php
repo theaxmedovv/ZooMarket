@@ -167,14 +167,22 @@ class PostController extends Controller
             'is_negotiable' => 'nullable|boolean',
             'location' => 'required|string|max:255',
             'status' => 'required|in:active,reserved,sold',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'nullable|array|max:3',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data['is_negotiable'] = $request->boolean('is_negotiable');
         $data['content'] = $data['description'];
+        unset($data['images']);
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('posts', 'public');
+        $uploadedImages = [];
+        foreach ($request->file('images', []) as $file) {
+            $uploadedImages[] = $file->store('posts', 'public');
+        }
+
+        if (!empty($uploadedImages)) {
+            $data['image'] = $uploadedImages[0];
+            $data['images'] = $uploadedImages;
         }
 
         $request->user()->posts()->create($data);
@@ -245,18 +253,24 @@ class PostController extends Controller
             'is_negotiable' => 'nullable|boolean',
             'location' => 'required|string|max:255',
             'status' => 'required|in:active,reserved,sold',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'nullable|array|max:3',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data['is_negotiable'] = $request->boolean('is_negotiable');
         $data['content'] = $data['description'];
+        unset($data['images']);
 
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($post->image) {
-                Storage::disk('public')->delete($post->image);
+        if ($request->hasFile('images')) {
+            foreach ($post->allImages() as $old) {
+                Storage::disk('public')->delete($old);
             }
-            $data['image'] = $request->file('image')->store('posts', 'public');
+            $uploadedImages = [];
+            foreach ($request->file('images') as $file) {
+                $uploadedImages[] = $file->store('posts', 'public');
+            }
+            $data['image'] = $uploadedImages[0];
+            $data['images'] = $uploadedImages;
         }
 
         $post->update($data);

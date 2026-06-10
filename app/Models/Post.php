@@ -24,6 +24,7 @@ class Post extends Model
         'status',
         'content',
         'image',
+        'images',
         'user_id',
     ];
 
@@ -32,7 +33,17 @@ class Post extends Model
         return [
             'price' => 'decimal:2',
             'is_negotiable' => 'boolean',
+            'images' => 'array',
         ];
+    }
+
+    public function allImages(): array
+    {
+        $list = array_filter((array) ($this->images ?? []));
+        if (empty($list) && $this->image) {
+            return [$this->image];
+        }
+        return array_values($list);
     }
 
     public function category(): BelongsTo

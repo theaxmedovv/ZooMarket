@@ -49,7 +49,8 @@ Route::post('/admin/profile', [AdminController::class, 'updateProfile'])
 
 Route::get('/home', function () {
     return redirect()->route('posts.index');
-})->middleware(['auth', 'role:user'])->name('home');
+})->middleware(['auth', 'role:user'])->name('post');
+
 
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 

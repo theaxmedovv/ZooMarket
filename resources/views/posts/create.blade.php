@@ -28,65 +28,69 @@
                     <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data" class="row g-4">
                         @csrf
 
-                        <!-- Title is fixed as a hidden field -->
-                        <input type="hidden" name="title" value="🐾 YANGI E'LON">
-
                         <div class="col-md-12">
-                            <div class="alert alert-info border-0 rounded-4 mb-0">
-                                <h4 class="mb-0"><strong>🐾 YANGI E'LON</strong></h4>
-                            </div>
+                            <label for="title" class="form-label fw-semibold">E'lon sarlavhasi</label>
+                            <input type="text" name="title" id="title" value="{{ old('title') }}"
+                                   class="form-control form-control-lg bg-light border-0"
+                                   placeholder="Masalan: Sog'lom it sotuv" required>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="category" class="form-label fw-semibold">Kategoriya</label>
-                            <input type="text" name="category" id="category" value="{{ old('category') }}" class="form-control form-control-lg bg-light border-0" placeholder="Kategoriya kiriting" required>
+                            <label for="category_id" class="form-label fw-semibold">Kategoriya</label>
+                            <select name="category_id" id="category_id" class="form-select form-select-lg bg-light border-0" required>
+                                <option value="">Kategoriyani tanlang</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="col-md-6">
                             <label for="breed" class="form-label fw-semibold">Zot</label>
-                            <input type="text" name="breed" id="breed" value="{{ old('breed') }}" class="form-control form-control-lg bg-light border-0" required>
+                            <input type="text" name="breed" id="breed" value="{{ old('breed') }}"
+                                   class="form-control form-control-lg bg-light border-0"
+                                   placeholder="Masalan: Labrador" required>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="quantity" class="form-label fw-semibold">Hayvonlar Soni</label>
-                            <input type="number" name="quantity" id="quantity" value="{{ old('quantity', 1) }}" class="form-control form-control-lg bg-light border-0" min="1" required>
-                        </div>
-
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="gender" class="form-label fw-semibold">Jinsi</label>
                             <select name="gender" id="gender" class="form-select form-select-lg bg-light border-0" required>
                                 <option value="male" @selected(old('gender') === 'male')>Erkak</option>
-                                <option value="female" @selected(old('gender') === 'female')>Ayol</option>
-                                <option value="mixed" @selected(old('gender') === 'mixed')>Erkak va Ayol</option>
+                                <option value="female" @selected(old('gender') === 'female')>Urg'ochi</option>
                             </select>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="age" class="form-label fw-semibold">Yoshi</label>
-                            <input type="text" name="age" id="age" value="{{ old('age') }}" class="form-control form-control-lg bg-light border-0" placeholder="Masalan: 8 oy" required>
+                            <input type="text" name="age" id="age" value="{{ old('age') }}"
+                                   class="form-control form-control-lg bg-light border-0"
+                                   placeholder="Masalan: 8 oy" required>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="health" class="form-label fw-semibold">Sog'lig'i</label>
-                            <input type="text" name="health" id="health" value="{{ old('health') }}" class="form-control form-control-lg bg-light border-0" placeholder="Masalan: Sog'lom, Vaksinalar..." required>
+                        <div class="col-md-4">
+                            <label for="color" class="form-label fw-semibold">Rangi</label>
+                            <input type="text" name="color" id="color" value="{{ old('color') }}"
+                                   class="form-control form-control-lg bg-light border-0"
+                                   placeholder="Masalan: Qora">
                         </div>
 
                         <div class="col-md-6">
                             <label for="location" class="form-label fw-semibold">Manzil</label>
-                            <input type="text" name="location" id="location" value="{{ old('location') }}" class="form-control form-control-lg bg-light border-0" required>
+                            <input type="text" name="location" id="location" value="{{ old('location') }}"
+                                   class="form-control form-control-lg bg-light border-0"
+                                   placeholder="Masalan: Toshkent" required>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="delivery" class="form-label fw-semibold">Dostavka</label>
-                            <input type="text" name="delivery" id="delivery" value="{{ old('delivery') }}" class="form-control form-control-lg bg-light border-0" placeholder="Masalan: Bepul, To'lanadigan..." required>
-                        </div>
-
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label for="price" class="form-label fw-semibold">Narx</label>
-                            <input type="number" step="0.01" min="0" name="price" id="price" value="{{ old('price') }}" class="form-control form-control-lg bg-light border-0" required>
+                            <input type="number" step="0.01" min="0" name="price" id="price"
+                                   value="{{ old('price') }}"
+                                   class="form-control form-control-lg bg-light border-0" required>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label for="currency" class="form-label fw-semibold">Valyuta</label>
                             <select name="currency" id="currency" class="form-select form-select-lg bg-light border-0" required>
                                 <option value="UZS" @selected(old('currency', 'UZS') === 'UZS')>UZS</option>
@@ -99,27 +103,43 @@
                         <div class="col-md-4">
                             <label for="status" class="form-label fw-semibold">Holat</label>
                             <select name="status" id="status" class="form-select form-select-lg bg-light border-0" required>
-                                <option value="active" @selected(old('status', 'active') === 'active')>Active</option>
-                                <option value="reserved" @selected(old('status') === 'reserved')>Reserved</option>
-                                <option value="sold" @selected(old('status') === 'sold')>Sold</option>
+                                <option value="active" @selected(old('status', 'active') === 'active')>Aktiv</option>
+                                <option value="reserved" @selected(old('status') === 'reserved')>Rezerv</option>
+                                <option value="sold" @selected(old('status') === 'sold')>Sotilgan</option>
                             </select>
                         </div>
 
                         <div class="col-12">
                             <div class="form-check">
-                                <input type="checkbox" name="is_negotiable" id="is_negotiable" value="1" class="form-check-input" @checked(old('is_negotiable'))>
+                                <input type="checkbox" name="is_negotiable" id="is_negotiable" value="1"
+                                       class="form-check-input" @checked(old('is_negotiable'))>
                                 <label for="is_negotiable" class="form-check-label">Narx kelishiladi</label>
                             </div>
                         </div>
 
                         <div class="col-12">
-                            <label for="additional" class="form-label fw-semibold">Qo'shimcha</label>
-                            <textarea name="additional" id="additional" rows="3" class="form-control bg-light border-0" placeholder="Qo'shimcha ma'lumotlar...">{{ old('additional') }}</textarea>
+                            <label for="description" class="form-label fw-semibold">Tavsif</label>
+                            <textarea name="description" id="description" rows="4"
+                                      class="form-control bg-light border-0"
+                                      placeholder="Hayvon haqida batafsil ma'lumot..." required>{{ old('description') }}</textarea>
                         </div>
 
                         <div class="col-12">
-                            <label for="image" class="form-label fw-semibold">Rasm</label>
-                            <input type="file" name="image" id="image" class="form-control form-control-lg bg-light border-0" accept="image/*">
+                            <label class="form-label fw-semibold">Rasmlar (maksimum 3 ta)</label>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="small text-muted mb-1 d-block">1-rasm (asosiy)</label>
+                                    <input type="file" name="images[]" class="form-control bg-light border-0" accept="image/*">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small text-muted mb-1 d-block">2-rasm</label>
+                                    <input type="file" name="images[]" class="form-control bg-light border-0" accept="image/*">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="small text-muted mb-1 d-block">3-rasm</label>
+                                    <input type="file" name="images[]" class="form-control bg-light border-0" accept="image/*">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="col-12 d-flex gap-3">
@@ -140,28 +160,4 @@
         border-color: #4361ee;
     }
 </style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const quantityInput = document.getElementById('quantity');
-        const genderSelect = document.getElementById('gender');
-        const mixedOption = genderSelect.querySelector('option[value="mixed"]');
-
-        function updateGenderOptions() {
-            const quantity = parseInt(quantityInput.value) || 1;
-            if (quantity > 1) {
-                mixedOption.style.display = 'block';
-            } else {
-                mixedOption.style.display = 'none';
-                if (genderSelect.value === 'mixed') {
-                    genderSelect.value = 'male';
-                }
-            }
-        }
-
-        quantityInput.addEventListener('change', updateGenderOptions);
-        quantityInput.addEventListener('input', updateGenderOptions);
-        updateGenderOptions();
-    });
-</script>
 @endsection
