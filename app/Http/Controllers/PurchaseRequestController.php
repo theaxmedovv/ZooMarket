@@ -14,12 +14,26 @@ class PurchaseRequestController extends Controller
 {
     public function userIndex(Request $request)
     {
-        $requests = PurchaseRequest::with(['animal', 'chat'])
-            ->where('user_id', $request->user()->id)
-            ->latest()
-            ->paginate(20);
+        $status = $request->query('status');
+        $userId = $request->user()->id;
 
-        return view('profile.purchase-requests', compact('requests'));
+        $query = PurchaseRequest::with(['animal.category', 'animal.user', 'chat'])
+            ->where('user_id', $userId);
+
+        if (in_array($status, ['pending', 'approved', 'rejected'], true)) {
+            $query->where('status', $status);
+        }
+
+        $requests = $query->latest()->paginate(12)->withQueryString();
+
+        $stats = [
+            'total' => PurchaseRequest::where('user_id', $userId)->count(),
+            'pending' => PurchaseRequest::where('user_id', $userId)->where('status', 'pending')->count(),
+            'approved' => PurchaseRequest::where('user_id', $userId)->where('status', 'approved')->count(),
+            'rejected' => PurchaseRequest::where('user_id', $userId)->where('status', 'rejected')->count(),
+        ];
+
+        return view('profile.purchase-requests', compact('requests', 'stats', 'status'));
     }
 
     public function store(Request $request): RedirectResponse

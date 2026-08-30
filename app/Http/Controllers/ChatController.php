@@ -12,7 +12,7 @@ class ChatController extends Controller
     {
         $userId = $request->user()->id;
 
-        $chats = Chat::with(['post', 'buyer', 'seller', 'lastMessage.sender'])
+        $chats = Chat::with(['post.category', 'buyer', 'seller', 'lastMessage.sender'])
             ->where('buyer_id', $userId)
             ->orWhere('seller_id', $userId)
             ->latest('updated_at')
