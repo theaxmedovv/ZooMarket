@@ -76,8 +76,13 @@ class PostController extends Controller
         $priceMax = is_numeric($priceMax) ? (float) $priceMax : null;
 
         $postsQuery = Post::with(['user', 'category'])
-            ->where('status', '!=', 'sold')
-            ->when($categoryId, function ($query) use ($categoryId) {
+            ->where('status', '!=', 'sold');
+
+        if (auth()->check() && auth()->user()->hasRole('seller')) {
+            $postsQuery->where('user_id', auth()->id());
+        }
+
+        $postsQuery->when($categoryId, function ($query) use ($categoryId) {
                 $query->where('category_id', $categoryId);
             })
             ->when($gender !== '', function ($query) use ($gender) {

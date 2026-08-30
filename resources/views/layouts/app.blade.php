@@ -176,23 +176,82 @@
         <div class="collapse navbar-collapse" id="mainNav">
             @auth
                 <ul class="navbar-nav mx-auto">
-                    <li><a class="nav-link {{ request()->is('posts*') ? 'active' : '' }}" href="{{ route('posts.index') }}"><i class="bi bi-compass"></i>Explore</a></li>
-                    <li><a class="nav-link {{ request()->is('chats*') ? 'active' : '' }} position-relative" href="{{ route('chats.index') }}"><i class="bi bi-chat"></i>Messages @if(!empty($globalUnreadCount) && $globalUnreadCount > 0)<span class="chat-badge">{{ $globalUnreadCount > 99 ? '99+' : $globalUnreadCount }}</span>@endif</a></li>
+                    @if(auth()->user()->hasRole('seller'))
+                        <li><a class="nav-link {{ request()->routeIs('posts.index') ? 'active' : '' }}" href="{{ route('posts.index') }}"><i class="bi bi-collection"></i>E'lonlarim</a></li>
+                        <li>
+                            <a class="nav-link {{ request()->routeIs('admin.purchase-requests.*') ? 'active' : '' }} position-relative" href="{{ route('admin.purchase-requests.index') }}">
+                                <i class="bi bi-inbox"></i>So'rovlar
+                                @if(!empty($pendingRequestsCount) && $pendingRequestsCount > 0)
+                                    <span class="chat-badge">{{ $pendingRequestsCount > 99 ? '99+' : $pendingRequestsCount }}</span>
+                                @endif
+                            </a>
+                        </li>
+                        <li><a class="nav-link {{ request()->routeIs('admin.archive.*') || request()->routeIs('admin.sold-animals.*') ? 'active' : '' }}" href="{{ route('admin.archive.index') }}"><i class="bi bi-archive"></i>Arxiv</a></li>
+                        <li>
+                            <a class="nav-link {{ request()->routeIs('chats.*') ? 'active' : '' }} position-relative" href="{{ route('chats.index') }}">
+                                <i class="bi bi-chat"></i>Xabarlar
+                                @if(!empty($globalUnreadCount) && $globalUnreadCount > 0)
+                                    <span class="chat-badge">{{ $globalUnreadCount > 99 ? '99+' : $globalUnreadCount }}</span>
+                                @endif
+                            </a>
+                        </li>
+                    @else
+                        <li><a class="nav-link {{ request()->is('posts*') ? 'active' : '' }}" href="{{ route('posts.index') }}"><i class="bi bi-compass"></i>Explore</a></li>
+                        <li>
+                            <a class="nav-link {{ request()->is('chats*') ? 'active' : '' }} position-relative" href="{{ route('chats.index') }}">
+                                <i class="bi bi-chat"></i>Xabarlar
+                                @if(!empty($globalUnreadCount) && $globalUnreadCount > 0)
+                                    <span class="chat-badge">{{ $globalUnreadCount > 99 ? '99+' : $globalUnreadCount }}</span>
+                                @endif
+                            </a>
+                        </li>
+                        <li><a class="nav-link {{ request()->routeIs('user.purchase-requests.*') ? 'active' : '' }}" href="{{ route('user.purchase-requests.index') }}"><i class="bi bi-bag-check"></i>Buyurtmalarim</a></li>
+                    @endif
                 </ul>
             @else <div class="mx-auto"></div> @endauth
             <div class="d-flex align-items-center gap-2 flex-wrap ms-lg-auto my-2 my-lg-0">
                 <div class="mobile-actions d-flex align-items-center gap-2 flex-wrap">
                     @auth
+                        @if(auth()->user()->hasRole('seller'))
+                            <a href="{{ route('posts.create') }}" class="btn-register d-none d-md-inline-flex align-items-center gap-1" style="font-size: 0.76rem; padding: 5px 11px;">
+                                <i class="bi bi-plus-lg"></i> Yangi e'lon
+                            </a>
+                        @endif
                         <div class="dropdown">
                             <button class="btn-profile-dropdown dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-person"></i> Profile
+                                <i class="bi bi-person"></i> {{ auth()->user()->hasRole('seller') ? 'Admin' : 'Profile' }}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-sm">
                                 <li>
                                     <a class="dropdown-item {{ request()->is('*profile*') ? 'active' : '' }}" href="{{ auth()->user()->hasRole('user') ? route('user.profile.show') : route('profile.show') }}">
-                                        <i class="bi bi-person-circle me-2"></i>Profile
+                                        <i class="bi bi-person-circle me-2"></i>Profil
                                     </a>
                                 </li>
+                                @if(auth()->user()->hasRole('seller'))
+                                    <li>
+                                        <a class="dropdown-item {{ request()->routeIs('posts.index') ? 'active' : '' }}" href="{{ route('posts.index') }}">
+                                            <i class="bi bi-collection me-2"></i>Mening e'lonlarim
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {{ request()->routeIs('admin.purchase-requests.*') ? 'active' : '' }}" href="{{ route('admin.purchase-requests.index') }}">
+                                            <i class="bi bi-inbox me-2"></i>So'rovlar
+                                            @if(!empty($pendingRequestsCount) && $pendingRequestsCount > 0)
+                                                <span class="badge bg-warning text-dark ms-2">{{ $pendingRequestsCount }}</span>
+                                            @endif
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {{ request()->routeIs('admin.archive.*') ? 'active' : '' }}" href="{{ route('admin.archive.index') }}">
+                                            <i class="bi bi-archive me-2"></i>Arxiv
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-lime" href="{{ route('posts.create') }}">
+                                            <i class="bi bi-plus-circle me-2"></i>Yangi e'lon berish
+                                        </a>
+                                    </li>
+                                @endif
                                 <li><hr class="dropdown-divider my-1"></li>
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST" class="m-0">

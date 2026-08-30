@@ -16,6 +16,17 @@
                     <span class="badge rounded-pill {{ $roleBadge }} px-3 py-2 fw-bold shadow-sm text-uppercase tracking-wider">
                         <i class="bi {{ $isSeller ? 'bi-shop' : 'bi-person-badge' }} me-1"></i> {{ $roleLabel }}
                     </span>
+                    @if($isSeller)
+                        <a href="{{ route('posts.index') }}" class="btn btn-sm btn-outline-light px-3 py-1 rounded-pill fw-semibold">
+                            <i class="bi bi-collection me-1"></i> E'lonlarim
+                        </a>
+                        <a href="{{ route('admin.purchase-requests.index') }}" class="btn btn-sm btn-outline-light px-3 py-1 rounded-pill fw-semibold">
+                            <i class="bi bi-inbox me-1"></i> So'rovlar
+                        </a>
+                        <a href="{{ route('admin.archive.index') }}" class="btn btn-sm btn-outline-light px-3 py-1 rounded-pill fw-semibold">
+                            <i class="bi bi-archive me-1"></i> Arxiv
+                        </a>
+                    @endif
                     <form action="{{ route('logout') }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-outline-light px-3 py-1 rounded-pill fw-semibold">

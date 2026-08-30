@@ -89,8 +89,15 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:seller'])->group(function () {
     Route::get('/admin/purchase-requests', [PurchaseRequestController::class, 'index'])
         ->name('admin.purchase-requests.index');
-    Route::get('/admin/sold-animals', [PurchaseRequestController::class, 'soldAnimals'])
-        ->name('admin.sold-animals.index');
+    Route::get('/admin/archive', [AdminController::class, 'archive'])
+        ->name('admin.archive.index');
+    Route::get('/admin/sold-animals', function () {
+        return redirect()->route('admin.archive.index');
+    })->name('admin.sold-animals.index');
+    Route::post('/admin/posts/{post}/restore', [AdminController::class, 'restorePost'])
+        ->name('admin.posts.restore');
+    Route::post('/admin/posts/{post}/archive', [AdminController::class, 'archivePost'])
+        ->name('admin.posts.archive');
     Route::post('/admin/purchase-requests/{purchaseRequest}/approve', [PurchaseRequestController::class, 'approve'])
         ->name('admin.purchase-requests.approve');
     Route::post('/admin/purchase-requests/{purchaseRequest}/reject', [PurchaseRequestController::class, 'reject'])

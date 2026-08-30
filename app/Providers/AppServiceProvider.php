@@ -13,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         View::composer('layouts.app', function ($view) {
-            $unread = 0;
+            $pendingRequestsCount = 0;
             if (auth()->check()) {
                 $uid    = auth()->id();
                 $unread = Message::whereHas('chat', fn ($q) =>
@@ -22,6 +22,12 @@ class AppServiceProvider extends ServiceProvider
                 ->where('sender_id', '!=', $uid)
                 ->whereNull('read_at')
                 ->count();
+
+                if (auth()->user()->hasRole('seller')) {
+                    $pendingRequestsCount = \App\Models\PurchaseRequest::where('status', 'pending')
+                        ->whereHas('animal', fn ($q) => $q->where('user_id', $uid))
+                        ->count();
+                }
             }
             
             try {
@@ -32,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with([
                 'globalUnreadCount' => $unread,
+                'pendingRequestsCount' => $pendingRequestsCount,
                 'navCategories' => $navCategories,
             ]);
         });

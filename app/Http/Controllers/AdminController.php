@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +12,42 @@ class AdminController extends Controller
     public function index(Request $request): RedirectResponse
     {
         return redirect()->route('profile.show');
+    }
+
+    public function archive(Request $request)
+    {
+        $user = $request->user();
+
+        $archivedPosts = Post::with(['category', 'purchaseRequests' => function ($query) {
+                $query->where('status', 'approved')->with('user');
+            }])
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['sold', 'archived'])
+            ->latest('updated_at')
+            ->paginate(15);
+
+        $totalArchived = Post::where('user_id', $user->id)->whereIn('status', ['sold', 'archived'])->count();
+        $totalSold = Post::where('user_id', $user->id)->where('status', 'sold')->count();
+
+        return view('admin.archive', compact('archivedPosts', 'totalArchived', 'totalSold'));
+    }
+
+    public function restorePost(Request $request, Post $post): RedirectResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 403);
+
+        $post->update(['status' => 'active']);
+
+        return back()->with('success', 'E\'lon muvaffaqiyatli faollashtirildi va asosiy ro\'yxatga qaytarildi.');
+    }
+
+    public function archivePost(Request $request, Post $post): RedirectResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 403);
+
+        $post->update(['status' => 'archived']);
+
+        return back()->with('success', 'E\'lon arxivga o\'tkazildi.');
     }
 
     public function updateProfile(Request $request): RedirectResponse

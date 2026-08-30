@@ -246,37 +246,55 @@
     <div class="catalog-toolbar">
         <div>
             <h1 class="catalog-title">
-                @if($currentCategory)
-                    {{ $getCategoryEmoji($currentCategory->name) }} {{ $currentCategory->name }}
-                @elseif(!empty($search))
-                    "{{ $search }}" bo'yicha e'lonlar
+                @if(auth()->check() && auth()->user()->hasRole('seller'))
+                    @if($currentCategory)
+                        {{ $getCategoryEmoji($currentCategory->name) }} {{ $currentCategory->name }} (E'lonlarim)
+                    @elseif(!empty($search))
+                        "{{ $search }}" bo'yicha e'lonlarim
+                    @else
+                        Mening e'lonlarim
+                    @endif
                 @else
-                    Barcha e'lonlar
+                    @if($currentCategory)
+                        {{ $getCategoryEmoji($currentCategory->name) }} {{ $currentCategory->name }}
+                    @elseif(!empty($search))
+                        "{{ $search }}" bo'yicha e'lonlar
+                    @else
+                        Barcha e'lonlar
+                    @endif
                 @endif
             </h1>
             <div class="result-meta">{{ $posts->total() }} ta e'lon mavjud</div>
         </div>
 
-        {{-- Sort Dropdown --}}
-        <div class="dropdown ms-auto">
-            <button class="btn-sort-dropdown dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-arrow-down-up me-1 text-lime"></i>
-                @php
-                    $sortLabel = match($activeFilters['sort'] ?? 'latest') {
-                        'price_asc' => 'Narx: arzonroq',
-                        'price_desc' => 'Narx: qimmatroq',
-                        'oldest' => 'Eng eskisi',
-                        default => 'Eng yangilari'
-                    };
-                @endphp
-                <span>{{ $sortLabel }}</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
-                <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? 'latest') === 'latest' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'latest'])) }}"><i class="bi bi-clock me-2"></i>Eng yangilari</a></li>
-                <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? '') === 'price_asc' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'price_asc'])) }}"><i class="bi bi-arrow-up-circle me-2"></i>Narx: arzonroq</a></li>
-                <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? '') === 'price_desc' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'price_desc'])) }}"><i class="bi bi-arrow-down-circle me-2"></i>Narx: qimmatroq</a></li>
-                <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? '') === 'oldest' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'oldest'])) }}"><i class="bi bi-calendar me-2"></i>Eng eskisi</a></li>
-            </ul>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            @if(auth()->check() && auth()->user()->hasRole('seller'))
+                <a href="{{ route('posts.create') }}" class="btn-search-submit text-decoration-none d-none d-sm-inline-flex">
+                    <i class="bi bi-plus-circle-fill"></i> Yangi e'lon
+                </a>
+            @endif
+
+            {{-- Sort Dropdown --}}
+            <div class="dropdown">
+                <button class="btn-sort-dropdown dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-arrow-down-up me-1 text-lime"></i>
+                    @php
+                        $sortLabel = match($activeFilters['sort'] ?? 'latest') {
+                            'price_asc' => 'Narx: arzonroq',
+                            'price_desc' => 'Narx: qimmatroq',
+                            'oldest' => 'Eng eskisi',
+                            default => 'Eng yangilari'
+                        };
+                    @endphp
+                    <span>{{ $sortLabel }}</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+                    <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? 'latest') === 'latest' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'latest'])) }}"><i class="bi bi-clock me-2"></i>Eng yangilari</a></li>
+                    <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? '') === 'price_asc' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'price_asc'])) }}"><i class="bi bi-arrow-up-circle me-2"></i>Narx: arzonroq</a></li>
+                    <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? '') === 'price_desc' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'price_desc'])) }}"><i class="bi bi-arrow-down-circle me-2"></i>Narx: qimmatroq</a></li>
+                    <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? '') === 'oldest' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'oldest'])) }}"><i class="bi bi-calendar me-2"></i>Eng eskisi</a></li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -370,10 +388,18 @@
     @empty
         <div class="col-12">
             <div class="empty-state">
-                <div class="empty-icon"><i class="bi bi-search"></i></div>
-                <h3 class="empty-title">Hech qanday e'lon topilmadi</h3>
-                <p class="empty-text">Boshqa so'z bilan qidirib ko'ring yoki filtrlarni tozalang.</p>
-                <a href="{{ route('posts.index') }}" class="btn-filter-apply d-inline-flex mt-3 text-decoration-none px-4">Barcha e'lonlarni ko'rish</a>
+                <div class="empty-icon"><i class="bi bi-collection"></i></div>
+                @if(auth()->check() && auth()->user()->hasRole('seller'))
+                    <h3 class="empty-title">Sizda hali faol e'lonlar yo'q</h3>
+                    <p class="empty-text">Birinchi e'loningizni joylashtiring va xaridorlarga taklif qiling!</p>
+                    <a href="{{ route('posts.create') }}" class="btn-filter-apply d-inline-flex mt-3 text-decoration-none px-4">
+                        <i class="bi bi-plus-lg me-1"></i> Yangi e'lon qo'shish
+                    </a>
+                @else
+                    <h3 class="empty-title">Hech qanday e'lon topilmadi</h3>
+                    <p class="empty-text">Boshqa so'z bilan qidirib ko'ring yoki filtrlarni tozalang.</p>
+                    <a href="{{ route('posts.index') }}" class="btn-filter-apply d-inline-flex mt-3 text-decoration-none px-4">Barcha e'lonlarni ko'rish</a>
+                @endif
             </div>
         </div>
     @endforelse

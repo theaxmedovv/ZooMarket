@@ -70,34 +70,43 @@ class PurchaseRequestController extends Controller
         return back()->with('success', 'So\'rovingiz yuborildi');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $requests = PurchaseRequest::with(['user', 'animal', 'chat'])
-            ->latest()
-            ->paginate(20);
+        $status = $request->query('status');
+        $userId = $request->user()->id;
 
-        return view('admin.purchase-requests', compact('requests'));
+        $query = PurchaseRequest::with(['user', 'animal', 'chat'])
+            ->whereHas('animal', function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            });
+
+        if (in_array($status, ['pending', 'approved', 'rejected'], true)) {
+            $query->where('status', $status);
+        }
+
+        $requests = $query->latest()->paginate(15)->withQueryString();
+
+        $stats = [
+            'total' => PurchaseRequest::whereHas('animal', fn($q) => $q->where('user_id', $userId))->count(),
+            'pending' => PurchaseRequest::where('status', 'pending')->whereHas('animal', fn($q) => $q->where('user_id', $userId))->count(),
+            'approved' => PurchaseRequest::where('status', 'approved')->whereHas('animal', fn($q) => $q->where('user_id', $userId))->count(),
+            'rejected' => PurchaseRequest::where('status', 'rejected')->whereHas('animal', fn($q) => $q->where('user_id', $userId))->count(),
+        ];
+
+        return view('admin.purchase-requests', compact('requests', 'stats', 'status'));
     }
 
-    public function soldAnimals()
+    public function soldAnimals(Request $request)
     {
-        $soldAnimals = PurchaseRequest::with(['user', 'animal'])
-            ->where('status', 'approved')
-            ->whereHas('animal', function ($query) {
-                $query->where('status', 'sold');
-            })
-            ->latest('updated_at')
-            ->paginate(20);
-
-        return view('admin.sold-animals', compact('soldAnimals'));
+        return redirect()->route('admin.archive.index');
     }
 
-    public function approve(PurchaseRequest $purchaseRequest): RedirectResponse
+    public function approve(Request $request, PurchaseRequest $purchaseRequest): RedirectResponse
     {
         $animal = $purchaseRequest->animal;
 
-        if (! $animal) {
-            return back()->withErrors(['purchase_request' => 'Hayvon topilmadi.']);
+        if (! $animal || $animal->user_id !== $request->user()->id) {
+            return back()->withErrors(['purchase_request' => 'Ushbu amalni bajarish uchun ruxsat yo\'q.']);
         }
 
         if ($animal->status === 'sold' && $purchaseRequest->status !== 'approved') {
@@ -125,11 +134,17 @@ class PurchaseRequestController extends Controller
             ]
         );
 
-        return back()->with('success', 'So\'rov tasdiqlandi. Chat yaratildi.');
+        return back()->with('success', 'So\'rov tasdiqlandi. Chat yaratildi va hayvon sotilganlar ro\'yxatiga o\'tkazildi.');
     }
 
-    public function reject(PurchaseRequest $purchaseRequest): RedirectResponse
+    public function reject(Request $request, PurchaseRequest $purchaseRequest): RedirectResponse
     {
+        $animal = $purchaseRequest->animal;
+
+        if (! $animal || $animal->user_id !== $request->user()->id) {
+            return back()->withErrors(['purchase_request' => 'Ushbu amalni bajarish uchun ruxsat yo\'q.']);
+        }
+
         $purchaseRequest->update(['status' => 'rejected']);
 
         return back()->with('success', 'So\'rov rad etildi.');
