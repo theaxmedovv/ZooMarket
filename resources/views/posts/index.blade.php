@@ -1,853 +1,386 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-5">
+@php
+    $showFilters = !auth()->check() || auth()->user()->hasRole('user');
 
-    {{-- ── PAGE HEADER ── --}}
-    <div class="row g-4 align-items-start mb-5">
-        <div class="col-lg-6">
-            <h1 class="page-title mb-2">Barcha mahsulotlar</h1>
-        </div>
+    $activeCount = 0;
+    if (!empty($activeFilters['category_id'])) $activeCount++;
+    if (!empty($activeFilters['gender'])) $activeCount++;
+    if (!empty($activeFilters['location'])) $activeCount++;
+    if (!empty($activeFilters['currency'])) $activeCount++;
+    if (($activeFilters['price_min'] ?? null) !== null) $activeCount++;
+    if (($activeFilters['price_max'] ?? null) !== null) $activeCount++;
 
-        <div class="col-lg-6">
-            @php
-                $showFilters = !auth()->check() || auth()->user()->hasRole('user');
-                $hasActiveFilters = !empty($activeFilters['category_id'])
-                    || !empty($activeFilters['gender'])
-                    || !empty($activeFilters['location'])
-                    || !empty($activeFilters['currency'])
-                    || ($activeFilters['price_min'] ?? null) !== null
-                    || ($activeFilters['price_max'] ?? null) !== null;
-            @endphp
+    $hasActiveFilters = $activeCount > 0;
 
-            <form action="{{ route('posts.index') }}" method="GET" class="d-grid gap-3">
-                <div class="search-group d-flex gap-2">
-                    <div class="search-input-wrap flex-grow-1">
-                        <i class="bi bi-search search-icon"></i>
-                        <input type="text" name="q" value="{{ $search ?? '' }}"
-                               class="search-input"
-                               placeholder="Mahsulot yoki brend qidirish...">
-                    </div>
+    $currentCategory = !empty($activeFilters['category_id']) 
+        ? $categories->firstWhere('id', $activeFilters['category_id']) 
+        : null;
 
-                    <button type="submit" class="btn-search">Qidirish</button>
+    $categoryEmojis = [
+        'Big Cats' => '🐆',
+        'Primates' => '🦍',
+        'Reptiles' => '🐊',
+        'Birds' => '🦜',
+        'Ungulates' => '🦏',
+        'Marine Life' => '🐋',
+        'Insects' => '🦋',
+        'Enrichment' => '🏗️',
+        'Nutrition' => '🥩',
+        'Habitats' => '🌿',
+    ];
 
-                    @if($showFilters)
-                        <button class="btn-filter {{ $hasActiveFilters ? 'active' : '' }}"
-                                type="button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#postFilters"
-                                aria-expanded="{{ $hasActiveFilters ? 'true' : 'false' }}">
-                            <i class="bi bi-sliders2"></i>
-                        </button>
-                    @endif
+    $getCategoryEmoji = function($name) use ($categoryEmojis) {
+        if (isset($categoryEmojis[$name])) {
+            return $categoryEmojis[$name];
+        }
+        $n = mb_strtolower($name);
+        if (str_contains($n, 'cat') || str_contains($n, 'mushuk') || str_contains($n, 'sher') || str_contains($n, 'yo\'lbars')) return '🐆';
+        if (str_contains($n, 'primate') || str_contains($n, 'maymun') || str_contains($n, 'gorilla')) return '🦍';
+        if (str_contains($n, 'reptil') || str_contains($n, 'sudral') || str_contains($n, 'toshbaqa') || str_contains($n, 'ilon')) return '🐊';
+        if (str_contains($n, 'bird') || str_contains($n, 'qush') || str_contains($n, 'popugay')) return '🦜';
+        if (str_contains($n, 'ungulate') || str_contains($n, 'ot') || str_contains($n, 'tuyoq') || str_contains($n, 'kiyik')) return '🦏';
+        if (str_contains($n, 'marine') || str_contains($n, 'baliq') || str_contains($n, 'fish') || str_contains($n, 'kit')) return '🐋';
+        if (str_contains($n, 'insect') || str_contains($n, 'hasharot') || str_contains($n, 'kapalak')) return '🦋';
+        if (str_contains($n, 'enrichment') || str_contains($n, 'jihoz') || str_contains($n, 'qafas')) return '🏗️';
+        if (str_contains($n, 'nutrition') || str_contains($n, 'oziq') || str_contains($n, 'korm') || str_contains($n, 'food')) return '🥩';
+        if (str_contains($n, 'habitat') || str_contains($n, 'makon') || str_contains($n, 'o\'simlik')) return '🌿';
+        if (str_contains($n, 'dog') || str_contains($n, 'it') || str_contains($n, 'kuchuk')) return '🐕';
+        if (str_contains($n, 'rabbit') || str_contains($n, 'quyon') || str_contains($n, 'hamster')) return '🐰';
+        return '🐾';
+    };
+@endphp
 
-                    @if(auth()->check() && (auth()->user()->hasRole('seller') || auth()->user()->hasRole('admin')))
-                        <a href="{{ route('posts.create') }}" class="btn-create">
-                            <i class="bi bi-plus-lg me-1"></i> Sotish
-                        </a>
-                    @endif
-                </div>
-
-                @if($showFilters)
-                    <div id="postFilters" class="collapse {{ $hasActiveFilters ? 'show' : '' }}">
-                        <div class="filter-panel">
-                            <div class="row g-3">
-                                <div class="col-sm-6">
-                                    <label class="filter-label">Kategoriya</label>
-                                    <select name="category_id" class="filter-select">
-                                        <option value="">Barchasi</option>
-                                        @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" @selected((string)($activeFilters['category_id'] ?? '') === (string)$category->id)>
-                                                {{ $category->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="col-sm-6">
-                                    <label class="filter-label">Jinsi</label>
-                                    <select name="gender" class="filter-select">
-                                        <option value="">Barchasi</option>
-                                        <option value="male"   @selected(($activeFilters['gender'] ?? '') === 'male')>Erkak</option>
-                                        <option value="female" @selected(($activeFilters['gender'] ?? '') === 'female')>Urg'ochi</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-sm-6">
-                                    <label class="filter-label">Joylashuv</label>
-                                    <input type="text" name="location" class="filter-input"
-                                           value="{{ $activeFilters['location'] ?? '' }}"
-                                           placeholder="Masalan: Samarqand">
-                                </div>
-
-                                <div class="col-sm-6">
-                                    <label class="filter-label">Valyuta</label>
-                                    <select name="currency" class="filter-select">
-                                        <option value="">Barchasi</option>
-                                        <option value="UZS" @selected(($activeFilters['currency'] ?? '') === 'UZS')>UZS</option>
-                                        <option value="USD" @selected(($activeFilters['currency'] ?? '') === 'USD')>USD</option>
-                                        <option value="EUR" @selected(($activeFilters['currency'] ?? '') === 'EUR')>EUR</option>
-                                        <option value="RUB" @selected(($activeFilters['currency'] ?? '') === 'RUB')>RUB</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-sm-6">
-                                    <label class="filter-label">Min narx</label>
-                                    <input type="number" name="price_min" class="filter-input" min="0" step="0.01"
-                                           value="{{ $activeFilters['price_min'] ?? '' }}" placeholder="0">
-                                </div>
-
-                                <div class="col-sm-6">
-                                    <label class="filter-label">Maks narx</label>
-                                    <input type="number" name="price_max" class="filter-input" min="0" step="0.01"
-                                           value="{{ $activeFilters['price_max'] ?? '' }}" placeholder="1 000 000">
-                                </div>
-                            </div>
-
-                            <div class="d-flex gap-2 mt-4">
-                                <button type="submit" class="btn-search">Filterlash</button>
-                                <a href="{{ route('posts.index') }}" class="btn-reset">Tozalash</a>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </form>
+{{-- ── TOP CATEGORY QUICK SCROLLER ───────────────────────────── --}}
+<section class="category-strip">
+    <div class="container">
+        <div class="category-strip-inner">
+            <a class="category-strip-pill {{ empty($activeFilters['category_id']) ? 'active' : '' }}" href="{{ route('posts.index', request()->except('category_id', 'page')) }}">
+                🐾 Barchasi
+            </a>
+            @foreach($categories as $category)
+                @php $emoji = $getCategoryEmoji($category->name); @endphp
+                <a class="category-strip-pill {{ (string)($activeFilters['category_id'] ?? '') === (string)$category->id ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->except('page'), ['category_id' => $category->id])) }}">
+                    {{ $emoji }} {{ $category->name }}
+                </a>
+            @endforeach
         </div>
     </div>
+</section>
 
-    {{-- ── POSTS GRID ── --}}
-    <div class="row g-4">
-        @forelse($posts as $post)
-            <div class="col-md-6 col-lg-4 post-col" style="--i: {{ $loop->index }}">
-                <article class="post-card">
+<div class="container page-shell">
+    {{-- ── UNIFIED SEARCH & FILTER BAR (QIDIRUV VA FILTR YONMA-YON) ───────────────────────────── --}}
+    @if($showFilters)
+    <div class="search-filter-hero">
+        <form action="{{ route('posts.index') }}" method="GET" id="searchFilterForm">
+            @if(!empty($activeFilters['sort']))
+                <input type="hidden" name="sort" value="{{ $activeFilters['sort'] }}">
+            @endif
 
-                    {{-- Image --}}
-                    <div class="card-img-wrap">
-                        @if($post->image)
-                            <img src="{{ asset('storage/' . $post->image) }}"
-                                 alt="{{ $post->title }}"
-                                 class="card-img" loading="lazy">
-                        @else
-                            <div class="card-img-placeholder">
-                                <i class="bi bi-image"></i>
-                                <span>Rasm yo'q</span>
-                            </div>
-                        @endif
+            <div class="search-filter-bar">
+                {{-- Search Input with icon --}}
+                <div class="search-input-group">
+                    <i class="bi bi-search search-group-icon"></i>
+                    <input type="text" name="q" value="{{ request('q', $search ?? '') }}" class="search-hero-input" placeholder="E'lonlar, zotlar, tavsif bo'yicha qidirish...">
+                </div>
 
-                        <span class="card-badge">
-                            <i class="bi bi-tag me-1"></i>{{ $post->category?->name ?? 'Mahsulot' }}
-                        </span>
+                {{-- Filter Button RIGHT NEXT TO SEARCH --}}
+                <button class="btn-filter-trigger {{ $hasActiveFilters ? 'active' : '' }}" type="button" data-bs-toggle="collapse" data-bs-target="#filterExpandBox" aria-expanded="{{ $hasActiveFilters ? 'true' : 'false' }}" aria-controls="filterExpandBox">
+                    <i class="bi bi-sliders2"></i>
+                    <span>Filtrlar</span>
+                    @if($activeCount > 0)
+                        <span class="badge filter-badge-count">{{ $activeCount }}</span>
+                    @endif
+                </button>
 
-                        @if($post->status === 'sold')
-                            <span class="card-sold-overlay">Sotilgan</span>
-                        @endif
-                    </div>
+                {{-- Search Submit Button --}}
+                <button type="submit" class="btn-search-submit">
+                    <i class="bi bi-search"></i>
+                    <span class="d-none d-sm-inline">Qidirish</span>
+                </button>
+            </div>
 
-                    {{-- Body --}}
-                    <div class="card-body-inner">
-                        {{-- Author --}}
-                        <div class="card-author">
-                            <div class="author-avatar">{{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}</div>
-                            <div class="author-info">
-                                <span class="author-name">{{ $post->user->name }}</span>
-                                <span class="author-time">{{ $post->created_at->diffForHumans() }}</span>
-                            </div>
+            {{-- ── EXPANDABLE DETAILED FILTER PANEL ───────────────────────────── --}}
+            <div id="filterExpandBox" class="collapse {{ $hasActiveFilters ? 'show' : '' }}">
+                <div class="filter-expand-box">
+                    <div class="row g-3 align-items-end">
+                        {{-- Category Filter --}}
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <label class="filter-sec-label"><i class="bi bi-grid-3x3-gap me-1"></i> Kategoriya</label>
+                            <select name="category_id" class="filter-select">
+                                <option value="">Barcha kategoriyalar</option>
+                                @foreach($categories as $category)
+                                    @php $emoji = $getCategoryEmoji($category->name); @endphp
+                                    <option value="{{ $category->id }}" @selected((string)($activeFilters['category_id'] ?? '') === (string)$category->id)>
+                                        {{ $emoji }} {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
 
-                        {{-- Title & Desc --}}
-                        <h2 class="card-title">
-                            <a href="{{ route('posts.show', $post) }}" class="card-title-link">{{ $post->title }}</a>
-                        </h2>
-
-                        <p class="card-desc">{{ Str::limit($post->description ?? $post->content, 90) }}</p>
-
-                        {{-- Price --}}
-                        @if(!empty($post->price))
-                        <div class="card-price">
-                            {{ number_format($post->price) }} {{ $post->currency ?? '' }}
-                        </div>
-                        @endif
-
-                        {{-- Footer --}}
-                        <div class="card-footer-inner">
-                            <a href="{{ route('posts.show', $post) }}" class="btn-detail">
-                                Batafsil <i class="bi bi-arrow-right ms-1"></i>
-                            </a>
-
-                            <div class="card-actions">
-                                @if(auth()->check() && auth()->user()->hasRole('user'))
-                                    @if($post->status === 'sold')
-                                        <span class="action-tag tag-sold">Sotilgan</span>
-                                    @elseif(in_array($post->id, $requestedAnimalIds ?? []))
-                                        <span class="action-tag tag-pending">So'rov yuborilgan</span>
-                                    @else
-                                        <button type="button"
-                                                class="btn-buy"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#buyModal{{ $post->id }}">
-                                            <i class="bi bi-cart-check me-1"></i> Sotib olish
-                                        </button>
-                                    @endif
-                                @endif
-
-                                @if(auth()->check() && auth()->user()->hasRole('user'))
-                                    <form action="{{ route('posts.like', $post) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="btn-icon {{ in_array($post->id, $likedPostIds ?? []) ? 'liked' : '' }}"
-                                                title="Like">
-                                            <i class="bi {{ in_array($post->id, $likedPostIds ?? []) ? 'bi-heart-fill' : 'bi-heart' }}"></i>
-                                        </button>
-                                    </form>
-                                @endif
-
-                                @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->id() === $post->user_id))
-                                    <div class="dropdown">
-                                        <button class="btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="Amallar">
-                                            <i class="bi bi-three-dots-vertical"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end card-dropdown shadow border-0 rounded-3 p-1">
-                                            <li>
-                                                <a class="dropdown-item rounded-2 py-2 small fw-500"
-                                                   href="{{ route('posts.edit', $post) }}">
-                                                    <i class="bi bi-pencil me-2 text-muted"></i> Tahrirlash
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider my-1 opacity-25"></li>
-                                            <li>
-                                                <form action="{{ route('posts.destroy', $post) }}" method="POST"
-                                                      onsubmit="return confirm('O\'chirilsinmi?')">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="dropdown-item rounded-2 py-2 small text-danger fw-500">
-                                                        <i class="bi bi-trash me-2"></i> O'chirish
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                @endif
+                        {{-- Gender Filter --}}
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <label class="filter-sec-label"><i class="bi bi-gender-ambiguous me-1"></i> Jinsi</label>
+                            <div class="segmented-control">
+                                <label class="segment-btn">
+                                    <input type="radio" name="gender" value="" {{ empty($activeFilters['gender']) ? 'checked' : '' }}>
+                                    <span>Hammasi</span>
+                                </label>
+                                <label class="segment-btn">
+                                    <input type="radio" name="gender" value="male" {{ ($activeFilters['gender'] ?? '') === 'male' ? 'checked' : '' }}>
+                                    <span>Erkak ♂</span>
+                                </label>
+                                <label class="segment-btn">
+                                    <input type="radio" name="gender" value="female" {{ ($activeFilters['gender'] ?? '') === 'female' ? 'checked' : '' }}>
+                                    <span>Urg'ochi ♀</span>
+                                </label>
                             </div>
                         </div>
-                    </div>
-                </article>
 
-                {{-- Buy Modal --}}
-                @if(auth()->check() && auth()->user()->hasRole('user') && $post->status !== 'sold' && !in_array($post->id, $requestedAnimalIds ?? []))
-                    <div class="modal fade" id="buyModal{{ $post->id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content buy-modal border-0 shadow">
-                                <div class="modal-body p-4">
-                                    <div class="buy-modal-icon mb-3">
-                                        <i class="bi bi-cart-check"></i>
-                                    </div>
-                                    <h5 class="fw-700 mb-1">Tasdiqlash</h5>
-                                    <p class="text-muted small mb-4">
-                                        <strong>{{ $post->title }}</strong> ni sotib olishga so'rov yuboriladimi?
-                                    </p>
-                                    <div class="d-flex gap-2 justify-content-end">
-                                        <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Yo'q</button>
-                                        <form action="{{ route('purchase-requests.store') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="animal_id" value="{{ $post->id }}">
-                                            <button type="submit" class="btn-modal-confirm">Ha, yuborish</button>
-                                        </form>
-                                    </div>
+                        {{-- Price Range --}}
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="filter-sec-label mb-0"><i class="bi bi-tag me-1"></i> Narx oralig'i</label>
+                                <select name="currency" class="filter-mini-select" title="Valyuta">
+                                    <option value="">Valyuta</option>
+                                    @foreach(['UZS','USD','EUR','RUB'] as $currency)
+                                        <option value="{{ $currency }}" @selected(($activeFilters['currency'] ?? '') === $currency)>{{ $currency }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" name="price_min" class="filter-input" min="0" step="0.01" value="{{ $activeFilters['price_min'] ?? '' }}" placeholder="Min narx">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" name="price_max" class="filter-input" min="0" step="0.01" value="{{ $activeFilters['price_max'] ?? '' }}" placeholder="Max narx">
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Location Filter --}}
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <label class="filter-sec-label"><i class="bi bi-geo-alt me-1"></i> Manzil</label>
+                            <div class="filter-input-wrap">
+                                <i class="bi bi-geo-alt filter-input-icon"></i>
+                                <input type="text" name="location" class="filter-input with-icon" value="{{ $activeFilters['location'] ?? '' }}" placeholder="Shahar yoki viloyat">
+                            </div>
+                        </div>
+
+                        {{-- Actions in Panel --}}
+                        <div class="col-12 d-flex align-items-center justify-content-between flex-wrap gap-2 pt-2 border-top border-line">
+                            <div class="text-muted small">
+                                @if($hasActiveFilters)
+                                    <span class="text-lime fw-semibold">{{ $activeCount }} ta filtr faol</span>
+                                @else
+                                    Qo'shimcha parametrlar bo'yicha saralash
+                                @endif
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                @if($hasActiveFilters)
+                                    <a class="btn-filter-reset" href="{{ route('posts.index') }}">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Barchasini tozalash
+                                    </a>
+                                @endif
+                                <button class="btn-filter-apply px-4" type="submit">
+                                    <i class="bi bi-funnel-fill me-1"></i> Qo'llash
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                @endif
-            </div>
-        @empty
-            <div class="col-12">
-                <div class="empty-state">
-                    <div class="empty-icon"><i class="bi bi-search"></i></div>
-                    <h3 class="empty-title">Hech narsa topilmadi</h3>
-                    <p class="empty-text">Boshqa kalit so'z bilan urinib ko'ring yoki filtrlarni tozalang.</p>
-                    <a href="{{ route('posts.index') }}" class="btn-search mt-2">Barcha postlar</a>
                 </div>
             </div>
-        @endforelse
+        </form>
     </div>
+    @endif
 
-    {{-- Pagination --}}
-    @if($posts->hasPages())
-        <div class="d-flex justify-content-center mt-5 pt-2">
-            {{ $posts->links() }}
+    {{-- ── ACTIVE FILTER CHIPS (LENTA) ───────────────────────────── --}}
+    @if($hasActiveFilters || !empty($search))
+        <div class="active-filter-chips">
+            <span class="chips-label"><i class="bi bi-funnel me-1"></i> Faol:</span>
+
+            @if(!empty($search))
+                <a class="filter-chip" href="{{ route('posts.index', request()->except('q', 'page')) }}" title="Qidiruv filtrini olib tashlash">
+                    Qidiruv: "{{ $search }}" <i class="bi bi-x-circle-fill"></i>
+                </a>
+            @endif
+
+            @if(!empty($activeFilters['category_id']) && $currentCategory)
+                <a class="filter-chip" href="{{ route('posts.index', request()->except('category_id', 'page')) }}" title="Kategoriya filtrini olib tashlash">
+                    {{ $getCategoryEmoji($currentCategory->name) }} {{ $currentCategory->name }} <i class="bi bi-x-circle-fill"></i>
+                </a>
+            @endif
+
+            @if(!empty($activeFilters['gender']))
+                <a class="filter-chip" href="{{ route('posts.index', request()->except('gender', 'page')) }}" title="Jins filtrini olib tashlash">
+                    Jinsi: {{ $activeFilters['gender'] === 'male' ? 'Erkak ♂' : 'Urg\'ochi ♀' }} <i class="bi bi-x-circle-fill"></i>
+                </a>
+            @endif
+
+            @if(!empty($activeFilters['location']))
+                <a class="filter-chip" href="{{ route('posts.index', request()->except('location', 'page')) }}" title="Manzil filtrini olib tashlash">
+                    Manzil: {{ $activeFilters['location'] }} <i class="bi bi-x-circle-fill"></i>
+                </a>
+            @endif
+
+            @if(!empty($activeFilters['currency']))
+                <a class="filter-chip" href="{{ route('posts.index', request()->except('currency', 'page')) }}" title="Valyuta filtrini olib tashlash">
+                    Valyuta: {{ $activeFilters['currency'] }} <i class="bi bi-x-circle-fill"></i>
+                </a>
+            @endif
+
+            @if(($activeFilters['price_min'] ?? null) !== null || ($activeFilters['price_max'] ?? null) !== null)
+                <a class="filter-chip" href="{{ route('posts.index', request()->except('price_min', 'price_max', 'page')) }}" title="Narx filtrini olib tashlash">
+                    Narx: {{ $activeFilters['price_min'] ?? '0' }} — {{ $activeFilters['price_max'] ?? '∞' }} {{ $activeFilters['currency'] ?? '' }} <i class="bi bi-x-circle-fill"></i>
+                </a>
+            @endif
+
+            <a class="filter-chip chip-clear-all" href="{{ route('posts.index') }}" title="Barcha filtrlarni tozalash">
+                Hammasini tozalash <i class="bi bi-arrow-counterclockwise ms-1"></i>
+            </a>
         </div>
     @endif
+
+    {{-- ── CATALOG TOOLBAR (SARALASH VA NATIJALAR SONI) ───────────────────────────── --}}
+    <div class="catalog-toolbar">
+        <div>
+            <h1 class="catalog-title">
+                @if($currentCategory)
+                    {{ $getCategoryEmoji($currentCategory->name) }} {{ $currentCategory->name }}
+                @elseif(!empty($search))
+                    "{{ $search }}" bo'yicha e'lonlar
+                @else
+                    Barcha e'lonlar
+                @endif
+            </h1>
+            <div class="result-meta">{{ $posts->total() }} ta e'lon mavjud</div>
+        </div>
+
+        {{-- Sort Dropdown --}}
+        <div class="dropdown ms-auto">
+            <button class="btn-sort-dropdown dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-arrow-down-up me-1 text-lime"></i>
+                @php
+                    $sortLabel = match($activeFilters['sort'] ?? 'latest') {
+                        'price_asc' => 'Narx: arzonroq',
+                        'price_desc' => 'Narx: qimmatroq',
+                        'oldest' => 'Eng eskisi',
+                        default => 'Eng yangilari'
+                    };
+                @endphp
+                <span>{{ $sortLabel }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+                <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? 'latest') === 'latest' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'latest'])) }}"><i class="bi bi-clock me-2"></i>Eng yangilari</a></li>
+                <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? '') === 'price_asc' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'price_asc'])) }}"><i class="bi bi-arrow-up-circle me-2"></i>Narx: arzonroq</a></li>
+                <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? '') === 'price_desc' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'price_desc'])) }}"><i class="bi bi-arrow-down-circle me-2"></i>Narx: qimmatroq</a></li>
+                <li><a class="dropdown-item {{ ($activeFilters['sort'] ?? '') === 'oldest' ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->query(), ['sort' => 'oldest'])) }}"><i class="bi bi-calendar me-2"></i>Eng eskisi</a></li>
+            </ul>
+        </div>
+    </div>
+
+    {{-- ── LISTING GRID ───────────────────────────── --}}
+    <div class="listing-grid">
+    @forelse($posts as $post)
+        <div class="post-col">
+            <article class="post-card">
+                <div class="card-img-wrap">
+                    @if($post->image)
+                        <div class="card-img-backdrop" style="background-image: url('{{ asset('storage/' . $post->image) }}');"></div>
+                        <img class="card-img" src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" loading="lazy">
+                    @else
+                        <div class="card-img-placeholder"><i class="bi bi-image"></i> Rasm yuklanmagan</div>
+                    @endif
+                    <span class="card-badge">{{ $post->category?->name ?? 'E\'lon' }}</span>
+                </div>
+                <div class="card-body-inner">
+                    <div class="card-author">
+                        <span class="author-avatar">{{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}</span>
+                        <div>
+                            <span>{{ $post->user->name }}</span>
+                            <small class="author-time">{{ $post->created_at->diffForHumans() }}</small>
+                        </div>
+                    </div>
+                    <h2 class="card-title">
+                        <a class="card-title-link" href="{{ route('posts.show', $post) }}">{{ $post->title }}</a>
+                    </h2>
+                    <p class="card-desc">{{ Str::limit($post->description ?? $post->content, 90) }}</p>
+                    @if(!empty($post->price))
+                        <div class="card-price">{{ number_format($post->price) }} <small>{{ $post->currency ?? 'UZS' }}</small></div>
+                    @else
+                        <div class="card-price text-muted" style="font-size: 0.95rem;">Kelishiladi</div>
+                    @endif
+                    <div class="card-footer-inner">
+                        <a class="btn-detail" href="{{ route('posts.show', $post) }}">Batafsil <i class="bi bi-arrow-right ms-1"></i></a>
+                        <div class="card-actions">
+                            @if(auth()->check() && auth()->user()->hasRole('user'))
+                                @if(in_array($post->id, $requestedAnimalIds ?? []))
+                                    <span class="action-tag tag-pending">So'ralgan</span>
+                                @else
+                                    <button class="btn-buy" type="button" data-bs-toggle="modal" data-bs-target="#buyModal{{ $post->id }}">Sotib olish</button>
+                                @endif
+                                <form action="{{ route('posts.like', $post) }}" method="POST">
+                                    @csrf
+                                    <button class="btn-icon {{ in_array($post->id, $likedPostIds ?? []) ? 'liked' : '' }}" type="submit" aria-label="Saqlash">
+                                        <i class="bi {{ in_array($post->id, $likedPostIds ?? []) ? 'bi-heart-fill' : 'bi-heart' }}"></i>
+                                    </button>
+                                </form>
+                            @endif
+                            @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->id() === $post->user_id))
+                                <div class="dropdown">
+                                    <button class="btn-icon" data-bs-toggle="dropdown" aria-label="Amallar"><i class="bi bi-three-dots"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                                        <li><a class="dropdown-item" href="{{ route('posts.edit', $post) }}"><i class="bi bi-pencil me-2"></i>Tahrirlash</a></li>
+                                        <li>
+                                            <form action="{{ route('posts.destroy', $post) }}" method="POST" onsubmit="return confirm('E\'lonni o\'chirishni xohlaysizmi?')">
+                                                @csrf @method('DELETE')
+                                                <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>O'chirish</button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </article>
+            @if(auth()->check() && auth()->user()->hasRole('user') && $post->status !== 'sold' && !in_array($post->id, $requestedAnimalIds ?? []))
+                <div class="modal fade" id="buyModal{{ $post->id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content buy-modal">
+                            <div class="modal-body p-4 text-center">
+                                <div class="buy-modal-icon mb-3"><i class="bi bi-bag-check"></i></div>
+                                <h5>Sotib olish so'rovini yuborish</h5>
+                                <p class="text-muted"><strong>{{ $post->title }}</strong> bo'yicha sotuvchiga so'rov jo'natilsinmi?</p>
+                                <div class="d-flex justify-content-center gap-2 mt-4">
+                                    <button class="btn-modal-cancel" data-bs-dismiss="modal">Bekor qilish</button>
+                                    <form action="{{ route('purchase-requests.store') }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="animal_id" value="{{ $post->id }}">
+                                        <button class="btn-modal-confirm" type="submit">So'rov yuborish</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+    @empty
+        <div class="col-12">
+            <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-search"></i></div>
+                <h3 class="empty-title">Hech qanday e'lon topilmadi</h3>
+                <p class="empty-text">Boshqa so'z bilan qidirib ko'ring yoki filtrlarni tozalang.</p>
+                <a href="{{ route('posts.index') }}" class="btn-filter-apply d-inline-flex mt-3 text-decoration-none px-4">Barcha e'lonlarni ko'rish</a>
+            </div>
+        </div>
+    @endforelse
+    </div>
+
+    @if($posts->hasPages())
+        <div class="d-flex justify-content-center mt-5">{{ $posts->links() }}</div>
+    @endif
 </div>
-
-<style>
-/* ── DESIGN TOKENS ── */
-:root {
-    --g: #16a34a;
-    --g-mid: #15803d;
-    --g-dark: #14532d;
-    --g-soft: #f0fdf4;
-    --g-pale: #dcfce7;
-    --g-border: #bbf7d0;
-    --text: #0f172a;
-    --text-2: #475569;
-    --text-3: #94a3b8;
-    --border: rgba(15,23,42,0.08);
-    --surface: #ffffff;
-    --bg: #f8fafc;
-    --radius: 16px;
-    --radius-sm: 10px;
-    --radius-pill: 100px;
-    --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
-}
-
-/* ── PAGE HEADER ── */
-.section-eyebrow {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--g);
-}
-
-.page-title {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: clamp(1.75rem, 3vw, 2.5rem);
-    font-weight: 400;
-    line-height: 1.15;
-    letter-spacing: -0.03em;
-    color: var(--text);
-    margin: 0;
-}
-
-.page-subtitle {
-    font-size: 0.9375rem;
-    color: var(--text-2);
-    margin: 0;
-}
-
-/* ── SEARCH ── */
-.search-input-wrap {
-    position: relative;
-    min-width: 0;
-}
-
-.search-icon {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-3);
-    font-size: 0.9rem;
-    pointer-events: none;
-}
-
-.search-input {
-    width: 100%;
-    height: 44px;
-    padding: 0 14px 0 38px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-    font-family: inherit;
-    background: var(--surface);
-    color: var(--text);
-    outline: none;
-    transition: border-color var(--transition), box-shadow var(--transition);
-}
-
-.search-input:focus {
-    border-color: var(--g);
-    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
-}
-
-.search-input::placeholder { color: var(--text-3); }
-
-.btn-search {
-    height: 44px;
-    padding: 0 20px;
-    background: var(--g);
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 600;
-    font-family: inherit;
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background var(--transition), transform var(--transition);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-}
-
-.btn-search:hover {
-    background: var(--g-mid);
-    color: white;
-    transform: translateY(-1px);
-}
-
-.btn-filter {
-    width: 44px;
-    height: 44px;
-    flex-shrink: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-2);
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition);
-}
-
-.btn-filter:hover, .btn-filter.active {
-    background: var(--g-soft);
-    border-color: var(--g-border);
-    color: var(--g);
-}
-
-.btn-create {
-    height: 44px;
-    padding: 0 18px;
-    background: var(--text);
-    color: white !important;
-    font-size: 0.875rem;
-    font-weight: 600;
-    font-family: inherit;
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    transition: background var(--transition), transform var(--transition);
-}
-
-.btn-create:hover {
-    background: #1e293b;
-    transform: translateY(-1px);
-}
-
-/* ── FILTER PANEL ── */
-.filter-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem;
-    margin-top: 4px;
-}
-
-.filter-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-3);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 6px;
-}
-
-.filter-input, .filter-select {
-    width: 100%;
-    height: 40px;
-    padding: 0 12px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    font-family: inherit;
-    color: var(--text);
-    outline: none;
-    transition: border-color var(--transition);
-    appearance: none;
-    -webkit-appearance: none;
-}
-
-.filter-select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='%2394a3b8' d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    padding-right: 32px;
-}
-
-.filter-input:focus, .filter-select:focus {
-    border-color: var(--g);
-    box-shadow: 0 0 0 3px rgba(22,163,74,0.1);
-}
-
-.btn-reset {
-    height: 40px;
-    padding: 0 18px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    font-weight: 500;
-    font-family: inherit;
-    color: var(--text-2);
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    transition: all var(--transition);
-}
-
-.btn-reset:hover {
-    background: var(--bg);
-    color: var(--text);
-}
-
-/* ── POST CARD ── */
-.post-col {
-    animation: fadeUp 0.4s ease both;
-    animation-delay: calc(var(--i) * 0.05s);
-}
-
-@keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.post-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
-}
-
-.post-card:hover {
-    box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-    transform: translateY(-4px);
-    border-color: rgba(22,163,74,0.15);
-}
-
-/* Card image */
-.card-img-wrap {
-    position: relative;
-    height: 220px;
-    overflow: hidden;
-    background: #f1f5f9;
-    flex-shrink: 0;
-}
-
-.card-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.post-card:hover .card-img {
-    transform: scale(1.04);
-}
-
-.card-img-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    color: var(--text-3);
-}
-
-.card-img-placeholder i { font-size: 2rem; }
-.card-img-placeholder span { font-size: 0.8rem; }
-
-.card-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(8px);
-    color: var(--g-dark);
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--g-border);
-}
-
-.card-sold-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(15,23,42,0.55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.1rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-}
-
-/* Card body */
-.card-body-inner {
-    padding: 1.125rem 1.25rem 1.25rem;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    gap: 0;
-}
-
-.card-author {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-}
-
-.author-avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--g-pale);
-    border: 1px solid var(--g-border);
-    color: var(--g-dark);
-    font-size: 0.75rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.author-info { display: flex; flex-direction: column; line-height: 1.3; }
-.author-name { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
-.author-time { font-size: 0.75rem; color: var(--text-3); }
-
-.card-title {
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.4;
-    margin: 0 0 6px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.card-title-link {
-    color: var(--text);
-    text-decoration: none;
-    transition: color var(--transition);
-}
-
-.card-title-link:hover { color: var(--g); }
-
-.card-desc {
-    font-size: 0.8375rem;
-    color: var(--text-2);
-    line-height: 1.55;
-    margin: 0 0 10px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    flex: 1;
-}
-
-.card-price {
-    font-size: 1.0625rem;
-    font-weight: 700;
-    color: var(--g-dark);
-    margin-bottom: 14px;
-}
-
-.card-footer-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border);
-    margin-top: auto;
-}
-
-.btn-detail {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--g);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    transition: gap var(--transition), color var(--transition);
-}
-
-.btn-detail:hover { color: var(--g-mid); gap: 6px; }
-
-.card-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.btn-buy {
-    height: 32px;
-    padding: 0 12px;
-    background: var(--g);
-    color: white;
-    font-size: 0.78rem;
-    font-weight: 600;
-    font-family: inherit;
-    border: none;
-    border-radius: var(--radius-pill);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-    transition: background var(--transition);
-}
-
-.btn-buy:hover { background: var(--g-mid); }
-
-.btn-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-sm);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text-3);
-    font-size: 0.875rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition);
-}
-
-.btn-icon:hover { background: var(--surface); color: var(--text); border-color: #e2e8f0; }
-.btn-icon.liked { background: #fff0f0; color: #ef4444; border-color: #fecaca; }
-
-.card-dropdown { min-width: 160px; }
-.card-dropdown .dropdown-item { font-weight: 500; }
-
-.action-tag {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: var(--radius-pill);
-    white-space: nowrap;
-}
-
-.tag-sold    { background: #f1f5f9; color: var(--text-3); }
-.tag-pending { background: #fffbeb; color: #92400e; }
-
-/* ── BUY MODAL ── */
-.buy-modal { border-radius: var(--radius); }
-
-.buy-modal-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: var(--g-soft);
-    border: 1px solid var(--g-border);
-    color: var(--g);
-    font-size: 1.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.btn-modal-cancel {
-    height: 40px;
-    padding: 0 18px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    font-weight: 500;
-    font-family: inherit;
-    color: var(--text-2);
-    cursor: pointer;
-    transition: all var(--transition);
-}
-
-.btn-modal-cancel:hover { background: var(--bg); color: var(--text); }
-
-.btn-modal-confirm {
-    height: 40px;
-    padding: 0 20px;
-    background: var(--g);
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    font-weight: 600;
-    font-family: inherit;
-    color: white;
-    cursor: pointer;
-    transition: background var(--transition);
-}
-
-.btn-modal-confirm:hover { background: var(--g-mid); }
-
-/* ── EMPTY STATE ── */
-.empty-state {
-    text-align: center;
-    padding: 5rem 2rem;
-    background: var(--surface);
-    border: 1px dashed rgba(22,163,74,0.25);
-    border-radius: var(--radius);
-}
-
-.empty-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 20px;
-    background: var(--g-soft);
-    color: var(--g);
-    font-size: 1.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.25rem;
-}
-
-.empty-title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 8px;
-}
-
-.empty-text {
-    font-size: 0.9rem;
-    color: var(--text-2);
-    margin-bottom: 1rem;
-}
-
-/* ── PAGINATION ── */
-.pagination .page-link {
-    border-radius: var(--radius-sm) !important;
-    border: 1px solid var(--border);
-    color: var(--text-2);
-    font-weight: 500;
-    font-size: 0.875rem;
-    padding: 7px 13px;
-    margin: 0 2px;
-    transition: all var(--transition);
-}
-
-.pagination .page-link:hover {
-    background: var(--g-soft);
-    border-color: var(--g-border);
-    color: var(--g);
-}
-
-.pagination .page-item.active .page-link {
-    background: var(--g);
-    border-color: var(--g);
-    color: white;
-}
-
-.pagination .page-item.disabled .page-link { opacity: 0.4; }
-
-/* ── UTIL ── */
-.fw-500 { font-weight: 500; }
-.fw-700 { font-weight: 700; }
-</style>
 @endsection

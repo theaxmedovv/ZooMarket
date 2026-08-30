@@ -23,7 +23,17 @@ class AppServiceProvider extends ServiceProvider
                 ->whereNull('read_at')
                 ->count();
             }
-            $view->with('globalUnreadCount', $unread);
+            
+            try {
+                $navCategories = \App\Models\Category::query()->orderBy('name')->get();
+            } catch (\Throwable $e) {
+                $navCategories = collect();
+            }
+
+            $view->with([
+                'globalUnreadCount' => $unread,
+                'navCategories' => $navCategories,
+            ]);
         });
     }
 }

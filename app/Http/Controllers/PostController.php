@@ -39,6 +39,7 @@ class PostController extends Controller
         $currency = (string) $request->query('currency', '');
         $priceMin = $request->query('price_min');
         $priceMax = $request->query('price_max');
+        $sort = (string) $request->query('sort', 'latest');
 
         if (! $canUseFilters) {
             $categoryId = null;
@@ -47,11 +48,13 @@ class PostController extends Controller
             $currency = '';
             $priceMin = null;
             $priceMax = null;
+            $sort = 'latest';
         }
 
         $availableCategoryIds = Category::query()->pluck('id')->all();
         $allowedGenders = ['male', 'female'];
         $allowedCurrencies = ['UZS', 'USD', 'EUR', 'RUB'];
+        $allowedSorts = ['latest', 'price_asc', 'price_desc', 'oldest'];
 
         if (! in_array($categoryId, $availableCategoryIds, true)) {
             $categoryId = null;
@@ -63,6 +66,10 @@ class PostController extends Controller
 
         if (! in_array($currency, $allowedCurrencies, true)) {
             $currency = '';
+        }
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'latest';
         }
 
         $priceMin = is_numeric($priceMin) ? (float) $priceMin : null;
@@ -101,8 +108,17 @@ class PostController extends Controller
                             $categoryQuery->where('name', 'like', "%{$search}%");
                         });
                 });
-            })
-            ->latest();
+            });
+
+        if ($sort === 'price_asc') {
+            $postsQuery->orderBy('price', 'asc');
+        } elseif ($sort === 'price_desc') {
+            $postsQuery->orderBy('price', 'desc');
+        } elseif ($sort === 'oldest') {
+            $postsQuery->oldest();
+        } else {
+            $postsQuery->latest();
+        }
 
         if (auth()->check()) {
             $postsQuery->withCount('likedByUsers');
@@ -131,6 +147,7 @@ class PostController extends Controller
             'currency' => $currency,
             'price_min' => $priceMin,
             'price_max' => $priceMax,
+            'sort' => $sort,
         ];
 
         return view('posts.index', compact('posts', 'search', 'likedPostIds', 'requestedAnimalIds', 'categories', 'activeFilters'));

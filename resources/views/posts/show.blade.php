@@ -222,17 +222,31 @@
     position: relative;
     border-radius: var(--radius);
     overflow: hidden;
-    background: #f1f5f9;
-    aspect-ratio: 4/3;
-    margin-bottom: 8px;
+    background: #081209;
+    border: 1px solid rgba(26, 43, 28, 0.8);
+    height: 460px;
+    min-height: 360px;
+    max-height: 540px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
 }
 
 .gallery-main-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    max-height: 540px;
+    object-fit: contain;
     display: block;
     transition: opacity 0.2s;
+}
+
+@media (max-width: 768px) {
+    .gallery-main {
+        height: 320px;
+        min-height: 260px;
+    }
 }
 
 .gallery-placeholder {
@@ -266,6 +280,8 @@
 .gallery-thumbs {
     display: flex;
     gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
 }
 
 .thumb-btn {
@@ -273,14 +289,15 @@
     height: 72px;
     border-radius: var(--radius-sm);
     overflow: hidden;
-    border: 2px solid transparent;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: #081209;
     padding: 0;
     cursor: pointer;
-    transition: border-color 0.15s;
+    transition: all 0.15s;
     flex-shrink: 0;
 }
-.thumb-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.thumb-btn.active { border-color: var(--g); }
+.thumb-btn img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.thumb-btn.active { border-color: #16a34a; box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.3); }
 .thumb-btn:hover { border-color: #86efac; }
 
 /* ── PANEL ── */

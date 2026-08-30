@@ -12,9 +12,17 @@
     <div class="profile-hero p-4 p-lg-5 rounded-5 text-white mb-4 position-relative overflow-hidden shadow-lg">
         <div class="row align-items-center g-4 position-relative" style="z-index: 2;">
             <div class="col-lg-8 text-center text-lg-start">
-                <span class="badge rounded-pill {{ $roleBadge }} px-3 py-2 fw-bold mb-3 shadow-sm text-uppercase tracking-wider">
-                    <i class="bi {{ $isSeller ? 'bi-shop' : 'bi-person-badge' }} me-1"></i> {{ $roleLabel }}
-                </span>
+                <div class="d-flex align-items-center justify-content-center justify-content-lg-start flex-wrap gap-2 mb-3">
+                    <span class="badge rounded-pill {{ $roleBadge }} px-3 py-2 fw-bold shadow-sm text-uppercase tracking-wider">
+                        <i class="bi {{ $isSeller ? 'bi-shop' : 'bi-person-badge' }} me-1"></i> {{ $roleLabel }}
+                    </span>
+                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-light px-3 py-1 rounded-pill fw-semibold">
+                            <i class="bi bi-box-arrow-right me-1"></i> Chiqish
+                        </button>
+                    </form>
+                </div>
                 <h1 class="display-4 fw-black mb-2">{{ $user->name }}</h1>
                 <p class="mb-0 opacity-75 fs-5 fw-light">Sizning shaxsiy kabinetingiz. Ma'lumotlarni boshqaring va faoliyatingizni kuzatib boring.</p>
             </div>

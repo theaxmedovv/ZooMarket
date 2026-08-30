@@ -9,7 +9,15 @@
     <div class="profile-hero p-4 p-lg-5 rounded-5 text-white mb-5">
         <div class="row align-items-center g-4">
             <div class="col-lg-8 animate-fade-in">
-                <span class="badge rounded-pill bg-white text-primary px-3 py-2 fw-bold mb-3 shadow-sm">User Profile</span>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <span class="badge rounded-pill bg-white text-primary px-3 py-2 fw-bold shadow-sm">User Profile</span>
+                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-light px-3 py-1 rounded-pill fw-semibold">
+                            <i class="bi bi-box-arrow-right me-1"></i> Chiqish
+                        </button>
+                    </form>
+                </div>
                 <h1 class="display-5 fw-black mb-2 tracking-tight">{{ $user->name }}</h1>
                 <p class="mb-0 opacity-75 fs-5">Shaxsiy profil sahifangiz. Bu yerda ma'lumotlaringizni boshqarishingiz va yoqtirgan mahsulotlaringizni kuzatishingiz mumkin.</p>
             </div>
