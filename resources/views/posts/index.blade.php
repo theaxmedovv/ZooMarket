@@ -303,70 +303,134 @@
     @forelse($posts as $post)
         <div class="post-col">
             <article class="post-card">
+                {{-- Card Image Header --}}
                 <div class="card-img-wrap">
-                    @if($post->image)
-                        <div class="card-img-backdrop" style="background-image: url('{{ asset('storage/' . $post->image) }}');"></div>
-                        <img class="card-img" src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" loading="lazy">
-                    @else
-                        <div class="card-img-placeholder"><i class="bi bi-image"></i> Rasm yuklanmagan</div>
-                    @endif
-                    <span class="card-badge">{{ $post->category?->name ?? 'E\'lon' }}</span>
-                    @if($post->isSoldOut())
-                        <span class="card-badge" style="left: auto; right: 12px; background: rgba(239, 68, 68, 0.9); color: #fff;">Sotilgan</span>
-                    @elseif($post->totalAvailableCount() > 0)
-                        <span class="card-badge" style="left: auto; right: 12px; background: rgba(194, 240, 60, 0.9); color: #060d07; font-weight: 700;">
-                            <i class="bi bi-box-seam me-1"></i>{{ $post->totalAvailableCount() }} ta
+                    <a href="{{ route('posts.show', $post) }}" class="card-img-link" aria-label="{{ $post->title }}">
+                        @if($post->image)
+                            <div class="card-img-backdrop" style="background-image: url('{{ asset('storage/' . $post->image) }}');"></div>
+                            <img class="card-img" src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" loading="lazy">
+                        @else
+                            <div class="card-img-placeholder">
+                                <i class="bi bi-image"></i> Rasm yuklanmagan
+                            </div>
+                        @endif
+                    </a>
+
+                    {{-- Badges on Image --}}
+                    <div class="card-badges-top">
+                        <span class="card-tag-pill tag-cat">
+                            {{ $post->category?->name ?? 'Hayvon' }}
                         </span>
+
+                        @if($post->isSoldOut())
+                            <span class="card-tag-pill tag-sold">
+                                <i class="bi bi-x-circle-fill"></i> Sotilgan
+                            </span>
+                        @elseif($post->totalAvailableCount() > 0)
+                            <span class="card-tag-pill tag-stock">
+                                <i class="bi bi-box-seam-fill"></i> {{ $post->totalAvailableCount() }} ta
+                            </span>
+                        @endif
+                    </div>
+
+                    {{-- Floating Favorite Button (Top Right) --}}
+                    @if(auth()->check() && auth()->user()->hasRole('user'))
+                        <form action="{{ route('posts.like', $post) }}" method="POST" class="card-heart-form">
+                            @csrf
+                            <button class="btn-card-heart {{ in_array($post->id, $likedPostIds ?? []) ? 'liked' : '' }}" type="submit" aria-label="Yoqtirish" title="Saqlash">
+                                <i class="bi {{ in_array($post->id, $likedPostIds ?? []) ? 'bi-heart-fill' : 'bi-heart' }}"></i>
+                            </button>
+                        </form>
                     @endif
                 </div>
+
+                {{-- Card Body --}}
                 <div class="card-body-inner">
-                    <div class="card-author">
-                        <span class="author-avatar">{{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}</span>
-                        <div>
-                            <span>{{ $post->user->name }}</span>
-                            <small class="author-time">{{ $post->created_at->diffForHumans() }}</small>
+                    {{-- Author row & Dropdown menu --}}
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="card-author">
+                            <span class="author-avatar">{{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}</span>
+                            <div class="author-meta">
+                                <span class="author-name">{{ $post->user->name }}</span>
+                                <small class="author-time">{{ $post->created_at->diffForHumans() }}</small>
+                            </div>
                         </div>
+
+                        @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->id() === $post->user_id))
+                            <div class="dropdown">
+                                <button class="btn-card-menu" data-bs-toggle="dropdown" aria-label="Amallar">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+                                    <li><a class="dropdown-item" href="{{ route('posts.edit', $post) }}"><i class="bi bi-pencil me-2"></i>Tahrirlash</a></li>
+                                    <li>
+                                        <form action="{{ route('posts.destroy', $post) }}" method="POST" onsubmit="return confirm('E\'lonni o\'chirishni xohlaysizmi?')">
+                                            @csrf @method('DELETE')
+                                            <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>O'chirish</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        @endif
                     </div>
+
+                    {{-- Title --}}
                     <h2 class="card-title">
                         <a class="card-title-link" href="{{ route('posts.show', $post) }}">{{ $post->title }}</a>
                     </h2>
-                    <p class="card-desc">{{ Str::limit($post->description ?? $post->content, 90) }}</p>
-                    @if(!empty($post->price))
-                        <div class="card-price">{{ number_format($post->price) }} <small>{{ $post->currency ?? 'UZS' }}</small></div>
-                    @else
-                        <div class="card-price text-muted" style="font-size: 0.95rem;">Kelishiladi</div>
-                    @endif
-                    <div class="card-footer-inner">
-                        <a class="btn-detail" href="{{ route('posts.show', $post) }}">Batafsil <i class="bi bi-arrow-right ms-1"></i></a>
-                        <div class="card-actions">
-                            @if(auth()->check() && auth()->user()->hasRole('user'))
-                                @if($post->isSoldOut())
-                                    <span class="action-tag tag-pending bg-danger text-white">Sotilgan</span>
-                                @else
-                                    <a class="btn-buy text-decoration-none" href="{{ route('posts.show', $post) }}">Sotib olish</a>
-                                @endif
-                                <form action="{{ route('posts.like', $post) }}" method="POST">
-                                    @csrf
-                                    <button class="btn-icon {{ in_array($post->id, $likedPostIds ?? []) ? 'liked' : '' }}" type="submit" aria-label="Saqlash">
-                                        <i class="bi {{ in_array($post->id, $likedPostIds ?? []) ? 'bi-heart-fill' : 'bi-heart' }}"></i>
-                                    </button>
-                                </form>
+
+                    {{-- Quick Metadata Chips (Zot, Manzil, Jinsi) --}}
+                    <div class="card-meta-chips">
+                        @if($post->breed)
+                            <span class="meta-chip" title="Zot">
+                                <i class="bi bi-award text-lime"></i> {{ Str::limit($post->breed, 15) }}
+                            </span>
+                        @endif
+                        @if($post->location)
+                            <span class="meta-chip" title="Manzil">
+                                <i class="bi bi-geo-alt text-orange"></i> {{ Str::limit($post->location, 14) }}
+                            </span>
+                        @endif
+                        <span class="meta-chip" title="Jinsi">
+                            @if($post->gender === 'mixed')
+                                <i class="bi bi-gender-male text-info"></i>{{ $post->availableMaleCount() }} <i class="bi bi-gender-female text-danger ms-1"></i>{{ $post->availableFemaleCount() }}
+                            @elseif($post->gender === 'female')
+                                <i class="bi bi-gender-female text-danger"></i> Urg'ochi
+                            @else
+                                <i class="bi bi-gender-male text-info"></i> Erkak
                             @endif
-                            @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->id() === $post->user_id))
-                                <div class="dropdown">
-                                    <button class="btn-icon" data-bs-toggle="dropdown" aria-label="Amallar"><i class="bi bi-three-dots"></i></button>
-                                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="{{ route('posts.edit', $post) }}"><i class="bi bi-pencil me-2"></i>Tahrirlash</a></li>
-                                        <li>
-                                            <form action="{{ route('posts.destroy', $post) }}" method="POST" onsubmit="return confirm('E\'lonni o\'chirishni xohlaysizmi?')">
-                                                @csrf @method('DELETE')
-                                                <button class="dropdown-item text-danger" type="submit"><i class="bi bi-trash me-2"></i>O'chirish</button>
-                                            </form>
-                                        </li>
-                                    </ul>
-                                </div>
+                        </span>
+                    </div>
+
+                    {{-- Price & Negotiable --}}
+                    <div class="card-price-row mt-auto pt-2">
+                        <div class="d-flex align-items-baseline gap-1">
+                            @if(!empty($post->price))
+                                <span class="card-price-num">{{ number_format($post->price, 0, '.', ' ') }}</span>
+                                <span class="card-price-curr">{{ $post->currency ?? 'UZS' }}</span>
+                            @else
+                                <span class="card-price-num text-muted" style="font-size: 1rem;">Kelishiladi</span>
                             @endif
                         </div>
+                        @if($post->is_negotiable)
+                            <span class="card-negotiable-tag">Kelishiladi</span>
+                        @endif
+                    </div>
+
+                    {{-- Footer Action Buttons --}}
+                    <div class="card-footer-inner">
+                        <a class="btn-card-view" href="{{ route('posts.show', $post) }}">
+                            <span>Batafsil</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+
+                        @if(auth()->check() && auth()->user()->hasRole('user'))
+                            @if(!$post->isSoldOut())
+                                <a class="btn-card-quick-buy" href="{{ route('posts.show', $post) }}" title="Sotib olish">
+                                    <i class="bi bi-cart-check-fill me-1"></i> Xarid
+                                </a>
+                            @endif
+                        @endif
                     </div>
                 </div>
             </article>

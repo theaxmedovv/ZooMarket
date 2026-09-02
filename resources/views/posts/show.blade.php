@@ -1,260 +1,415 @@
 @extends('layouts.app')
 
 @section('content')
-@php $allImages = $post->allImages(); @endphp
+@php
+    $allImages = $post->allImages();
+    $maleAvail = $post->availableMaleCount();
+    $femaleAvail = $post->availableFemaleCount();
+    $defaultGender = $maleAvail > 0 ? 'male' : ($femaleAvail > 0 ? 'female' : 'male');
+@endphp
 
-<div class="container py-4">
+<div class="container py-4 post-detail-container">
 
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb mb-0" style="font-size:0.82rem;">
-            <li class="breadcrumb-item"><a href="{{ route('posts.index') }}" class="text-decoration-none text-success">E'lonlar</a></li>
-            <li class="breadcrumb-item active">{{ Str::limit($post->title, 40) }}</li>
-        </ol>
-    </nav>
+    {{-- ── TOP NAVIGATION & BREADCRUMB BAR ── --}}
+    <div class="detail-topbar mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <a href="{{ route('posts.index') }}" class="btn-back-crumb">
+                    <i class="bi bi-arrow-left me-1"></i> Barcha e'lonlar
+                </a>
+                <nav aria-label="breadcrumb" class="d-none d-md-block">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{{ route('posts.index') }}">E'lonlar</a></li>
+                        @if($post->category)
+                            <li class="breadcrumb-item"><a href="{{ route('posts.index', ['category_id' => $post->category_id]) }}">{{ $post->category->name }}</a></li>
+                        @endif
+                        <li class="breadcrumb-item active" aria-current="page">{{ Str::limit($post->title, 32) }}</li>
+                    </ol>
+                </nav>
+            </div>
 
-    <div class="ad-layout">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge-post-meta">
+                    <i class="bi bi-hash text-lime"></i> ID: {{ $post->id }}
+                </span>
+                <span class="badge-post-meta">
+                    <i class="bi bi-clock me-1 text-lime"></i> {{ $post->created_at->diffForHumans() }}
+                </span>
+                <span class="badge-post-meta d-none d-sm-inline-flex">
+                    <i class="bi bi-heart-fill me-1 text-orange"></i> {{ $post->liked_by_users_count }}
+                </span>
+            </div>
+        </div>
+    </div>
 
-        {{-- ── LEFT: IMAGE GALLERY ── --}}
-        <div class="ad-gallery">
-            <div class="gallery-main" id="galleryMain">
-                @if(!empty($allImages))
-                    <img src="{{ asset('storage/' . $allImages[0]) }}"
-                         alt="{{ $post->title }}"
-                         class="gallery-main-img" id="mainImg">
-                @else
-                    <div class="gallery-placeholder">
-                        <i class="bi bi-image"></i>
-                        <span>Rasm yo'q</span>
+    {{-- ── MAIN DETAIL LAYOUT (2 COLUMNS) ── --}}
+    <div class="row g-4">
+
+        {{-- ── LEFT COLUMN: GALLERY, DESCRIPTION & TRUST ── --}}
+        <div class="col-lg-7 col-xl-7">
+
+            {{-- Gallery Card --}}
+            <div class="gallery-card-shell mb-4">
+                <div class="gallery-main-view" id="galleryMainView">
+                    @if(!empty($allImages))
+                        <div class="gallery-ambient-backdrop" id="ambientBackdrop" style="background-image: url('{{ asset('storage/' . $allImages[0]) }}');"></div>
+                        <img src="{{ asset('storage/' . $allImages[0]) }}"
+                             alt="{{ $post->title }}"
+                             class="gallery-main-img" id="mainImg">
+                    @else
+                        <div class="gallery-placeholder">
+                            <i class="bi bi-image"></i>
+                            <span>Rasm yuklanmagan</span>
+                        </div>
+                    @endif
+
+                    {{-- Floating Status & Category Badges on Image --}}
+                    <div class="gallery-overlay-top">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="gallery-glass-pill pill-cat">
+                                <i class="bi bi-tag-fill text-lime me-1"></i> {{ $post->category?->name ?? 'Hayvon' }}
+                            </span>
+                            @if($post->isSoldOut())
+                                <span class="gallery-glass-pill pill-sold">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Sotilgan
+                                </span>
+                            @elseif($post->status === 'reserved')
+                                <span class="gallery-glass-pill pill-reserved">
+                                    <i class="bi bi-hourglass-split me-1"></i> Rezerv qilingan
+                                </span>
+                            @else
+                                <span class="gallery-glass-pill pill-active">
+                                    <i class="bi bi-check-circle-fill text-lime me-1"></i> Sotuvda faol
+                                </span>
+                            @endif
+                        </div>
+
+                        @if(!empty($allImages))
+                            <span class="gallery-glass-pill pill-counter">
+                                <i class="bi bi-camera-fill text-lime me-1"></i>
+                                <span id="galleryCounter">1 / {{ count($allImages) }}</span>
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Thumbnails strip --}}
+                @if(count($allImages) > 1)
+                    <div class="gallery-thumbnails-strip">
+                        @foreach($allImages as $i => $img)
+                            <button type="button" class="gallery-thumb-btn {{ $i === 0 ? 'active' : '' }}"
+                                    onclick="switchImage('{{ asset('storage/' . $img) }}', this, {{ $i + 1 }})">
+                                <img src="{{ asset('storage/' . $img) }}" alt="Rasm {{ $i + 1 }}">
+                            </button>
+                        @endforeach
                     </div>
                 @endif
-
-                @if($post->status === 'reserved')
-                    <span class="gallery-status-badge badge-reserved">Rezerv</span>
-                @endif
             </div>
 
-            @if(count($allImages) > 1)
-                <div class="gallery-thumbs">
-                    @foreach($allImages as $i => $img)
-                        <button class="thumb-btn {{ $i === 0 ? 'active' : '' }}"
-                                onclick="switchImage('{{ asset('storage/' . $img) }}', this)">
-                            <img src="{{ asset('storage/' . $img) }}" alt="Rasm {{ $i + 1 }}">
-                        </button>
-                    @endforeach
+            {{-- Description Section Card --}}
+            <div class="detail-section-card mb-4">
+                <div class="section-card-title">
+                    <i class="bi bi-card-text text-lime me-2"></i> E'lon tavsifi
                 </div>
-            @endif
-        </div>
-
-        {{-- ── RIGHT: DETAILS PANEL ── --}}
-        <div class="ad-panel">
-
-            {{-- Title & price --}}
-            <div class="panel-header">
-                <h1 class="ad-title">{{ $post->title }}</h1>
-
-                <div class="ad-price-row">
-                    <span class="ad-price">
-                        {{ number_format((float) $post->price, 0, '.', ' ') }}
-                        <span class="ad-currency">{{ $post->currency }}</span>
-                    </span>
-                    @if($post->is_negotiable)
-                        <span class="negotiable-badge">Kelishiladi</span>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Seller info --}}
-            <div class="seller-row">
-                <div class="seller-avatar">{{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}</div>
-                <div>
-                    <div class="seller-name">{{ $post->user->name }}</div>
-                    <div class="seller-date">{{ $post->created_at->format('d.m.Y') }}</div>
-                </div>
-            </div>
-
-            {{-- Inventory & Stock Banner --}}
-            <div class="stock-panel-box mb-3">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                    <span class="stock-title">
-                        <i class="bi bi-boxes text-lime me-1"></i> Hayvonlar soni va mavjudligi:
-                    </span>
-                    <span class="badge {{ $post->isSoldOut() ? 'bg-danger' : 'bg-lime-soft text-lime' }} fw-bold px-3 py-1 rounded-pill">
-                        {{ $post->isSoldOut() ? 'Sotilgan (Tugagan)' : 'Jami: ' . $post->totalAvailableCount() . ' ta mavjud' }}
-                    </span>
-                </div>
-                <div class="row g-2">
-                    @if($post->gender === 'mixed' || ($post->male_quantity > 0 && $post->female_quantity > 0))
-                        <div class="col-6">
-                            <div class="stock-mini-card {{ $post->availableMaleCount() > 0 ? '' : 'depleted' }}">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-gender-male text-info fs-5"></i>
-                                    <div>
-                                        <div class="small fw-bold text-cream">Erkak</div>
-                                        <div class="stock-subtext {{ $post->availableMaleCount() > 0 ? 'text-lime' : 'text-danger' }}">
-                                            {{ $post->availableMaleCount() > 0 ? $post->availableMaleCount() . ' ta mavjud' : 'Tugagan' }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="stock-mini-card {{ $post->availableFemaleCount() > 0 ? '' : 'depleted' }}">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="bi bi-gender-female text-danger fs-5"></i>
-                                    <div>
-                                        <div class="small fw-bold text-cream">Urg'ochi</div>
-                                        <div class="stock-subtext {{ $post->availableFemaleCount() > 0 ? 'text-lime' : 'text-danger' }}">
-                                            {{ $post->availableFemaleCount() > 0 ? $post->availableFemaleCount() . ' ta mavjud' : 'Tugagan' }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @elseif($post->availableMaleCount() > 0 || $post->gender === 'male')
-                        <div class="col-12">
-                            <div class="stock-mini-card {{ $post->availableMaleCount() > 0 ? '' : 'depleted' }}">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="bi bi-gender-male text-info fs-5"></i>
-                                        <span class="small fw-bold text-cream">Jinsi: Erkak</span>
-                                    </div>
-                                    <span class="stock-subtext {{ $post->availableMaleCount() > 0 ? 'text-lime' : 'text-danger' }}">
-                                        Mavjud: {{ $post->availableMaleCount() }} ta
-                                    </span>
-                                </div>
-                            </div>
+                <div class="section-desc-body">
+                    @if($post->description ?? $post->content)
+                        <div class="ad-full-text">
+                            {!! nl2br(e($post->description ?? $post->content)) !!}
                         </div>
                     @else
-                        <div class="col-12">
-                            <div class="stock-mini-card {{ $post->availableFemaleCount() > 0 ? '' : 'depleted' }}">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="bi bi-gender-female text-danger fs-5"></i>
-                                        <span class="small fw-bold text-cream">Jinsi: Urg'ochi</span>
-                                    </div>
-                                    <span class="stock-subtext {{ $post->availableFemaleCount() > 0 ? 'text-lime' : 'text-danger' }}">
-                                        Mavjud: {{ $post->availableFemaleCount() }} ta
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
+                        <p class="text-muted fst-italic mb-0">Sotuvchi ushbu e'lon uchun alohida tavsif qoldirmagan.</p>
                     @endif
                 </div>
             </div>
 
-            {{-- Info grid --}}
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label"><i class="bi bi-tag"></i> Kategoriya</span>
-                    <span class="info-val">{{ $post->category?->name ?? '—' }}</span>
+            {{-- Trust & Safe Marketplace Notice --}}
+            <div class="detail-section-card mb-4">
+                <div class="section-card-title">
+                    <i class="bi bi-shield-check text-lime me-2"></i> Xavfsiz xarid qoidalari
                 </div>
-                <div class="info-item">
-                    <span class="info-label"><i class="bi bi-award"></i> Zot</span>
-                    <span class="info-val">{{ $post->breed ?: '—' }}</span>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="trust-mini-feature">
+                            <div class="trust-icon-box"><i class="bi bi-camera-video"></i></div>
+                            <h6>Jonli ko'rik</h6>
+                            <p>Xarid qilishdan avval videochat orqali hayvonning sog'lig'i va holatini ko'ring.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="trust-mini-feature">
+                            <div class="trust-icon-box"><i class="bi bi-chat-heart"></i></div>
+                            <h6>To'g'ridan-to'g'ri aloqa</h6>
+                            <p>Vositachilarsiz bevosita sotuvchi bilan chat yoki telefon orqali bog'laning.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="trust-mini-feature">
+                            <div class="trust-icon-box"><i class="bi bi-patch-check"></i></div>
+                            <h6>Xavfsiz to'lov</h6>
+                            <p>To'lovni hayvonni o'z ko'zingiz bilan ko'rib, qabul qilganingizdan so'ng to'lang.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <span class="info-label"><i class="bi bi-gender-ambiguous"></i> Jinsi</span>
-                    <span class="info-val">
-                        @if($post->gender === 'mixed')
-                            Aralash (Mixed)
-                        @elseif($post->gender === 'female')
-                            Urg'ochi ♀
+            </div>
+
+        </div>
+
+        {{-- ── RIGHT COLUMN: STICKY PURCHASE & SELLER PANEL ── --}}
+        <div class="col-lg-5 col-xl-5">
+            <div class="sticky-detail-sidebar">
+
+                {{-- Price & Title Box --}}
+                <div class="detail-panel-box mb-3">
+                    <div class="panel-price-header">
+                        <div class="price-val-wrap">
+                            <div class="ad-price-display">
+                                {{ number_format((float) $post->price, 0, '.', ' ') }}
+                                <small class="ad-price-unit">{{ $post->currency }}</small>
+                            </div>
+                            @if($post->is_negotiable)
+                                <span class="badge-negotiable-glow">
+                                    <i class="bi bi-check2-circle me-1"></i> Kelishiladi
+                                </span>
+                            @endif
+                        </div>
+                        <div class="price-sub-hint text-muted small">
+                            Bir dona hayvon uchun ko'rsatilgan narx
+                        </div>
+                    </div>
+
+                    <h1 class="ad-main-title">{{ $post->title }}</h1>
+
+                    <div class="d-flex align-items-center gap-2 flex-wrap mt-2">
+                        @if($post->breed)
+                            <span class="detail-chip">
+                                <i class="bi bi-award text-lime me-1"></i> {{ $post->breed }}
+                            </span>
+                        @endif
+                        @if($post->location)
+                            <span class="detail-chip">
+                                <i class="bi bi-geo-alt text-orange me-1"></i> {{ $post->location }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Live Stock & Gender Breakdown Card --}}
+                <div class="detail-panel-box mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="panel-section-label">
+                            <i class="bi bi-boxes text-lime me-1"></i> Zaxira va jins taqsimoti:
+                        </span>
+                        <span class="stock-total-badge {{ $post->isSoldOut() ? 'sold-badge' : '' }}">
+                            {{ $post->isSoldOut() ? 'Tugagan (Sold out)' : 'Jami: ' . $post->totalAvailableCount() . ' ta mavjud' }}
+                        </span>
+                    </div>
+
+                    <div class="row g-2">
+                        @if($post->gender === 'mixed' || ($post->male_quantity > 0 && $post->female_quantity > 0))
+                            <div class="col-6">
+                                <div class="stock-breakdown-card {{ $maleAvail > 0 ? '' : 'depleted' }}">
+                                    <div class="stock-card-icon male-icon"><i class="bi bi-gender-male"></i></div>
+                                    <div>
+                                        <div class="stock-card-title">Erkak ♂</div>
+                                        <div class="stock-card-status {{ $maleAvail > 0 ? 'text-lime' : 'text-danger' }}">
+                                            {{ $maleAvail > 0 ? $maleAvail . ' ta mavjud' : 'Tugagan' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stock-breakdown-card {{ $femaleAvail > 0 ? '' : 'depleted' }}">
+                                    <div class="stock-card-icon female-icon"><i class="bi bi-gender-female"></i></div>
+                                    <div>
+                                        <div class="stock-card-title">Urg'ochi ♀</div>
+                                        <div class="stock-card-status {{ $femaleAvail > 0 ? 'text-lime' : 'text-danger' }}">
+                                            {{ $femaleAvail > 0 ? $femaleAvail . ' ta mavjud' : 'Tugagan' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @elseif($maleAvail > 0 || $post->gender === 'male')
+                            <div class="col-12">
+                                <div class="stock-breakdown-card {{ $maleAvail > 0 ? '' : 'depleted' }}">
+                                    <div class="stock-card-icon male-icon"><i class="bi bi-gender-male"></i></div>
+                                    <div class="d-flex align-items-center justify-content-between flex-grow-1">
+                                        <div class="stock-card-title">Jinsi: Erkak ♂</div>
+                                        <div class="stock-card-status {{ $maleAvail > 0 ? 'text-lime' : 'text-danger' }}">
+                                            Mavjud: {{ $maleAvail }} ta
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @else
-                            Erkak ♂
+                            <div class="col-12">
+                                <div class="stock-breakdown-card {{ $femaleAvail > 0 ? '' : 'depleted' }}">
+                                    <div class="stock-card-icon female-icon"><i class="bi bi-gender-female"></i></div>
+                                    <div class="d-flex align-items-center justify-content-between flex-grow-1">
+                                        <div class="stock-card-title">Jinsi: Urg'ochi ♀</div>
+                                        <div class="stock-card-status {{ $femaleAvail > 0 ? 'text-lime' : 'text-danger' }}">
+                                            Mavjud: {{ $femaleAvail }} ta
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @endif
+                    </div>
+                </div>
+
+                {{-- Key Specifications Grid --}}
+                <div class="detail-panel-box mb-3">
+                    <span class="panel-section-label mb-2 d-block">
+                        <i class="bi bi-ui-checks-grid text-lime me-1"></i> Asosiy xususiyatlar:
                     </span>
+                    <div class="specs-grid">
+                        <div class="spec-cell">
+                            <span class="spec-label"><i class="bi bi-tag text-muted me-1"></i> Kategoriya</span>
+                            <span class="spec-val">{{ $post->category?->name ?? '—' }}</span>
+                        </div>
+                        <div class="spec-cell">
+                            <span class="spec-label"><i class="bi bi-award text-muted me-1"></i> Zot</span>
+                            <span class="spec-val">{{ $post->breed ?: '—' }}</span>
+                        </div>
+                        <div class="spec-cell">
+                            <span class="spec-label"><i class="bi bi-gender-ambiguous text-muted me-1"></i> Jinsi</span>
+                            <span class="spec-val">
+                                @if($post->gender === 'mixed')
+                                    Aralash (Mixed)
+                                @elseif($post->gender === 'female')
+                                    Urg'ochi ♀
+                                @else
+                                    Erkak ♂
+                                @endif
+                            </span>
+                        </div>
+                        <div class="spec-cell">
+                            <span class="spec-label"><i class="bi bi-calendar3 text-muted me-1"></i> Yoshi</span>
+                            <span class="spec-val">{{ $post->age ?: '—' }}</span>
+                        </div>
+                        <div class="spec-cell">
+                            <span class="spec-label"><i class="bi bi-palette text-muted me-1"></i> Rangi</span>
+                            <span class="spec-val">{{ $post->color ?: '—' }}</span>
+                        </div>
+                        <div class="spec-cell">
+                            <span class="spec-label"><i class="bi bi-geo-alt text-muted me-1"></i> Manzil</span>
+                            <span class="spec-val">{{ $post->location ?: '—' }}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <span class="info-label"><i class="bi bi-box-seam"></i> Jami soni</span>
-                    <span class="info-val">{{ $post->totalAvailableCount() }} ta</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label"><i class="bi bi-clock"></i> Yoshi</span>
-                    <span class="info-val">{{ $post->age ?: '—' }}</span>
-                </div>
-                @if($post->color)
-                <div class="info-item">
-                    <span class="info-label"><i class="bi bi-palette"></i> Rangi</span>
-                    <span class="info-val">{{ $post->color }}</span>
-                </div>
-                @endif
-                <div class="info-item">
-                    <span class="info-label"><i class="bi bi-geo-alt"></i> Manzil</span>
-                    <span class="info-val">{{ $post->location ?: '—' }}</span>
-                </div>
-            </div>
 
-            {{-- Description --}}
-            @if($post->description ?? $post->content)
-            <div class="ad-desc">
-                <div class="ad-desc-label">Tavsif</div>
-                <div class="ad-desc-text">{!! nl2br(e($post->description ?? $post->content)) !!}</div>
-            </div>
-            @endif
+                {{-- Seller Profile Trust Card --}}
+                <div class="detail-panel-box mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="seller-avatar-box">
+                            {{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="seller-name-title mb-0">{{ $post->user->name }}</h6>
+                                <span class="badge-seller-tag">Sotuvchi</span>
+                            </div>
+                            <div class="seller-meta-text">
+                                Ro'yxatdan o'tgan: {{ $post->user->created_at->format('d.m.Y') }}
+                            </div>
+                        </div>
+                    </div>
 
-            {{-- Actions --}}
-            <div class="ad-actions">
-                @if(auth()->check() && auth()->user()->hasRole('user'))
-                    @if($post->isSoldOut() || $post->status === 'sold')
-                        <button class="btn-action btn-sold" disabled>
-                            <i class="bi bi-x-circle me-1"></i> Sotilgan
-                        </button>
-                    @else
-                        <button class="btn-action btn-buy"
-                                data-bs-toggle="modal" data-bs-target="#buyModalDetail">
-                            <i class="bi bi-cart-check me-1"></i> Sotib olish
-                        </button>
+                    @if($post->user->phone || $post->user->telegram_username)
+                        <div class="seller-contact-links mt-3 pt-3 border-top border-line">
+                            @if($post->user->phone)
+                                <a href="tel:{{ $post->user->phone }}" class="seller-contact-btn btn-call">
+                                    <i class="bi bi-telephone-fill"></i>
+                                    <span>{{ $post->user->phone }}</span>
+                                </a>
+                            @endif
+                            @if($post->user->telegram_username)
+                                <a href="https://t.me/{{ ltrim($post->user->telegram_username, '@') }}" target="_blank" class="seller-contact-btn btn-tg">
+                                    <i class="bi bi-telegram"></i>
+                                    <span>Telegram</span>
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Action Buttons --}}
+                <div class="detail-actions-box">
+                    @if(auth()->check() && auth()->user()->hasRole('user'))
+                        @if($post->isSoldOut() || $post->status === 'sold')
+                            <button class="btn-action-main btn-main-sold" disabled>
+                                <i class="bi bi-x-circle-fill me-2"></i> E'lon sotilgan (Mavjud emas)
+                            </button>
+                        @else
+                            <button class="btn-action-main btn-main-buy" data-bs-toggle="modal" data-bs-target="#buyModalDetail">
+                                <i class="bi bi-cart-check-fill me-2"></i> Sotib olish so'rovini yuborish
+                            </button>
+                        @endif
+
+                        <div class="action-secondary-row mt-2">
+                            <form action="{{ route('posts.like', $post) }}" method="POST" class="flex-grow-1">
+                                @csrf
+                                <button type="submit" class="btn-action-sub btn-sub-like {{ $isLiked ? 'liked' : '' }}">
+                                    <i class="bi {{ $isLiked ? 'bi-heart-fill' : 'bi-heart' }} me-1"></i>
+                                    <span>{{ $isLiked ? 'Yoqtirilgan' : 'Yoqtirish' }}</span>
+                                    <span class="like-counter">({{ $post->liked_by_users_count }})</span>
+                                </button>
+                            </form>
+
+                            @if($chat)
+                                @php $unread = $chat->unreadCountFor(auth()->id()); @endphp
+                                <a href="{{ route('chats.show', $chat) }}" class="btn-action-sub btn-sub-chat">
+                                    <i class="bi bi-chat-dots-fill me-1"></i>
+                                    <span>Chat</span>
+                                    @if($unread > 0)
+                                        <span class="badge bg-lime text-ink ms-1">{{ $unread }}</span>
+                                    @endif
+                                </a>
+                            @endif
+                        </div>
                     @endif
 
-                    <form action="{{ route('posts.like', $post) }}" method="POST" class="d-contents">
-                        @csrf
-                        <button type="submit" class="btn-action btn-like {{ $isLiked ? 'liked' : '' }}">
-                            <i class="bi {{ $isLiked ? 'bi-heart-fill' : 'bi-heart' }} me-1"></i>
-                            {{ $isLiked ? 'Yoqtirilgan' : 'Yoqtirish' }}
-                            <span class="ms-1 opacity-75">({{ $post->liked_by_users_count }})</span>
-                        </button>
-                    </form>
-                @endif
+                    @if(auth()->check() && (auth()->user()->can('edit posts') || auth()->id() === $post->user_id))
+                        <div class="mt-2">
+                            <a href="{{ route('posts.edit', $post) }}" class="btn-action-sub btn-sub-edit w-100">
+                                <i class="bi bi-pencil-square me-1"></i> E'lonni tahrirlash
+                            </a>
+                        </div>
+                    @endif
 
-                @if(auth()->check() && auth()->user()->can('edit posts'))
-                    <a href="{{ route('posts.edit', $post) }}" class="btn-action btn-edit">
-                        <i class="bi bi-pencil me-1"></i> Tahrirlash
-                    </a>
-                @endif
+                    @guest
+                        <div class="guest-action-card text-center p-3 rounded-3 mt-2">
+                            <div class="small text-muted mb-2">Hayvonni sotib olish yoki sotuvchi bilan bog'lanish uchun tizimga kiring:</div>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a href="{{ route('login') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">Kirish</a>
+                                <a href="{{ route('register') }}" class="btn btn-sm btn-success rounded-pill px-3">Ro'yxatdan o'tish</a>
+                            </div>
+                        </div>
+                    @endguest
+                </div>
 
-                @if($chat)
-                    @php $unread = $chat->unreadCountFor(auth()->id()); @endphp
-                    <a href="{{ route('chats.show', $chat) }}" class="btn-action btn-chat">
-                        <i class="bi bi-chat-dots me-1"></i> Chatga o'tish
-                        @if($unread > 0)
-                            <span class="ms-1 badge bg-white text-success" style="font-size:0.65rem;">{{ $unread }}</span>
-                        @endif
-                    </a>
-                @endif
             </div>
-
-            <a href="{{ route('posts.index') }}" class="back-link">
-                <i class="bi bi-arrow-left me-1"></i> Barcha e'lonlar
-            </a>
         </div>
+
     </div>
 </div>
 
-{{-- Buy Modal with Gender and Quantity Selection --}}
+{{-- ── BUY MODAL WITH DYNAMIC GENDER & QUANTITY SELECTION ── --}}
 @if(auth()->check() && auth()->user()->hasRole('user') && ! $post->isSoldOut())
-    <div class="modal fade" id="buyModalDetail" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="buyModalDetail" tabindex="-1" aria-labelledby="buyModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content rounded-4 border-0 shadow-lg modal-buy-custom">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold text-cream">
+                    <h5 class="modal-title fw-bold text-cream" id="buyModalLabel">
                         <i class="bi bi-cart-check-fill text-lime me-2"></i> Sotib olish so'rovi
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Yopish"></button>
                 </div>
                 <form action="{{ route('purchase-requests.store') }}" method="POST" id="buyerPurchaseForm">
                     @csrf
                     <input type="hidden" name="animal_id" value="{{ $post->id }}">
                     <div class="modal-body p-4">
+
+                        {{-- Post Summary Card --}}
                         <div class="post-summary-card mb-3">
                             <div class="fw-bold text-cream">{{ $post->title }}</div>
                             <div class="small text-muted">{{ $post->breed }} &bull; {{ $post->location }}</div>
@@ -269,11 +424,6 @@
                             <label class="form-label-custom small fw-bold text-cream d-block mb-2">
                                 1. Hayvon jinsini tanlang:
                             </label>
-                            @php
-                                $maleAvail = $post->availableMaleCount();
-                                $femaleAvail = $post->availableFemaleCount();
-                                $defaultGender = $maleAvail > 0 ? 'male' : ($femaleAvail > 0 ? 'female' : 'male');
-                            @endphp
                             <div class="row g-2">
                                 <div class="col-6">
                                     <label class="buyer-gender-card {{ $maleAvail <= 0 ? 'disabled' : '' }}" for="buyerGenderMale">
@@ -329,8 +479,8 @@
                             </div>
                         </div>
 
-                        {{-- Calculation Summary --}}
-                        <div class="buyer-total-panel p-3 rounded-3 mb-3">
+                        {{-- Calculation Summary Panel --}}
+                        <div class="buyer-total-panel p-3 rounded-3 mb-2">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="small text-muted">Jami to'lov:</span>
                                 <span class="fw-bold text-lime fs-5" id="buyerTotalPrice">
@@ -341,6 +491,7 @@
                                 1 ta &times; {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
                             </div>
                         </div>
+
                     </div>
                     <div class="modal-footer border-0 pt-0 d-flex gap-2">
                         <button type="button" class="btn btn-outline-secondary rounded-pill px-4 flex-grow-1" data-bs-dismiss="modal">Bekor qilish</button>
@@ -355,325 +506,586 @@
 @endif
 
 <style>
-:root {
-    --g: #16a34a;
-    --g-mid: #15803d;
-    --g-soft: #f0fdf4;
-    --g-pale: #dcfce7;
-    --g-border: #bbf7d0;
-    --text: #0f172a;
-    --text-2: #475569;
-    --text-3: #94a3b8;
-    --border: rgba(15,23,42,0.08);
-    --radius: 14px;
-    --radius-sm: 9px;
-    --shadow: 0 4px 20px rgba(0,0,0,0.07);
+/* ── DETAIL PAGE STYLING (DARK LUXURY THEME) ── */
+.post-detail-container {
+    max-width: 1240px;
 }
 
-/* ── LAYOUT ── */
-.ad-layout {
-    display: grid;
-    grid-template-columns: 1fr 420px;
-    gap: 24px;
-    align-items: start;
+/* Topbar & Breadcrumb */
+.detail-topbar {
+    background: rgba(13, 24, 14, 0.75);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 10px 16px;
+    backdrop-filter: blur(12px);
+}
+.btn-back-crumb {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn-back-crumb:hover {
+    color: var(--lime);
+    border-color: var(--lime);
+    background: rgba(194, 240, 60, 0.08);
+    transform: translateX(-2px);
+}
+.breadcrumb {
+    font-size: 0.8rem;
+}
+.breadcrumb-item a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.breadcrumb-item a:hover {
+    color: var(--lime);
+}
+.breadcrumb-item.active {
+    color: var(--cream);
+    font-weight: 600;
+}
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    color: var(--muted);
+    font-size: 0.95rem;
+    padding: 0 6px;
+}
+.badge-post-meta {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 3px 9px;
+    border-radius: 999px;
 }
 
-@media (max-width: 900px) {
-    .ad-layout { grid-template-columns: 1fr; }
-}
-
-/* ── GALLERY ── */
-.ad-gallery { position: sticky; top: 80px; }
-
-.gallery-main {
-    position: relative;
-    border-radius: var(--radius);
+/* Gallery Shell */
+.gallery-card-shell {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
     overflow: hidden;
-    background: #081209;
-    border: 1px solid rgba(26, 43, 28, 0.8);
+    padding: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.gallery-main-view {
     height: 460px;
-    min-height: 360px;
-    max-height: 540px;
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #040804;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 12px;
 }
-
+.gallery-ambient-backdrop {
+    position: absolute;
+    inset: -14px;
+    background-size: cover;
+    background-position: center;
+    filter: blur(24px) brightness(0.24) saturate(1.4);
+    opacity: 0.9;
+    transform: scale(1.15);
+    pointer-events: none;
+    transition: background-image 0.25s ease;
+}
 .gallery-main-img {
-    width: 100%;
-    height: 100%;
-    max-height: 540px;
+    position: relative;
+    z-index: 2;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
-    display: block;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s ease, transform 0.3s ease;
 }
-
-@media (max-width: 768px) {
-    .gallery-main {
-        height: 320px;
-        min-height: 260px;
-    }
-}
-
 .gallery-placeholder {
-    width: 100%;
-    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    color: var(--text-3);
+    color: var(--muted);
     font-size: 0.9rem;
 }
-.gallery-placeholder i { font-size: 2.5rem; }
+.gallery-placeholder i {
+    font-size: 2.8rem;
+    color: var(--line);
+}
 
-.gallery-status-badge {
+.gallery-overlay-top {
     position: absolute;
     top: 14px;
     left: 14px;
-    font-size: 0.78rem;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 3;
+    pointer-events: none;
+}
+.gallery-glass-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.74rem;
     font-weight: 700;
     padding: 5px 12px;
-    border-radius: 100px;
+    border-radius: 9999px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
 }
-.badge-reserved {
-    background: #fffbeb;
-    color: #92400e;
-    border: 1px solid #fde68a;
+.gallery-glass-pill.pill-cat {
+    background: rgba(8, 18, 9, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--cream);
+}
+.gallery-glass-pill.pill-active {
+    background: rgba(194, 240, 60, 0.18);
+    border: 1px solid rgba(194, 240, 60, 0.5);
+    color: var(--lime);
+}
+.gallery-glass-pill.pill-reserved {
+    background: rgba(255, 107, 43, 0.2);
+    border: 1px solid rgba(255, 107, 43, 0.5);
+    color: var(--orange);
+}
+.gallery-glass-pill.pill-sold {
+    background: rgba(239, 68, 68, 0.25);
+    border: 1px solid rgba(239, 68, 68, 0.6);
+    color: #ff6b6b;
+}
+.gallery-glass-pill.pill-counter {
+    background: rgba(8, 18, 9, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--cream);
 }
 
-.gallery-thumbs {
+.gallery-thumbnails-strip {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     overflow-x: auto;
+    margin-top: 12px;
     padding-bottom: 4px;
+    scrollbar-width: thin;
 }
-
-.thumb-btn {
-    width: 72px;
-    height: 72px;
-    border-radius: var(--radius-sm);
+.gallery-thumb-btn {
+    width: 76px;
+    height: 76px;
+    border-radius: 12px;
     overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.1);
     background: #081209;
+    border: 2px solid var(--line);
     padding: 0;
     cursor: pointer;
-    transition: all 0.15s;
     flex-shrink: 0;
+    transition: all 0.2s ease;
 }
-.thumb-btn img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
-.thumb-btn.active { border-color: #16a34a; box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.3); }
-.thumb-btn:hover { border-color: #86efac; }
-
-/* ── PANEL ── */
-.ad-panel {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    box-shadow: var(--shadow);
+.gallery-thumb-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.gallery-thumb-btn:hover {
+    border-color: rgba(194, 240, 60, 0.5);
+    transform: translateY(-2px);
+}
+.gallery-thumb-btn.active {
+    border-color: var(--lime);
+    box-shadow: 0 0 14px rgba(194, 240, 60, 0.35);
 }
 
-.panel-header { display: flex; flex-direction: column; gap: 8px; }
-
-.ad-title {
-    font-size: 1.3rem;
+/* Detail Section Cards */
+.detail-section-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.section-card-title {
+    font-family: var(--serif);
+    font-size: 1.05rem;
     font-weight: 700;
-    color: var(--text);
-    line-height: 1.35;
+    color: var(--cream);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+}
+.ad-full-text {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: rgba(238, 233, 222, 0.88);
+}
+
+/* Trust Features */
+.trust-mini-feature {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 16px;
+    height: 100%;
+}
+.trust-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(194, 240, 60, 0.12);
+    color: var(--lime);
+    display: grid;
+    place-items: center;
+    font-size: 1.15rem;
+    margin-bottom: 10px;
+}
+.trust-mini-feature h6 {
+    font-family: var(--serif);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 6px;
+}
+.trust-mini-feature p {
+    font-size: 0.76rem;
+    color: var(--muted);
+    line-height: 1.45;
     margin: 0;
 }
 
-.ad-price-row {
+/* Right Sticky Sidebar */
+.sticky-detail-sidebar {
+    position: sticky;
+    top: 76px;
+}
+.detail-panel-box {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+/* Price Box */
+.panel-price-header {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+}
+.price-val-wrap {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
     flex-wrap: wrap;
+    gap: 8px;
 }
-
-.ad-price {
-    font-size: 1.6rem;
+.ad-price-display {
+    font-family: var(--serif);
+    font-size: 1.95rem;
     font-weight: 800;
-    color: var(--g);
-    line-height: 1;
+    color: var(--lime);
+    letter-spacing: -0.03em;
+    line-height: 1.15;
 }
-.ad-currency { font-size: 1rem; font-weight: 600; }
-
-.negotiable-badge {
-    font-size: 0.75rem;
+.ad-price-unit {
+    font-size: 0.95rem;
     font-weight: 600;
-    background: var(--g-soft);
-    color: var(--g-mid);
-    border: 1px solid var(--g-border);
+    color: rgba(238, 233, 222, 0.75);
+}
+.badge-negotiable-glow {
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: rgba(194, 240, 60, 0.12);
+    color: var(--lime);
+    border: 1px solid rgba(194, 240, 60, 0.35);
     padding: 3px 10px;
-    border-radius: 100px;
+    border-radius: 9999px;
+}
+.ad-main-title {
+    font-family: var(--serif);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1.3;
+    margin: 0;
+}
+.detail-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 3px 9px;
+    border-radius: 8px;
 }
 
-/* Seller */
-.seller-row {
+/* Stock Card */
+.panel-section-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--cream);
+}
+.stock-total-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(194, 240, 60, 0.14);
+    color: var(--lime);
+    border: 1px solid rgba(194, 240, 60, 0.3);
+}
+.stock-total-badge.sold-badge {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ff6b6b;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+.stock-breakdown-card {
+    background: #081209;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px;
-    background: var(--g-soft);
-    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
 }
-.seller-avatar {
-    width: 36px;
-    height: 36px;
-    background: var(--g);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    font-weight: 700;
+.stock-breakdown-card.depleted {
+    opacity: 0.45;
+    background: #140d0d;
+    border-color: #2b1717;
+}
+.stock-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
     flex-shrink: 0;
 }
-.seller-name { font-size: 0.875rem; font-weight: 600; color: var(--text); }
-.seller-date { font-size: 0.75rem; color: var(--text-3); }
+.stock-card-icon.male-icon {
+    background: rgba(13, 202, 240, 0.12);
+    color: #0dcaf0;
+}
+.stock-card-icon.female-icon {
+    background: rgba(220, 53, 69, 0.12);
+    color: #dc3545;
+}
+.stock-card-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--cream);
+}
+.stock-card-status {
+    font-size: 0.72rem;
+    font-weight: 600;
+}
 
-/* Info grid */
-.info-grid {
+/* Specs 2x3 Grid */
+.specs-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
 }
-
-.info-item {
+.spec-cell {
+    background: #081209;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 9px 12px;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 10px 12px;
-    background: #f8fafc;
-    border-radius: var(--radius-sm);
 }
-.info-label {
-    font-size: 0.72rem;
+.spec-label {
+    font-size: 0.68rem;
     font-weight: 600;
+    color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-3);
+    letter-spacing: 0.03em;
 }
-.info-label i { margin-right: 4px; }
-.info-val { font-size: 0.875rem; font-weight: 600; color: var(--text); }
-
-/* Description */
-.ad-desc-label {
-    font-size: 0.75rem;
+.spec-val {
+    font-size: 0.84rem;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-3);
-    margin-bottom: 6px;
-}
-.ad-desc-text {
-    font-size: 0.9rem;
-    color: var(--text-2);
-    line-height: 1.65;
-    max-height: 130px;
-    overflow-y: auto;
-    padding-right: 4px;
+    color: var(--cream);
 }
 
-/* Actions */
-.ad-actions {
+/* Seller Card */
+.seller-avatar-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #192b1b;
+    border: 1.5px solid rgba(194, 240, 60, 0.4);
+    color: var(--lime);
+    display: grid;
+    place-items: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.seller-name-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--cream);
+}
+.badge-seller-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: rgba(194, 240, 60, 0.12);
+    color: var(--lime);
+    border: 1px solid rgba(194, 240, 60, 0.3);
+    padding: 1px 6px;
+    border-radius: 999px;
+}
+.seller-meta-text {
+    font-size: 0.72rem;
+    color: var(--muted);
+}
+.seller-contact-links {
     display: flex;
-    flex-direction: column;
     gap: 8px;
 }
-
-.d-contents { display: contents; }
-
-.btn-action {
-    width: 100%;
-    height: 44px;
-    border-radius: 100px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    font-family: inherit;
-    border: none;
-    cursor: pointer;
-    display: flex;
+.seller-contact-btn {
+    flex: 1;
+    height: 38px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
-    text-decoration: none;
-}
-
-.btn-buy    { background: var(--g); color: white; }
-.btn-buy:hover { background: var(--g-mid); }
-
-.btn-pending { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; cursor: not-allowed; }
-.btn-sold    { background: #f1f5f9; color: var(--text-3); cursor: not-allowed; }
-
-.btn-like { background: #fff0f3; color: #e11d48; border: 1px solid rgba(225,29,72,0.15); }
-.btn-like:hover, .btn-like.liked { background: #e11d48; color: white; border-color: #e11d48; }
-
-.btn-edit { background: #f8fafc; color: var(--text-2); border: 1px solid var(--border); }
-.btn-edit:hover { background: #e2e8f0; color: var(--text); }
-
-.btn-chat { background: var(--g-soft); color: var(--g); border: 1px solid var(--g-border); }
-.btn-chat:hover { background: var(--g-pale); }
-
-.back-link {
-    font-size: 0.82rem;
-    color: var(--text-3);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    transition: color 0.15s;
-    margin-top: -4px;
-}
-.back-link:hover { color: var(--g); }
-
-/* Stock Banner & Mini Cards */
-.stock-panel-box {
-    background: #0d180e;
-    border: 1px solid #1a2b1c;
-    border-radius: 12px;
-    padding: 14px;
-}
-.stock-title {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #eee9de;
-}
-.stock-mini-card {
-    background: #142416;
-    border: 1px solid #1e3621;
+    gap: 6px;
     border-radius: 10px;
-    padding: 10px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
     transition: all 0.2s ease;
 }
-.stock-mini-card.depleted {
-    opacity: 0.5;
-    background: #1a1616;
-    border-color: #3b1e1e;
+.seller-contact-btn.btn-call {
+    background: rgba(194, 240, 60, 0.12);
+    border: 1px solid rgba(194, 240, 60, 0.35);
+    color: var(--lime);
 }
-.stock-subtext {
-    font-size: 0.76rem;
-    font-weight: 600;
+.seller-contact-btn.btn-call:hover {
+    background: var(--lime);
+    color: var(--ink);
+    font-weight: 700;
 }
-.bg-lime-soft { background: rgba(194, 240, 60, 0.12) !important; }
-.text-lime { color: #c2f03c !important; }
-.text-cream { color: #eee9de !important; }
+.seller-contact-btn.btn-tg {
+    background: rgba(13, 202, 240, 0.12);
+    border: 1px solid rgba(13, 202, 240, 0.35);
+    color: #0dcaf0;
+}
+.seller-contact-btn.btn-tg:hover {
+    background: #0dcaf0;
+    color: #05161c;
+    font-weight: 700;
+}
 
-/* Buyer Purchase Modal */
+/* Action Buttons */
+.detail-actions-box {
+    margin-top: 4px;
+}
+.btn-action-main {
+    width: 100%;
+    height: 50px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.22s ease;
+}
+.btn-main-buy {
+    background: var(--lime);
+    color: var(--ink);
+    box-shadow: 0 6px 20px rgba(194, 240, 60, 0.28);
+}
+.btn-main-buy:hover {
+    background: #d4f564;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(194, 240, 60, 0.4);
+}
+.btn-main-sold {
+    background: #2b1717;
+    color: #ff6b6b;
+    border: 1px solid #4a1f1f;
+    cursor: not-allowed;
+}
+
+.action-secondary-row {
+    display: flex;
+    gap: 8px;
+}
+.btn-action-sub {
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--cream);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.btn-sub-like {
+    width: 100%;
+}
+.btn-sub-like:hover, .btn-sub-like.liked {
+    border-color: var(--orange);
+    color: var(--orange);
+    background: rgba(255, 107, 43, 0.12);
+}
+.btn-sub-chat {
+    padding: 0 16px;
+    background: rgba(194, 240, 60, 0.08);
+    border-color: rgba(194, 240, 60, 0.3);
+    color: var(--lime);
+}
+.btn-sub-chat:hover {
+    background: rgba(194, 240, 60, 0.18);
+    color: var(--lime);
+}
+.btn-sub-edit {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--muted);
+}
+.btn-sub-edit:hover {
+    border-color: var(--cream);
+    color: var(--cream);
+}
+.like-counter {
+    opacity: 0.75;
+    font-size: 0.76rem;
+}
+.guest-action-card {
+    background: rgba(13, 24, 14, 0.75);
+    border: 1px dashed var(--line);
+}
+
+/* Buy Modal Customization */
 .modal-buy-custom {
     background: #0d180e !important;
-    border: 1px solid #1a2b1c !important;
-    color: #eee9de;
+    border: 1px solid var(--line) !important;
+    color: var(--cream);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8) !important;
 }
 .post-summary-card {
-    background: #142416;
-    border: 1px solid #1e3621;
+    background: #081209;
+    border: 1px solid var(--line);
     border-radius: 12px;
     padding: 12px 14px;
 }
@@ -683,8 +1095,8 @@
     margin: 0;
 }
 .buyer-gender-card .gender-card-inner {
-    border: 1.5px solid #1a2b1c;
-    background: #142416;
+    border: 1.5px solid var(--line);
+    background: #081209;
     border-radius: 12px;
     padding: 12px;
     text-align: center;
@@ -695,18 +1107,18 @@
     transition: all 0.2s ease;
 }
 .buyer-gender-card input:checked + .gender-card-inner {
-    border-color: #c2f03c;
+    border-color: var(--lime);
     background: rgba(194, 240, 60, 0.12);
     box-shadow: 0 0 12px rgba(194, 240, 60, 0.2);
 }
 .buyer-gender-card.disabled {
     cursor: not-allowed;
-    opacity: 0.45;
+    opacity: 0.4;
 }
 .buyer-gender-card .gender-name {
     font-weight: 700;
     font-size: 0.88rem;
-    color: #eee9de;
+    color: var(--cream);
 }
 .buyer-gender-card .gender-stock {
     font-size: 0.72rem;
@@ -717,8 +1129,8 @@
 .buyer-quantity-stepper {
     display: flex;
     align-items: center;
-    background: #142416;
-    border: 1.5px solid #1a2b1c;
+    background: #081209;
+    border: 1.5px solid var(--line);
     border-radius: 12px;
     overflow: hidden;
     height: 48px;
@@ -728,7 +1140,7 @@
     height: 100%;
     border: none;
     background: transparent;
-    color: #c2f03c;
+    color: var(--lime);
     font-size: 1.1rem;
     font-weight: bold;
     display: flex;
@@ -741,34 +1153,34 @@
     background: rgba(194, 240, 60, 0.15);
 }
 .btn-stepper:disabled {
-    opacity: 0.3;
+    opacity: 0.25;
     cursor: not-allowed;
 }
 .buyer-qty-input {
     border: none !important;
     background: transparent !important;
-    color: #eee9de !important;
+    color: var(--cream) !important;
     font-weight: 800;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     height: 100%;
     box-shadow: none !important;
 }
 
 /* Total Panel */
 .buyer-total-panel {
-    background: #081209;
-    border: 1px solid #1a2b1c;
+    background: #050c06;
+    border: 1px solid var(--line);
 }
 .btn-buy-confirm {
-    background: #c2f03c;
-    color: #060d07;
+    background: var(--lime);
+    color: var(--ink);
     font-weight: 700;
     border: none;
     transition: all 0.2s ease;
 }
 .btn-buy-confirm:hover {
     background: #d4f564;
-    color: #060d07;
+    color: var(--ink);
     transform: translateY(-1px);
 }
 .btn-buy-confirm:disabled {
@@ -778,23 +1190,56 @@
     transform: none;
 }
 
-/* Breadcrumb arrow */
-.breadcrumb-item + .breadcrumb-item::before {
-    content: "›";
-    font-size: 1rem;
-    vertical-align: middle;
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    .sticky-detail-sidebar {
+        position: static;
+        margin-top: 24px;
+    }
+    .gallery-main-view {
+        height: 360px;
+    }
+    .ad-price-display {
+        font-size: 1.65rem;
+    }
+}
+@media (max-width: 575.98px) {
+    .gallery-main-view {
+        height: 280px;
+    }
+    .gallery-thumb-btn {
+        width: 64px;
+        height: 64px;
+    }
+    .specs-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
 
 <script>
-function switchImage(src, btn) {
-    document.getElementById('mainImg').style.opacity = '0';
-    setTimeout(() => {
-        document.getElementById('mainImg').src = src;
-        document.getElementById('mainImg').style.opacity = '1';
-    }, 120);
-    document.querySelectorAll('.thumb-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+function switchImage(src, btn, index) {
+    const mainImg = document.getElementById('mainImg');
+    const ambientBackdrop = document.getElementById('ambientBackdrop');
+    const galleryCounter = document.getElementById('galleryCounter');
+    const totalCount = {{ max(1, count($allImages)) }};
+
+    if (mainImg) {
+        mainImg.style.opacity = '0';
+        setTimeout(() => {
+            mainImg.src = src;
+            mainImg.style.opacity = '1';
+        }, 120);
+    }
+    if (ambientBackdrop) {
+        ambientBackdrop.style.backgroundImage = `url('${src}')`;
+    }
+    if (galleryCounter && index) {
+        galleryCounter.textContent = `${index} / ${totalCount}`;
+    }
+
+    document.querySelectorAll('.gallery-thumb-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
 }
 
 document.addEventListener('DOMContentLoaded', function () {

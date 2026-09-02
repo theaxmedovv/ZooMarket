@@ -57,6 +57,40 @@ class ExampleTest extends TestCase
         $response->assertSee('Narx: arzonroq');
     }
 
+    public function test_post_detail_page_loads_with_modern_marketplace_layout(): void
+    {
+        $seller = User::factory()->create();
+        $seller->assignRole('seller');
+
+        $post = Post::create([
+            'title' => 'Kuchuk bola',
+            'category_id' => 1,
+            'breed' => 'Labrador',
+            'gender' => 'male',
+            'age' => '6 oylik',
+            'color' => 'Oq',
+            'description' => 'Juda chiroyli va sog\'lom kuchukcha',
+            'price' => 1500000,
+            'currency' => 'UZS',
+            'is_negotiable' => true,
+            'location' => 'Toshkent',
+            'status' => 'active',
+            'content' => 'Juda chiroyli va sog\'lom kuchukcha',
+            'user_id' => $seller->id,
+        ]);
+
+        $response = $this->get(route('posts.show', $post));
+
+        $response->assertStatus(200);
+        $response->assertSee('Kuchuk bola');
+        $response->assertSee('Labrador');
+        $response->assertSee('1 500 000');
+        $response->assertSee('Zaxira va jins taqsimoti:');
+        $response->assertSee('Asosiy xususiyatlar:');
+        $response->assertSee("E'lon tavsifi", false);
+        $response->assertSee('Xavfsiz xarid qoidalari');
+    }
+
     public function test_seller_approval_creates_chat_and_return_listing_reactivates_post(): void
     {
         $seller = User::factory()->create();
