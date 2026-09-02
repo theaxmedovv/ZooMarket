@@ -14,6 +14,9 @@ class Post extends Model
         'category_id',
         'breed',
         'gender',
+        'quantity',
+        'male_quantity',
+        'female_quantity',
         'age',
         'color',
         'description',
@@ -34,7 +37,40 @@ class Post extends Model
             'price' => 'decimal:2',
             'is_negotiable' => 'boolean',
             'images' => 'array',
+            'quantity' => 'integer',
+            'male_quantity' => 'integer',
+            'female_quantity' => 'integer',
         ];
+    }
+
+    public function availableMaleCount(): int
+    {
+        return max(0, (int) $this->male_quantity);
+    }
+
+    public function availableFemaleCount(): int
+    {
+        return max(0, (int) $this->female_quantity);
+    }
+
+    public function totalAvailableCount(): int
+    {
+        return $this->availableMaleCount() + $this->availableFemaleCount();
+    }
+
+    public function hasMaleAvailable(): bool
+    {
+        return $this->availableMaleCount() > 0;
+    }
+
+    public function hasFemaleAvailable(): bool
+    {
+        return $this->availableFemaleCount() > 0;
+    }
+
+    public function isSoldOut(): bool
+    {
+        return $this->totalAvailableCount() <= 0 || $this->status === 'sold';
     }
 
     public function allImages(): array

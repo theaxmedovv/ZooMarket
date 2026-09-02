@@ -54,12 +54,32 @@
                                     <label for="breed" class="form-label fw-bold text-dark">Zot</label>
                                     <input type="text" name="breed" id="breed" value="{{ old('breed', $post->breed) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="gender" class="form-label fw-bold text-dark">Jinsi</label>
-                                    <select name="gender" id="gender" class="form-select form-select-lg border-0 bg-light rounded-4 px-4" required>
+                                <div class="col-md-3">
+                                    <label for="quantityEdit" class="form-label fw-bold text-dark">Jami soni</label>
+                                    <input type="number" name="quantity" id="quantityEdit" min="1" max="100" value="{{ old('quantity', $post->quantity) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="genderEdit" class="form-label fw-bold text-dark">Jinsi</label>
+                                    <select name="gender" id="genderEdit" class="form-select form-select-lg border-0 bg-light rounded-4 px-4" required>
                                         <option value="male" @selected(old('gender', $post->gender) === 'male')>Erkak</option>
                                         <option value="female" @selected(old('gender', $post->gender) === 'female')>Urg'ochi</option>
+                                        <option value="mixed" @selected(old('gender', $post->gender) === 'mixed') id="optMixedEdit">Aralash (Mixed)</option>
                                     </select>
+                                </div>
+                                <div class="col-12 {{ old('gender', $post->gender) === 'mixed' ? '' : 'd-none' }}" id="mixedBoxEdit">
+                                    <div class="p-3 bg-light rounded-4 border">
+                                        <div class="fw-semibold small mb-2 text-dark">Aralash jinslar soni taqsimoti:</div>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <label class="form-label small text-muted">Erkaklar soni</label>
+                                                <input type="number" name="male_quantity" id="maleQtyEdit" value="{{ old('male_quantity', $post->male_quantity) }}" class="form-control rounded-3" min="1" max="99">
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label small text-muted">Urg'ochilar soni</label>
+                                                <input type="number" name="female_quantity" id="femaleQtyEdit" value="{{ old('female_quantity', $post->female_quantity) }}" class="form-control rounded-3" min="1" max="99">
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-md-4">
                                     <label for="age" class="form-label fw-bold text-dark">Yoshi</label>
@@ -180,4 +200,41 @@
         to { opacity: 1; transform: translateY(0); }
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const qtyInput = document.getElementById('quantityEdit');
+    const genderSelect = document.getElementById('genderEdit');
+    const optMixed = document.getElementById('optMixedEdit');
+    const mixedBox = document.getElementById('mixedBoxEdit');
+    const maleQty = document.getElementById('maleQtyEdit');
+    const femaleQty = document.getElementById('femaleQtyEdit');
+
+    function syncEdit() {
+        const qty = parseInt(qtyInput.value) || 1;
+        if (qty === 1) {
+            optMixed.disabled = true;
+            if (genderSelect.value === 'mixed') {
+                genderSelect.value = 'male';
+            }
+        } else {
+            optMixed.disabled = false;
+        }
+
+        if (genderSelect.value === 'mixed' && qty > 1) {
+            mixedBox.classList.remove('d-none');
+            maleQty.required = true;
+            femaleQty.required = true;
+        } else {
+            mixedBox.classList.add('d-none');
+            maleQty.required = false;
+            femaleQty.required = false;
+        }
+    }
+
+    if (qtyInput) qtyInput.addEventListener('input', syncEdit);
+    if (genderSelect) genderSelect.addEventListener('change', syncEdit);
+    syncEdit();
+});
+</script>
 @endsection

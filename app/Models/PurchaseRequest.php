@@ -11,8 +11,17 @@ class PurchaseRequest extends Model
     protected $fillable = [
         'user_id',
         'animal_id',
+        'gender',
+        'quantity',
         'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'quantity' => 'integer',
+        ];
+    }
 
     public function user(): BelongsTo
     {

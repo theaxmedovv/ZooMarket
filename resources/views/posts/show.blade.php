@@ -72,6 +72,76 @@
                 </div>
             </div>
 
+            {{-- Inventory & Stock Banner --}}
+            <div class="stock-panel-box mb-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                    <span class="stock-title">
+                        <i class="bi bi-boxes text-lime me-1"></i> Hayvonlar soni va mavjudligi:
+                    </span>
+                    <span class="badge {{ $post->isSoldOut() ? 'bg-danger' : 'bg-lime-soft text-lime' }} fw-bold px-3 py-1 rounded-pill">
+                        {{ $post->isSoldOut() ? 'Sotilgan (Tugagan)' : 'Jami: ' . $post->totalAvailableCount() . ' ta mavjud' }}
+                    </span>
+                </div>
+                <div class="row g-2">
+                    @if($post->gender === 'mixed' || ($post->male_quantity > 0 && $post->female_quantity > 0))
+                        <div class="col-6">
+                            <div class="stock-mini-card {{ $post->availableMaleCount() > 0 ? '' : 'depleted' }}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-gender-male text-info fs-5"></i>
+                                    <div>
+                                        <div class="small fw-bold text-cream">Erkak</div>
+                                        <div class="stock-subtext {{ $post->availableMaleCount() > 0 ? 'text-lime' : 'text-danger' }}">
+                                            {{ $post->availableMaleCount() > 0 ? $post->availableMaleCount() . ' ta mavjud' : 'Tugagan' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stock-mini-card {{ $post->availableFemaleCount() > 0 ? '' : 'depleted' }}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-gender-female text-danger fs-5"></i>
+                                    <div>
+                                        <div class="small fw-bold text-cream">Urg'ochi</div>
+                                        <div class="stock-subtext {{ $post->availableFemaleCount() > 0 ? 'text-lime' : 'text-danger' }}">
+                                            {{ $post->availableFemaleCount() > 0 ? $post->availableFemaleCount() . ' ta mavjud' : 'Tugagan' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @elseif($post->availableMaleCount() > 0 || $post->gender === 'male')
+                        <div class="col-12">
+                            <div class="stock-mini-card {{ $post->availableMaleCount() > 0 ? '' : 'depleted' }}">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-gender-male text-info fs-5"></i>
+                                        <span class="small fw-bold text-cream">Jinsi: Erkak</span>
+                                    </div>
+                                    <span class="stock-subtext {{ $post->availableMaleCount() > 0 ? 'text-lime' : 'text-danger' }}">
+                                        Mavjud: {{ $post->availableMaleCount() }} ta
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="col-12">
+                            <div class="stock-mini-card {{ $post->availableFemaleCount() > 0 ? '' : 'depleted' }}">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-gender-female text-danger fs-5"></i>
+                                        <span class="small fw-bold text-cream">Jinsi: Urg'ochi</span>
+                                    </div>
+                                    <span class="stock-subtext {{ $post->availableFemaleCount() > 0 ? 'text-lime' : 'text-danger' }}">
+                                        Mavjud: {{ $post->availableFemaleCount() }} ta
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             {{-- Info grid --}}
             <div class="info-grid">
                 <div class="info-item">
@@ -84,7 +154,19 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label"><i class="bi bi-gender-ambiguous"></i> Jinsi</span>
-                    <span class="info-val">{{ $post->gender === 'female' ? 'Urg\'ochi' : ($post->gender === 'male' ? 'Erkak' : '—') }}</span>
+                    <span class="info-val">
+                        @if($post->gender === 'mixed')
+                            Aralash (Mixed)
+                        @elseif($post->gender === 'female')
+                            Urg'ochi ♀
+                        @else
+                            Erkak ♂
+                        @endif
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label"><i class="bi bi-box-seam"></i> Jami soni</span>
+                    <span class="info-val">{{ $post->totalAvailableCount() }} ta</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label"><i class="bi bi-clock"></i> Yoshi</span>
@@ -113,13 +195,9 @@
             {{-- Actions --}}
             <div class="ad-actions">
                 @if(auth()->check() && auth()->user()->hasRole('user'))
-                    @if($post->status === 'sold')
+                    @if($post->isSoldOut() || $post->status === 'sold')
                         <button class="btn-action btn-sold" disabled>
                             <i class="bi bi-x-circle me-1"></i> Sotilgan
-                        </button>
-                    @elseif($hasPurchaseRequest)
-                        <button class="btn-action btn-pending" disabled>
-                            <i class="bi bi-hourglass-split me-1"></i> So'rov yuborilgan
                         </button>
                     @else
                         <button class="btn-action btn-buy"
@@ -162,26 +240,115 @@
     </div>
 </div>
 
-{{-- Buy Modal --}}
-@if(auth()->check() && auth()->user()->hasRole('user') && $post->status !== 'sold' && ! $hasPurchaseRequest)
+{{-- Buy Modal with Gender and Quantity Selection --}}
+@if(auth()->check() && auth()->user()->hasRole('user') && ! $post->isSoldOut())
     <div class="modal fade" id="buyModalDetail" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content rounded-4 border-0 shadow-lg">
-                <div class="modal-body p-4 text-center">
-                    <div class="modal-icon mb-3"><i class="bi bi-cart-check"></i></div>
-                    <h5 class="fw-bold mb-2">Tasdiqlash</h5>
-                    <p class="text-muted small mb-4">
-                        <strong>{{ $post->title }}</strong> uchun so'rov yuborilsinmi?
-                    </p>
-                    <div class="d-flex gap-2 justify-content-center">
-                        <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Yo'q</button>
-                        <form action="{{ route('purchase-requests.store') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="animal_id" value="{{ $post->id }}">
-                            <button type="submit" class="btn btn-success rounded-pill px-4">Ha, yuborish</button>
-                        </form>
-                    </div>
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg modal-buy-custom">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-cream">
+                        <i class="bi bi-cart-check-fill text-lime me-2"></i> Sotib olish so'rovi
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <form action="{{ route('purchase-requests.store') }}" method="POST" id="buyerPurchaseForm">
+                    @csrf
+                    <input type="hidden" name="animal_id" value="{{ $post->id }}">
+                    <div class="modal-body p-4">
+                        <div class="post-summary-card mb-3">
+                            <div class="fw-bold text-cream">{{ $post->title }}</div>
+                            <div class="small text-muted">{{ $post->breed }} &bull; {{ $post->location }}</div>
+                            <div class="text-lime fw-bold mt-1">
+                                {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
+                                <span class="small text-muted fw-normal">/ 1 ta uchun</span>
+                            </div>
+                        </div>
+
+                        {{-- Step 1: Gender Selection --}}
+                        <div class="mb-3">
+                            <label class="form-label-custom small fw-bold text-cream d-block mb-2">
+                                1. Hayvon jinsini tanlang:
+                            </label>
+                            @php
+                                $maleAvail = $post->availableMaleCount();
+                                $femaleAvail = $post->availableFemaleCount();
+                                $defaultGender = $maleAvail > 0 ? 'male' : ($femaleAvail > 0 ? 'female' : 'male');
+                            @endphp
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="buyer-gender-card {{ $maleAvail <= 0 ? 'disabled' : '' }}" for="buyerGenderMale">
+                                        <input type="radio" name="gender" value="male" class="d-none"
+                                               id="buyerGenderMale"
+                                               data-available="{{ $maleAvail }}"
+                                               @checked($defaultGender === 'male')
+                                               @disabled($maleAvail <= 0) required>
+                                        <div class="gender-card-inner">
+                                            <i class="bi bi-gender-male text-info fs-5"></i>
+                                            <span class="gender-name">Erkak</span>
+                                            <span class="gender-stock {{ $maleAvail > 0 ? 'text-lime' : 'text-danger' }}">
+                                                {{ $maleAvail > 0 ? $maleAvail . ' ta mavjud' : 'Tugagan' }}
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-6">
+                                    <label class="buyer-gender-card {{ $femaleAvail <= 0 ? 'disabled' : '' }}" for="buyerGenderFemale">
+                                        <input type="radio" name="gender" value="female" class="d-none"
+                                               id="buyerGenderFemale"
+                                               data-available="{{ $femaleAvail }}"
+                                               @checked($defaultGender === 'female')
+                                               @disabled($femaleAvail <= 0) required>
+                                        <div class="gender-card-inner">
+                                            <i class="bi bi-gender-female text-danger fs-5"></i>
+                                            <span class="gender-name">Urg'ochi</span>
+                                            <span class="gender-stock {{ $femaleAvail > 0 ? 'text-lime' : 'text-danger' }}">
+                                                {{ $femaleAvail > 0 ? $femaleAvail . ' ta mavjud' : 'Tugagan' }}
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Step 2: Quantity Selection --}}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="buyerQuantityInput" class="form-label-custom small fw-bold text-cream mb-0">
+                                    2. Miqdorni tanlang:
+                                </label>
+                                <span class="small text-muted" id="buyerAvailHint">
+                                    Mavjud: <strong class="text-lime" id="buyerMaxCount">{{ $defaultGender === 'male' ? $maleAvail : $femaleAvail }}</strong> ta
+                                </span>
+                            </div>
+                            <div class="buyer-quantity-stepper">
+                                <button type="button" class="btn-stepper" id="btnBuyerMinus"><i class="bi bi-dash-lg"></i></button>
+                                <input type="number" name="quantity" id="buyerQuantityInput"
+                                       class="form-control text-center buyer-qty-input"
+                                       value="1" min="1" max="{{ $defaultGender === 'male' ? $maleAvail : $femaleAvail }}" required>
+                                <button type="button" class="btn-stepper" id="btnBuyerPlus"><i class="bi bi-plus-lg"></i></button>
+                            </div>
+                        </div>
+
+                        {{-- Calculation Summary --}}
+                        <div class="buyer-total-panel p-3 rounded-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small text-muted">Jami to'lov:</span>
+                                <span class="fw-bold text-lime fs-5" id="buyerTotalPrice">
+                                    {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
+                                </span>
+                            </div>
+                            <div class="small text-muted" id="buyerSummaryText">
+                                1 ta &times; {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0 d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 flex-grow-1" data-bs-dismiss="modal">Bekor qilish</button>
+                        <button type="submit" class="btn btn-buy-confirm rounded-pill px-4 flex-grow-1" id="btnSubmitOrder">
+                            <i class="bi bi-send-check me-1"></i> So'rov yuborish
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -466,19 +633,149 @@
 }
 .back-link:hover { color: var(--g); }
 
-/* Modal */
-.modal-icon {
-    width: 52px;
-    height: 52px;
-    background: var(--g-soft);
-    border: 1px solid var(--g-border);
-    border-radius: 14px;
-    color: var(--g);
-    font-size: 1.4rem;
+/* Stock Banner & Mini Cards */
+.stock-panel-box {
+    background: #0d180e;
+    border: 1px solid #1a2b1c;
+    border-radius: 12px;
+    padding: 14px;
+}
+.stock-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #eee9de;
+}
+.stock-mini-card {
+    background: #142416;
+    border: 1px solid #1e3621;
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: all 0.2s ease;
+}
+.stock-mini-card.depleted {
+    opacity: 0.5;
+    background: #1a1616;
+    border-color: #3b1e1e;
+}
+.stock-subtext {
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+.bg-lime-soft { background: rgba(194, 240, 60, 0.12) !important; }
+.text-lime { color: #c2f03c !important; }
+.text-cream { color: #eee9de !important; }
+
+/* Buyer Purchase Modal */
+.modal-buy-custom {
+    background: #0d180e !important;
+    border: 1px solid #1a2b1c !important;
+    color: #eee9de;
+}
+.post-summary-card {
+    background: #142416;
+    border: 1px solid #1e3621;
+    border-radius: 12px;
+    padding: 12px 14px;
+}
+.buyer-gender-card {
+    display: block;
+    cursor: pointer;
+    margin: 0;
+}
+.buyer-gender-card .gender-card-inner {
+    border: 1.5px solid #1a2b1c;
+    background: #142416;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+}
+.buyer-gender-card input:checked + .gender-card-inner {
+    border-color: #c2f03c;
+    background: rgba(194, 240, 60, 0.12);
+    box-shadow: 0 0 12px rgba(194, 240, 60, 0.2);
+}
+.buyer-gender-card.disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+.buyer-gender-card .gender-name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #eee9de;
+}
+.buyer-gender-card .gender-stock {
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+/* Stepper */
+.buyer-quantity-stepper {
+    display: flex;
+    align-items: center;
+    background: #142416;
+    border: 1.5px solid #1a2b1c;
+    border-radius: 12px;
+    overflow: hidden;
+    height: 48px;
+}
+.btn-stepper {
+    width: 48px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: #c2f03c;
+    font-size: 1.1rem;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.btn-stepper:hover {
+    background: rgba(194, 240, 60, 0.15);
+}
+.btn-stepper:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+.buyer-qty-input {
+    border: none !important;
+    background: transparent !important;
+    color: #eee9de !important;
+    font-weight: 800;
+    font-size: 1.1rem;
+    height: 100%;
+    box-shadow: none !important;
+}
+
+/* Total Panel */
+.buyer-total-panel {
+    background: #081209;
+    border: 1px solid #1a2b1c;
+}
+.btn-buy-confirm {
+    background: #c2f03c;
+    color: #060d07;
+    font-weight: 700;
+    border: none;
+    transition: all 0.2s ease;
+}
+.btn-buy-confirm:hover {
+    background: #d4f564;
+    color: #060d07;
+    transform: translateY(-1px);
+}
+.btn-buy-confirm:disabled {
+    background: #475569;
+    color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Breadcrumb arrow */
@@ -499,5 +796,110 @@ function switchImage(src, btn) {
     document.querySelectorAll('.thumb-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const qtyInput = document.getElementById('buyerQuantityInput');
+    const btnMinus = document.getElementById('btnBuyerMinus');
+    const btnPlus = document.getElementById('btnBuyerPlus');
+    const buyerMaxCount = document.getElementById('buyerMaxCount');
+    const buyerTotalPrice = document.getElementById('buyerTotalPrice');
+    const buyerSummaryText = document.getElementById('buyerSummaryText');
+    const btnSubmitOrder = document.getElementById('btnSubmitOrder');
+
+    const maleRadio = document.getElementById('buyerGenderMale');
+    const femaleRadio = document.getElementById('buyerGenderFemale');
+
+    const unitPrice = {{ (float) $post->price }};
+    const currency = "{{ $post->currency }}";
+
+    function getSelectedAvailable() {
+        if (maleRadio && maleRadio.checked) {
+            return parseInt(maleRadio.getAttribute('data-available')) || 0;
+        }
+        if (femaleRadio && femaleRadio.checked) {
+            return parseInt(femaleRadio.getAttribute('data-available')) || 0;
+        }
+        return 0;
+    }
+
+    function syncBuyerModal() {
+        const available = getSelectedAvailable();
+        if (buyerMaxCount) {
+            buyerMaxCount.textContent = available;
+        }
+
+        if (available <= 0) {
+            if (qtyInput) {
+                qtyInput.value = 0;
+                qtyInput.max = 0;
+                qtyInput.disabled = true;
+            }
+            if (btnMinus) btnMinus.disabled = true;
+            if (btnPlus) btnPlus.disabled = true;
+            if (btnSubmitOrder) {
+                btnSubmitOrder.disabled = true;
+                btnSubmitOrder.textContent = "Tanlangan jins tugagan";
+            }
+            if (buyerTotalPrice) buyerTotalPrice.textContent = `0 ${currency}`;
+            if (buyerSummaryText) buyerSummaryText.textContent = "0 ta xarid";
+            return;
+        }
+
+        if (qtyInput) {
+            qtyInput.disabled = false;
+            qtyInput.max = available;
+            let current = parseInt(qtyInput.value) || 1;
+            if (current < 1) current = 1;
+            if (current > available) current = available;
+            qtyInput.value = current;
+
+            if (btnMinus) btnMinus.disabled = current <= 1;
+            if (btnPlus) btnPlus.disabled = current >= available;
+
+            const total = current * unitPrice;
+            const formattedTotal = Number(total).toLocaleString('ru-RU');
+            const formattedUnit = Number(unitPrice).toLocaleString('ru-RU');
+
+            if (buyerTotalPrice) buyerTotalPrice.textContent = `${formattedTotal} ${currency}`;
+            if (buyerSummaryText) buyerSummaryText.textContent = `${current} ta × ${formattedUnit} ${currency}`;
+        }
+
+        if (btnSubmitOrder) {
+            btnSubmitOrder.disabled = false;
+            btnSubmitOrder.innerHTML = `<i class="bi bi-send-check me-1"></i> So'rov yuborish`;
+        }
+    }
+
+    if (maleRadio) maleRadio.addEventListener('change', syncBuyerModal);
+    if (femaleRadio) femaleRadio.addEventListener('change', syncBuyerModal);
+
+    if (btnMinus) {
+        btnMinus.addEventListener('click', function () {
+            let current = parseInt(qtyInput.value) || 1;
+            if (current > 1) {
+                qtyInput.value = current - 1;
+                syncBuyerModal();
+            }
+        });
+    }
+
+    if (btnPlus) {
+        btnPlus.addEventListener('click', function () {
+            const available = getSelectedAvailable();
+            let current = parseInt(qtyInput.value) || 1;
+            if (current < available) {
+                qtyInput.value = current + 1;
+                syncBuyerModal();
+            }
+        });
+    }
+
+    if (qtyInput) {
+        qtyInput.addEventListener('input', syncBuyerModal);
+        qtyInput.addEventListener('change', syncBuyerModal);
+    }
+
+    syncBuyerModal();
+});
 </script>
 @endsection

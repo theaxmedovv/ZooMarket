@@ -35,6 +35,10 @@
             <span><i class="bi bi-check-circle-fill me-1 text-lime"></i> Tasdiqlangan</span>
             <span class="tab-count">{{ $stats['approved'] }}</span>
         </a>
+        <a href="{{ route('admin.purchase-requests.index', ['status' => 'sold']) }}" class="admin-tab-item {{ $status === 'sold' ? 'active' : '' }}">
+            <span><i class="bi bi-bag-check-fill me-1 text-lime"></i> Sotilgan</span>
+            <span class="tab-count">{{ $stats['sold'] ?? 0 }}</span>
+        </a>
         <a href="{{ route('admin.purchase-requests.index', ['status' => 'rejected']) }}" class="admin-tab-item {{ $status === 'rejected' ? 'active' : '' }}">
             <span><i class="bi bi-x-circle-fill me-1 text-muted"></i> Rad etilgan</span>
             <span class="tab-count">{{ $stats['rejected'] }}</span>
@@ -104,7 +108,20 @@
                                         </div>
                                         <div>
                                             <div class="fw-semibold">{{ Str::limit($request->animal->title, 28) }}</div>
-                                            <small class="text-muted">{{ $request->animal->category?->name ?? 'Hayvon' }}</small>
+                                            <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
+                                                <span class="badge bg-panel-soft text-lime border border-line" style="font-size: 0.7rem;">
+                                                    <i class="bi bi-box-seam me-1"></i>{{ $request->quantity ?? 1 }} ta
+                                                </span>
+                                                @if($request->gender === 'male')
+                                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-gender-male me-1"></i>Erkak
+                                                    </span>
+                                                @elseif($request->gender === 'female')
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-gender-female me-1"></i>Urg'ochi
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </a>
                                 @else
@@ -115,10 +132,19 @@
                             {{-- Price --}}
                             <td>
                                 @if($request->animal)
-                                    <span class="text-lime fw-bold font-serif">
-                                        {{ number_format((float) $request->animal->price, 0, '.', ' ') }}
+                                    @php
+                                        $orderQty = $request->quantity ?? 1;
+                                        $totalOrder = (float) $request->animal->price * $orderQty;
+                                    @endphp
+                                    <div class="text-lime fw-bold font-serif">
+                                        {{ number_format($totalOrder, 0, '.', ' ') }}
                                         <small class="text-cream opacity-75">{{ $request->animal->currency }}</small>
-                                    </span>
+                                    </div>
+                                    @if($orderQty > 1)
+                                        <div class="text-muted" style="font-size: 0.72rem;">
+                                            {{ $orderQty }} ta &times; {{ number_format((float) $request->animal->price, 0, '.', ' ') }}
+                                        </div>
+                                    @endif
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
@@ -129,6 +155,10 @@
                                 @if($request->status === 'approved')
                                     <span class="badge-status badge-approved">
                                         <i class="bi bi-check-circle-fill me-1"></i> Tasdiqlangan
+                                    </span>
+                                @elseif($request->status === 'sold')
+                                    <span class="badge-status badge-sold">
+                                        <i class="bi bi-bag-check-fill me-1"></i> Sotilgan
                                     </span>
                                 @elseif($request->status === 'rejected')
                                     <span class="badge-status badge-rejected">
@@ -150,7 +180,7 @@
                             <td class="text-end">
                                 <div class="d-inline-flex gap-2 flex-wrap justify-content-end align-items-center">
                                     @if($request->status === 'pending')
-                                        <form action="{{ route('admin.purchase-requests.approve', $request) }}" method="POST" class="m-0" onsubmit="return confirm('Ushbu so\'rovni tasdiqlashni va e\'lonni sotilgan deb belgilashni xohlaysizmi?')">
+                                        <form action="{{ route('admin.purchase-requests.approve', $request) }}" method="POST" class="m-0" onsubmit="return confirm('Ushbu so\'rovni tasdiqlashni xohlaysizmi?')">
                                             @csrf
                                             <button type="submit" class="btn-req-action btn-approve" title="Tasdiqlash">
                                                 <i class="bi bi-check2"></i> Tasdiqlash
@@ -164,7 +194,23 @@
                                         </form>
                                     @endif
 
-                                    @if($request->status === 'approved' && $request->chat)
+                                    @if($request->status === 'approved')
+                                        <form action="{{ route('admin.purchase-requests.mark-sold', $request) }}" method="POST" class="m-0" onsubmit="return confirm('Hayvon sotilgan deb belgilansinmi?')">
+                                            @csrf
+                                            <button type="submit" class="btn-req-action btn-approve" title="Sotilgan deb belgilash">
+                                                <i class="bi bi-bag-check-fill"></i> Sold
+                                            </button>
+                                        </form>
+
+                                        <form action="{{ route('admin.purchase-requests.return-listing', $request) }}" method="POST" class="m-0" onsubmit="return confirm('E\'lonni yana marketga qaytarishni xohlaysizmi?')">
+                                            @csrf
+                                            <button type="submit" class="btn-req-action btn-reject" title="Return Listing">
+                                                <i class="bi bi-arrow-counterclockwise"></i> Return Listing
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    @if(($request->status === 'approved' || $request->status === 'sold') && $request->chat)
                                         @php $unread = $request->chat->unreadCountFor(auth()->id()); @endphp
                                         <a href="{{ route('chats.show', $request->chat) }}" class="btn-req-action btn-chat">
                                             <i class="bi bi-chat-dots-fill"></i> Chat

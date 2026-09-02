@@ -311,6 +311,13 @@
                         <div class="card-img-placeholder"><i class="bi bi-image"></i> Rasm yuklanmagan</div>
                     @endif
                     <span class="card-badge">{{ $post->category?->name ?? 'E\'lon' }}</span>
+                    @if($post->isSoldOut())
+                        <span class="card-badge" style="left: auto; right: 12px; background: rgba(239, 68, 68, 0.9); color: #fff;">Sotilgan</span>
+                    @elseif($post->totalAvailableCount() > 0)
+                        <span class="card-badge" style="left: auto; right: 12px; background: rgba(194, 240, 60, 0.9); color: #060d07; font-weight: 700;">
+                            <i class="bi bi-box-seam me-1"></i>{{ $post->totalAvailableCount() }} ta
+                        </span>
+                    @endif
                 </div>
                 <div class="card-body-inner">
                     <div class="card-author">
@@ -333,10 +340,10 @@
                         <a class="btn-detail" href="{{ route('posts.show', $post) }}">Batafsil <i class="bi bi-arrow-right ms-1"></i></a>
                         <div class="card-actions">
                             @if(auth()->check() && auth()->user()->hasRole('user'))
-                                @if(in_array($post->id, $requestedAnimalIds ?? []))
-                                    <span class="action-tag tag-pending">So'ralgan</span>
+                                @if($post->isSoldOut())
+                                    <span class="action-tag tag-pending bg-danger text-white">Sotilgan</span>
                                 @else
-                                    <button class="btn-buy" type="button" data-bs-toggle="modal" data-bs-target="#buyModal{{ $post->id }}">Sotib olish</button>
+                                    <a class="btn-buy text-decoration-none" href="{{ route('posts.show', $post) }}">Sotib olish</a>
                                 @endif
                                 <form action="{{ route('posts.like', $post) }}" method="POST">
                                     @csrf
@@ -363,27 +370,6 @@
                     </div>
                 </div>
             </article>
-            @if(auth()->check() && auth()->user()->hasRole('user') && $post->status !== 'sold' && !in_array($post->id, $requestedAnimalIds ?? []))
-                <div class="modal fade" id="buyModal{{ $post->id }}" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered">
-                        <div class="modal-content buy-modal">
-                            <div class="modal-body p-4 text-center">
-                                <div class="buy-modal-icon mb-3"><i class="bi bi-bag-check"></i></div>
-                                <h5>Sotib olish so'rovini yuborish</h5>
-                                <p class="text-muted"><strong>{{ $post->title }}</strong> bo'yicha sotuvchiga so'rov jo'natilsinmi?</p>
-                                <div class="d-flex justify-content-center gap-2 mt-4">
-                                    <button class="btn-modal-cancel" data-bs-dismiss="modal">Bekor qilish</button>
-                                    <form action="{{ route('purchase-requests.store') }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="animal_id" value="{{ $post->id }}">
-                                        <button class="btn-modal-confirm" type="submit">So'rov yuborish</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
         </div>
     @empty
         <div class="col-12">

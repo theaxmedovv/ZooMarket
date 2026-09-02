@@ -100,6 +100,10 @@ Route::middleware(['auth', 'role:seller'])->group(function () {
         ->name('admin.posts.archive');
     Route::post('/admin/purchase-requests/{purchaseRequest}/approve', [PurchaseRequestController::class, 'approve'])
         ->name('admin.purchase-requests.approve');
+    Route::post('/admin/purchase-requests/{purchaseRequest}/mark-sold', [PurchaseRequestController::class, 'markSold'])
+        ->name('admin.purchase-requests.mark-sold');
+    Route::post('/admin/purchase-requests/{purchaseRequest}/return-listing', [PurchaseRequestController::class, 'returnListing'])
+        ->name('admin.purchase-requests.return-listing');
     Route::post('/admin/purchase-requests/{purchaseRequest}/reject', [PurchaseRequestController::class, 'reject'])
         ->name('admin.purchase-requests.reject');
 });

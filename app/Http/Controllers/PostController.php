@@ -177,11 +177,14 @@ class PostController extends Controller
     {
         abort_unless($this->canCreatePosts(), 403);
 
-        $data = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'breed' => 'required|string|max:255',
-            'gender' => 'required|in:male,female',
+            'quantity' => 'required|integer|min:1|max:100',
+            'gender' => 'required|in:male,female,mixed',
+            'male_quantity' => 'nullable|integer|min:0|max:100',
+            'female_quantity' => 'nullable|integer|min:0|max:100',
             'age' => 'required|string|max:50',
             'color' => 'nullable|string|max:100',
             'description' => 'required|string',
@@ -193,6 +196,43 @@ class PostController extends Controller
             'images' => 'nullable|array|max:3',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $validator->after(function ($v) use ($request) {
+            $quantity = (int) $request->input('quantity');
+            $gender = $request->input('gender');
+            $maleQty = (int) $request->input('male_quantity', 0);
+            $femaleQty = (int) $request->input('female_quantity', 0);
+
+            if ($quantity === 1 && $gender === 'mixed') {
+                $v->errors()->add('gender', "Miqdor 1 bo'lganda faqat Erkak yoki Urg'ochi tanlanishi mumkin.");
+            }
+
+            if ($gender === 'mixed') {
+                if ($maleQty < 1) {
+                    $v->errors()->add('male_quantity', "Aralash tanlanganda kamida 1 ta erkak hayvon kiritilishi shart.");
+                }
+                if ($femaleQty < 1) {
+                    $v->errors()->add('female_quantity', "Aralash tanlanganda kamida 1 ta urg'ochi hayvon kiritilishi shart.");
+                }
+                if (($maleQty + $femaleQty) !== $quantity) {
+                    $v->errors()->add('male_quantity', "Erkak ({$maleQty}) va urg'ochi ({$femaleQty}) hayvonlar soni yig'indisi umumiy miqdorga ({$quantity}) teng bo'lishi kerak.");
+                }
+            }
+        });
+
+        $data = $validator->validate();
+
+        $quantity = (int) $data['quantity'];
+        if ($data['gender'] === 'mixed') {
+            $data['male_quantity'] = (int) $data['male_quantity'];
+            $data['female_quantity'] = (int) $data['female_quantity'];
+        } elseif ($data['gender'] === 'male') {
+            $data['male_quantity'] = $quantity;
+            $data['female_quantity'] = 0;
+        } else {
+            $data['male_quantity'] = 0;
+            $data['female_quantity'] = $quantity;
+        }
 
         $data['is_negotiable'] = $request->boolean('is_negotiable');
         $data['content'] = $data['description'];
@@ -283,11 +323,14 @@ class PostController extends Controller
         $post = Post::findOrFail($id);
         Gate::authorize('edit posts');
 
-        $data = $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'breed' => 'required|string|max:255',
-            'gender' => 'required|in:male,female',
+            'quantity' => 'required|integer|min:1|max:100',
+            'gender' => 'required|in:male,female,mixed',
+            'male_quantity' => 'nullable|integer|min:0|max:100',
+            'female_quantity' => 'nullable|integer|min:0|max:100',
             'age' => 'required|string|max:50',
             'color' => 'nullable|string|max:100',
             'description' => 'required|string',
@@ -299,6 +342,43 @@ class PostController extends Controller
             'images' => 'nullable|array|max:3',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        $validator->after(function ($v) use ($request) {
+            $quantity = (int) $request->input('quantity');
+            $gender = $request->input('gender');
+            $maleQty = (int) $request->input('male_quantity', 0);
+            $femaleQty = (int) $request->input('female_quantity', 0);
+
+            if ($quantity === 1 && $gender === 'mixed') {
+                $v->errors()->add('gender', "Miqdor 1 bo'lganda faqat Erkak yoki Urg'ochi tanlanishi mumkin.");
+            }
+
+            if ($gender === 'mixed') {
+                if ($maleQty < 1) {
+                    $v->errors()->add('male_quantity', "Aralash tanlanganda kamida 1 ta erkak hayvon kiritilishi shart.");
+                }
+                if ($femaleQty < 1) {
+                    $v->errors()->add('female_quantity', "Aralash tanlanganda kamida 1 ta urg'ochi hayvon kiritilishi shart.");
+                }
+                if (($maleQty + $femaleQty) !== $quantity) {
+                    $v->errors()->add('male_quantity', "Erkak ({$maleQty}) va urg'ochi ({$femaleQty}) hayvonlar soni yig'indisi umumiy miqdorga ({$quantity}) teng bo'lishi kerak.");
+                }
+            }
+        });
+
+        $data = $validator->validate();
+
+        $quantity = (int) $data['quantity'];
+        if ($data['gender'] === 'mixed') {
+            $data['male_quantity'] = (int) $data['male_quantity'];
+            $data['female_quantity'] = (int) $data['female_quantity'];
+        } elseif ($data['gender'] === 'male') {
+            $data['male_quantity'] = $quantity;
+            $data['female_quantity'] = 0;
+        } else {
+            $data['male_quantity'] = 0;
+            $data['female_quantity'] = $quantity;
+        }
 
         $data['is_negotiable'] = $request->boolean('is_negotiable');
         $data['content'] = $data['description'];

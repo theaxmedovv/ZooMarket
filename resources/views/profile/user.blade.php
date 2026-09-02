@@ -1,256 +1,213 @@
 @extends('layouts.app')
 
 @section('content')
-@php
-    $accent = 'user';
-@endphp
-
-<div class="container py-5 profile-page profile-{{ $accent }}">
-    <div class="profile-hero p-4 p-lg-5 rounded-5 text-white mb-5">
-        <div class="row align-items-center g-4">
-            <div class="col-lg-8 animate-fade-in">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                    <span class="badge rounded-pill bg-white text-primary px-3 py-2 fw-bold shadow-sm">User Profile</span>
-                    <form action="{{ route('logout') }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-light px-3 py-1 rounded-pill fw-semibold">
-                            <i class="bi bi-box-arrow-right me-1"></i> Chiqish
-                        </button>
-                    </form>
-                </div>
-                <h1 class="display-5 fw-black mb-2 tracking-tight">{{ $user->name }}</h1>
-                <p class="mb-0 opacity-75 fs-5">Shaxsiy profil sahifangiz. Bu yerda ma'lumotlaringizni boshqarishingiz va yoqtirgan mahsulotlaringizni kuzatishingiz mumkin.</p>
-            </div>
-
-            <div class="col-lg-4 text-lg-end animate-fade-in">
-                <div class="profile-avatar mx-lg-auto ms-lg-auto shadow-lg">
-                    @if($user->avatar)
-                        <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="w-100 h-100 rounded-4 object-fit-cover">
-                    @else
-                        {{ strtoupper(substr($user->name, 0, 1)) }}
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-custom border-0 shadow-sm rounded-4 d-flex align-items-center mb-4 p-3 bg-white border-start border-success border-4 slide-down">
-            <div class="icon-box bg-success text-white rounded-circle me-3 p-2 d-flex align-items-center justify-content-center" style="width:30px; height:30px;">
-                <i class="bi bi-check2"></i>
-            </div>
-            <div class="fw-semibold text-dark">{{ session('success') }}</div>
-            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
-    <div class="row g-4 mb-5">
-        <div class="col-md-4 animate-up" style="animation-delay: 0.1s">
-            <div class="card border-0 shadow-sm rounded-4 h-100 info-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-shape bg-primary bg-opacity-10 text-primary rounded-3 p-2 me-3">
-                            <i class="bi bi-envelope-fill fs-5"></i>
-                        </div>
-                        <div class="text-muted small fw-bold text-uppercase tracking-wider">Email Manzil</div>
+<div class="container py-4 page-shell">
+    <div class="profile-shell">
+        <div class="profile-header">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 w-100">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                        <span class="badge bg-primary-soft text-primary fw-bold px-3 py-2 rounded-pill">
+                            <i class="bi bi-person-circle me-1"></i> Profil
+                        </span>
+                        <span class="badge bg-panel-soft text-muted fw-semibold px-2 py-1 rounded-pill">User dashboard</span>
                     </div>
-                    <div class="fw-bold fs-5 text-dark">{{ $user->email }}</div>
+                    <h1 class="h2 fw-bold mb-2 text-cream font-serif m-0">{{ $user->name }}</h1>
+                    <p class="text-muted small mb-0">Shaxsiy kabinet. Profil ma'lumotlaringizni tahrirlang, saqlangan e'lonlarni ko'ring va buyurtmalar holatini kuzatib boring.</p>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 flex-wrap justify-content-lg-end">
+                    <span class="badge bg-panel-soft text-muted fw-semibold px-2 py-1 rounded-pill align-self-start">User</span>
+                </div>
+            </div>
+
+            <div class="profile-avatar-wrap">
+                @if($user->avatar)
+                    <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="profile-avatar-image">
+                @else
+                    <div class="profile-avatar-fallback">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                @endif
+            </div>
+        </div>
+
+        @if(session('success'))
+            <div class="alert-banner mb-4 rounded-3 py-2 px-3 d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill text-lime fs-5"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="metric-card">
+                    <div class="metric-icon icon-mail"><i class="bi bi-envelope-fill"></i></div>
+                    <div class="metric-label">Email</div>
+                    <div class="metric-value">{{ $user->email }}</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="metric-card">
+                    <div class="metric-icon icon-phone"><i class="bi bi-telephone-fill"></i></div>
+                    <div class="metric-label">Telefon</div>
+                    <div class="metric-value">{{ $user->phone ?: 'Kiritilmagan' }}</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="metric-card">
+                    <div class="metric-icon icon-heart"><i class="bi bi-heart-fill"></i></div>
+                    <div class="metric-label">Yoqtirganlar</div>
+                    <div class="metric-value">{{ $user->liked_posts_count ?? 0 }} <span class="metric-small">ta</span></div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="metric-card">
+                    <div class="metric-icon icon-telegram"><i class="bi bi-telegram"></i></div>
+                    <div class="metric-label">Telegram</div>
+                    <div class="metric-value">{{ $user->telegram_username ? '@' . ltrim($user->telegram_username, '@') : 'Kiritilmagan' }}</div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4 animate-up" style="animation-delay: 0.2s">
-            <div class="card border-0 shadow-sm rounded-4 h-100 info-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-shape bg-success bg-opacity-10 text-success rounded-3 p-2 me-3">
-                            <i class="bi bi-telephone-fill fs-5"></i>
-                        </div>
-                        <div class="text-muted small fw-bold text-uppercase tracking-wider">Telefon</div>
-                    </div>
-                    <div class="fw-bold fs-5 text-dark">{{ $user->phone ?: 'Kiritilmagan' }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 animate-up" style="animation-delay: 0.3s">
-            <div class="card border-0 shadow-sm rounded-4 h-100 info-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-shape bg-danger bg-opacity-10 text-danger rounded-3 p-2 me-3">
-                            <i class="bi bi-heart-fill fs-5"></i>
-                        </div>
-                        <div class="text-muted small fw-bold text-uppercase tracking-wider">Yoqtirilganlar</div>
-                    </div>
-                    <div class="fw-bold fs-4 text-dark">{{ $user->liked_posts_count }} <span class="fs-6 fw-normal text-muted">ta post</span></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 animate-up" style="animation-delay: 0.4s">
-            <div class="card border-0 shadow-sm rounded-4 h-100 info-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="icon-shape bg-info bg-opacity-10 text-info rounded-3 p-2 me-3">
-                            <i class="bi bi-telegram fs-5"></i>
-                        </div>
-                        <div class="text-muted small fw-bold text-uppercase tracking-wider">Telegram</div>
-                    </div>
-                    <div class="fw-bold fs-5 text-dark">{{ $user->telegram_username ? '@' . ltrim($user->telegram_username, '@') : 'Kiritilmagan' }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-sm rounded-5 h-100 overflow-hidden">
-                <div class="card-header bg-white border-0 p-4 p-lg-5 pb-0">
-                    <div class="d-flex justify-content-between align-items-center">
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-xl-7">
+                <div class="panel-box">
+                    <div class="panel-header">
                         <div>
-                            <h3 class="fw-black mb-1 tracking-tight">Saqlangan mahsulotlar</h3>
-                            <p class="text-muted mb-0 small">Sizga yoqqan e'lonlar ro'yxati</p>
+                            <h3 class="panel-title">Saqlangan e'lonlar</h3>
+                            <p class="panel-subtitle">Sizga yoqqan mahsulotlar ro'yxati</p>
                         </div>
-                        <a href="{{ route('posts.index') }}" class="btn btn-light rounded-pill px-4 fw-bold border shadow-sm hover-lift">
+                        <a href="{{ route('posts.index') }}" class="btn-panel-link small-link">
                             <i class="bi bi-plus-lg me-1"></i> Ko'proq
                         </a>
                     </div>
-                </div>
-                <div class="card-body p-4 p-lg-5">
-                    <div class="liked-posts-list">
+
+                    <div class="profile-list">
                         @forelse($likedPosts as $post)
-                            <div class="recent-post d-flex justify-content-between align-items-center gap-3 py-4 {{ ! $loop->last ? 'border-bottom' : '' }} transition-all hover-bg-light rounded-4 px-3 mx-n3">
-                                <div class="d-flex align-items-center gap-3">
+                            <div class="profile-list-item {{ !$loop->last ? 'has-border' : '' }}">
+                                <div class="d-flex align-items-center gap-3 flex-grow-1">
                                     @if($post->image)
-                                        <img src="{{ asset('storage/' . $post->image) }}" class="rounded-3 object-fit-cover" style="width: 60px; height: 60px;" alt="">
+                                        <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="liked-post-image">
                                     @else
-                                        <div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
-                                            <i class="bi bi-image text-muted"></i>
+                                        <div class="liked-post-placeholder">
+                                            <i class="bi bi-image"></i>
                                         </div>
                                     @endif
-                                    <div>
-                                        <h6 class="mb-1 fw-bold">
-                                            <a href="{{ route('posts.show', $post) }}" class="text-decoration-none text-dark post-detail-link">
+                                    <div class="flex-grow-1 min-w-0">
+                                        <h6 class="profile-post-title mb-1">
+                                            <a href="{{ route('posts.show', $post) }}" class="text-decoration-none text-cream hover-lime">
                                                 {{ $post->title }}
                                             </a>
                                         </h6>
-                                        <div class="text-muted x-small fw-semibold">
-                                            <i class="bi bi-person me-1"></i> {{ $post->user->name }} •
-                                            <i class="bi bi-calendar3 me-1 ms-1"></i> {{ optional($post->pivot->created_at)->format('d M') }}
+                                        <div class="text-muted small">
+                                            <i class="bi bi-person me-1"></i> {{ $post->user->name }}
+                                            <span class="mx-2 text-line">•</span>
+                                            <i class="bi bi-calendar3 me-1"></i> {{ optional($post->pivot->created_at)->format('d M') }}
                                         </div>
                                     </div>
                                 </div>
+
                                 <div class="d-flex align-items-center gap-2">
                                     <form action="{{ route('posts.like', $post) }}" method="POST" onsubmit="return confirm('Yoqtirilganlardan o\'chirilsinmi?')">
                                         @csrf
-                                        <button type="submit" class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border p-2" title="O'chirish">
+                                        <button type="submit" class="profile-action-btn delete-btn" title="O'chirish">
                                             <i class="bi bi-heart-fill"></i>
                                         </button>
                                     </form>
-                                    <a href="{{ route('posts.show', $post) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
-                                        Batafsil
+                                    <a href="{{ route('posts.show', $post) }}" class="profile-action-btn detail-btn">
+                                        <i class="bi bi-eye"></i>
                                     </a>
                                 </div>
                             </div>
                         @empty
-                            <div class="empty-state rounded-5 p-5 text-center bg-light border-dashed">
-                                <i class="bi bi-heart-break display-4 text-muted opacity-25 mb-3 d-block"></i>
-                                <h5 class="fw-bold text-dark">Hozircha hech narsa yo'q</h5>
-                                <p class="text-muted small mb-4">Sizga yoqqan mahsulotlarni keyinroq tez topish uchun ularga "Like" bosing.</p>
-                                <a href="{{ route('posts.index') }}" class="btn btn-primary rounded-pill px-4 fw-bold">Mahsulotlarni ko'rish</a>
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="bi bi-heart-break"></i></div>
+                                <h3 class="empty-title">Hozircha yo'q</h3>
+                                <p class="empty-text">Sizga yoqqan e'lonlarni saqlash uchun "Like" tugmasini bosing.</p>
+                                <a href="{{ route('posts.index') }}" class="btn-filter-apply d-inline-flex mt-3 text-decoration-none px-4">
+                                    <i class="bi bi-compass me-1"></i> E'lonlarni ko'rish
+                                </a>
                             </div>
                         @endforelse
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm rounded-5 mb-4 overflow-hidden">
-                <div class="card-header bg-primary py-4 px-5 border-0">
-                    <h4 class="text-white fw-black mb-0 tracking-tight">Profil ma'lumotlari</h4>
-                    <p class="text-white-50 x-small mb-0 text-uppercase tracking-wider">Ism, telefon, telegram va rasm</p>
-                </div>
-                <div class="card-body p-4 p-lg-5">
-                    <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data" class="d-grid gap-3">
-                        @csrf
-
+            <div class="col-12 col-xl-5">
+                <div class="panel-box mb-4">
+                    <div class="panel-header compact-header">
                         <div>
-                            <label for="name" class="form-label fw-bold text-dark small ms-1">Ism</label>
-                            <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" class="form-control form-control-lg bg-light border-0 rounded-4 shadow-none" required>
+                            <h3 class="panel-title">Profil ma'lumotlari</h3>
+                            <p class="panel-subtitle">Ism, telefon, telegram va avatar</p>
                         </div>
-
-                        <div>
-                            <label for="phone" class="form-label fw-bold text-dark small ms-1">Telefon</label>
-                            <input type="text" name="phone" id="phone" value="{{ old('phone', $user->phone) }}" class="form-control form-control-lg bg-light border-0 rounded-4 shadow-none" placeholder="+998 90 123 45 67">
-                        </div>
-
-                        <div>
-                            <label for="telegram_username" class="form-label fw-bold text-dark small ms-1">Telegram username</label>
-                            <input type="text" name="telegram_username" id="telegram_username" value="{{ old('telegram_username', $user->telegram_username) }}" class="form-control form-control-lg bg-light border-0 rounded-4 shadow-none" placeholder="username">
-                        </div>
-
-                        <div>
-                            <label for="avatar" class="form-label fw-bold text-dark small ms-1">Profil rasmi</label>
-                            <input type="file" name="avatar" id="avatar" class="form-control form-control-lg bg-light border-0 rounded-4 shadow-none" accept="image/*">
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3 fw-black shadow-sm mt-1 hover-lift">
-                            <i class="bi bi-floppy2 me-2"></i> Profilni saqlash
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm rounded-5 mb-4 overflow-hidden">
-                <div class="card-header bg-dark py-4 px-5 border-0">
-                    <h4 class="text-white fw-black mb-0 tracking-tight">Xavfsizlik</h4>
-                    <p class="text-white-50 x-small mb-0 text-uppercase tracking-wider">Parolni yangilash</p>
-                </div>
-                <div class="card-body p-4 p-lg-5">
-                    <form action="{{ route('profile.password.update') }}" method="POST" class="d-grid gap-4">
-                        @csrf
-
-                        <div class="form-group">
-                            <label for="current_password" class="form-label fw-bold text-dark small ms-1">Joriy parol</label>
-                            <input type="password" name="current_password" id="current_password"
-                                   class="form-control form-control-lg bg-light border-0 rounded-4 shadow-none @error('current_password') is-invalid @enderror" required>
-                            @error('current_password')
-                                <div class="invalid-feedback ps-2">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="password" class="form-label fw-bold text-dark small ms-1">Yangi parol</label>
-                            <input type="password" name="password" id="password"
-                                   class="form-control form-control-lg bg-light border-0 rounded-4 shadow-none @error('password') is-invalid @enderror" required>
-                            @error('password')
-                                <div class="invalid-feedback ps-2">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="password_confirmation" class="form-label fw-bold text-dark small ms-1">Yangi parolni tasdiqlang</label>
-                            <input type="password" name="password_confirmation" id="password_confirmation"
-                                   class="form-control form-control-lg bg-light border-0 rounded-4 shadow-none" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3 fw-black shadow-sm mt-2 hover-lift">
-                            <i class="bi bi-shield-lock me-2"></i> Saqlash
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm rounded-5 bg-primary text-white overflow-hidden">
-                <div class="card-body p-4 p-lg-5">
-                    <h4 class="fw-black mb-3 tracking-tight">Yordam kerakmi?</h4>
-                    <p class="opacity-75 small mb-4">Profil bilan bog'liq muammolar bo'lsa, qo'llab-quvvatlash xizmatiga murojaat qiling.</p>
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('user.purchase-requests.index') }}" class="btn btn-white bg-white text-primary rounded-pill py-2 fw-bold shadow-sm">
-                            <i class="bi bi-bag-check me-1"></i> So'rovlarim
-                        </a>
                     </div>
+
+                    <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data" class="row g-3 mt-0">
+                        @csrf
+                        <div class="col-12">
+                            <label for="name" class="form-label fw-semibold small text-cream">Ism</label>
+                            <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" class="form-control profile-input" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="phone" class="form-label fw-semibold small text-cream">Telefon</label>
+                            <input type="text" name="phone" id="phone" value="{{ old('phone', $user->phone) }}" class="form-control profile-input" placeholder="+998 90 123 45 67">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="telegram_username" class="form-label fw-semibold small text-cream">Telegram username</label>
+                            <input type="text" name="telegram_username" id="telegram_username" value="{{ old('telegram_username', $user->telegram_username) }}" class="form-control profile-input" placeholder="username">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="avatar" class="form-label fw-semibold small text-cream">Profil rasmi</label>
+                            <input type="file" name="avatar" id="avatar" class="form-control profile-input" accept="image/*">
+                        </div>
+
+                        <div class="col-12 pt-2">
+                            <button type="submit" class="btn-filter-apply w-100 text-decoration-none">
+                                <i class="bi bi-floppy2 me-1"></i> Saqlash
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="panel-box">
+                    <div class="panel-header compact-header">
+                        <div>
+                            <h3 class="panel-title">Xavfsizlik</h3>
+                            <p class="panel-subtitle">Parolni yangilash</p>
+                        </div>
+                    </div>
+
+                    <form action="{{ route('profile.password.update') }}" method="POST" class="row g-3 mt-0">
+                        @csrf
+                        <div class="col-12">
+                            <label for="current_password" class="form-label fw-semibold small text-cream">Joriy parol</label>
+                            <input type="password" name="current_password" id="current_password" class="form-control profile-input @error('current_password') is-invalid @enderror" required>
+                            @error('current_password')
+                                <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-12">
+                            <label for="password" class="form-label fw-semibold small text-cream">Yangi parol</label>
+                            <input type="password" name="password" id="password" class="form-control profile-input @error('password') is-invalid @enderror" required>
+                            @error('password')
+                                <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-12">
+                            <label for="password_confirmation" class="form-label fw-semibold small text-cream">Yangi parolni tasdiqlang</label>
+                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control profile-input" required>
+                        </div>
+
+                        <div class="col-12 pt-2">
+                            <button type="submit" class="btn-panel-link w-100 justify-content-center text-decoration-none border-danger-subtle text-danger">
+                                <i class="bi bi-shield-lock me-1"></i> Parolni yangilash
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -258,67 +215,314 @@
 </div>
 
 <style>
-    :root { --market-primary: #2563eb; }
-    .fw-black { font-weight: 800; }
-    .tracking-tight { letter-spacing: -1px; }
-    .x-small { font-size: 0.75rem; }
+    .font-serif { font-family: var(--serif); }
+    .text-cream { color: var(--cream) !important; }
+    .text-lime { color: var(--lime) !important; }
+    .text-muted { color: var(--muted) !important; }
+    .bg-primary-soft { background: rgba(194, 240, 60, 0.12) !important; color: var(--lime) !important; }
+    .bg-panel-soft { background: rgba(255,255,255,0.04) !important; color: var(--muted) !important; }
+    .hover-lime:hover { color: var(--lime) !important; }
+    .border-danger-subtle { border-color: rgba(255, 107, 43, 0.35) !important; }
+    .text-line { color: rgba(255,255,255,.22); }
 
-    .profile-hero {
-        background: linear-gradient(135deg, #0f172a 0%, #2563eb 60%, #38bdf8 100%);
-        box-shadow: 0 20px 45px rgba(37, 99, 235, 0.2);
+    .profile-shell {
+        display: block;
     }
 
-    .profile-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 35px;
+    .profile-header {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        background: linear-gradient(135deg, rgba(12, 18, 13, 0.96), rgba(16, 29, 18, 0.96));
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 24px 24px 20px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: "";
+        position: absolute;
+        inset: -40% auto auto 65%;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: rgba(194, 240, 60, 0.08);
+        filter: blur(12px);
+    }
+
+    .profile-avatar-wrap {
+        position: relative;
+        z-index: 1;
+        width: 110px;
+        height: 110px;
+        border-radius: 28px;
+        border: 1px solid rgba(194, 240, 60, 0.35);
+        background: rgba(194, 240, 60, 0.08);
         display: grid;
         place-items: center;
-        font-size: 3rem;
+        overflow: hidden;
+        box-shadow: 0 16px 30px rgba(0,0,0,0.2);
+    }
+
+    .profile-avatar-image,
+    .profile-avatar-fallback {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 28px;
+    }
+
+    .profile-avatar-fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--lime), #dff77c);
+        color: var(--ink);
+        font-size: 2.4rem;
         font-weight: 800;
-        background: rgba(255, 255, 255, 0.2);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(15px);
-        color: white;
     }
 
-    .info-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .info-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important;
-    }
-
-    .hover-bg-light:hover {
-        background-color: #f8fafc;
-    }
-
-    .post-detail-link:hover {
-        color: var(--market-primary) !important;
-        text-decoration: underline;
-        text-underline-offset: 4px;
+    .metric-card {
+        min-height: 146px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 18px 16px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.12);
     }
 
-    .border-dashed {
-        border: 2px dashed #e2e8f0 !important;
+    .metric-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 1.05rem;
     }
 
-    /* Form Controls */
-    .form-control:focus {
-        background-color: #fff !important;
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
-        border-color: var(--market-primary) !important;
+    .icon-mail { background: rgba(194, 240, 60, 0.12); color: var(--lime); }
+    .icon-phone { background: rgba(255, 107, 43, 0.12); color: var(--orange); }
+    .icon-heart { background: rgba(255, 90, 120, 0.12); color: #ff8faa; }
+    .icon-telegram { background: rgba(94, 164, 255, 0.12); color: #7bb8ff; }
+
+    .metric-label {
+        color: var(--muted);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
     }
 
-    /* Animations */
-    .animate-up { animation: fadeInUp 0.6s ease forwards; opacity: 0; }
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+    .metric-value {
+        color: var(--cream);
+        font-weight: 700;
+        font-size: 0.98rem;
+        line-height: 1.35;
+        word-break: break-word;
     }
 
-    .hover-lift { transition: all 0.2s; }
-    .hover-lift:hover { transform: translateY(-2px); shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .metric-small {
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .panel-box {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+
+    .compact-header {
+        margin-bottom: 12px;
+    }
+
+    .panel-title {
+        margin: 0;
+        color: var(--cream);
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    .panel-subtitle {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.74rem;
+    }
+
+    .small-link {
+        padding: 7px 12px;
+        font-size: 0.72rem;
+    }
+
+    .profile-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .profile-list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 14px 0;
+    }
+
+    .profile-list-item.has-border {
+        border-bottom: 1px solid var(--line);
+    }
+
+    .liked-post-image {
+        width: 62px;
+        height: 62px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        flex-shrink: 0;
+    }
+
+    .liked-post-placeholder {
+        width: 62px;
+        height: 62px;
+        border-radius: 12px;
+        background: rgba(194, 240, 60, 0.08);
+        border: 1px solid var(--line);
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .profile-post-title {
+        font-size: 0.98rem;
+        font-weight: 700;
+        line-height: 1.3;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .profile-action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .profile-action-btn:hover {
+        border-color: var(--lime);
+        color: var(--lime);
+        background: rgba(194, 240, 60, 0.08);
+    }
+
+    .profile-action-btn.delete-btn:hover {
+        border-color: rgba(255, 107, 43, 0.5);
+        color: var(--orange);
+    }
+
+    .form-label {
+        margin-bottom: 7px;
+    }
+
+    .profile-input {
+        width: 100%;
+        border-radius: 10px;
+        background: #0a130b;
+        border: 1px solid var(--line);
+        color: var(--cream);
+        min-height: 42px;
+        padding: 0.7rem 0.9rem;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .profile-input:focus {
+        background: #0a130b;
+        border-color: var(--lime);
+        box-shadow: 0 0 0 3px rgba(194, 240, 60, 0.12);
+        color: var(--cream);
+    }
+
+    .profile-input::placeholder {
+        color: var(--muted);
+    }
+
+    .empty-state {
+        padding: 46px 20px 30px;
+        border: 1px dashed var(--line);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.02);
+        text-align: center;
+    }
+
+    .empty-icon {
+        font-size: 2.1rem;
+        color: var(--lime);
+        margin-bottom: 10px;
+    }
+
+    .empty-title {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--cream);
+        font-weight: 700;
+    }
+
+    .empty-text {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 0.85rem;
+    }
+
+    @media (max-width: 991.98px) {
+        .profile-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .container {
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+        .profile-header,
+        .panel-box {
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+
+        .profile-list-item {
+            align-items: flex-start;
+        }
+    }
 </style>
 @endsection

@@ -14,8 +14,10 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('layouts.app', function ($view) {
             $pendingRequestsCount = 0;
+            $unread = 0;
+
             if (auth()->check()) {
-                $uid    = auth()->id();
+                $uid = auth()->id();
                 $unread = Message::whereHas('chat', fn ($q) =>
                     $q->where('buyer_id', $uid)->orWhere('seller_id', $uid)
                 )
@@ -29,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
                         ->count();
                 }
             }
-            
+
             try {
                 $navCategories = \App\Models\Category::query()->orderBy('name')->get();
             } catch (\Throwable $e) {
