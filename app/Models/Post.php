@@ -27,6 +27,9 @@ class Post extends Model
         'is_negotiable',
         'location',
         'status',
+        'moderation_status',
+        'moderation_reason',
+        'moderated_at',
         'content',
         'image',
         'images',
@@ -42,7 +45,28 @@ class Post extends Model
             'quantity' => 'integer',
             'male_quantity' => 'integer',
             'female_quantity' => 'integer',
+            'moderated_at' => 'datetime',
         ];
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->moderation_status === 'approved';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->moderation_status === 'pending';
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->moderation_status === 'rejected';
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('moderation_status', 'approved');
     }
 
     public function availableMaleCount(): int

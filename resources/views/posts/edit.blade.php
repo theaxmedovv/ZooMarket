@@ -34,6 +34,25 @@
                                 </div>
                             @endif
 
+                            @if($post->moderation_status === 'rejected')
+                                <div class="alert alert-danger border-danger border-opacity-50 rounded-4 p-3 mb-4">
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="rounded-circle p-2 bg-danger bg-opacity-25 text-danger flex-shrink-0">
+                                            <i class="bi bi-shield-x fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="text-danger d-block">E'lon avval Groq AI tomonidan rad etilgan</strong>
+                                            <div class="small mt-1 text-muted">
+                                                <strong>Rad etilish sababi:</strong> {{ $post->moderation_reason }}
+                                            </div>
+                                            <div class="small text-muted mt-1">
+                                                E'lon ma'lumotlari yoki fotosuratlarini to'g'rilab saqlasangiz, u avtomatik ravishda qayta tekshiruvdan o'tkaziladi.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+
                             <div class="mb-4">
                                 <label for="title" class="form-label fw-bold text-dark">Maqola sarlavhasi</label>
                                 <input type="text" name="title" value="{{ old('title', $post->title) }}"

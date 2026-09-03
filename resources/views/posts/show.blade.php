@@ -42,6 +42,58 @@
         </div>
     </div>
 
+    {{-- ── AI MODERATION STATUS BANNER FOR SELLER ── --}}
+    @if(auth()->check() && (auth()->id() === $post->user_id || auth()->user()->hasRole('admin')))
+        @if($post->moderation_status === 'rejected')
+            <div class="alert alert-danger border-danger border-opacity-50 rounded-4 p-4 mb-4 shadow-sm" style="background: rgba(220, 53, 69, 0.08);">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="rounded-circle p-2 bg-danger bg-opacity-25 text-danger flex-shrink-0">
+                        <i class="bi bi-shield-x fs-3"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                            <h5 class="text-danger fw-bold mb-0">
+                                <i class="bi bi-robot me-1"></i> E'lon Groq AI moderatsiyasidan o'tmadi
+                            </h5>
+                            <span class="badge bg-danger text-white px-2 py-1">Ommaga ko'rsatilmaydi</span>
+                        </div>
+                        <p class="text-cream mb-2 small">
+                            Ushbu e'lon yoki yuklangan fotosuratlar hayvonlar xavfsizligi, taqiqlangan turlar yoki sifat qoidalariga mos kelmadi.
+                        </p>
+                        <div class="p-3 rounded-3 mb-3" style="background: rgba(0, 0, 0, 0.35); border-left: 3px solid #dc3545;">
+                            <strong class="text-danger d-block small mb-1">
+                                <i class="bi bi-info-circle-fill me-1"></i> Rad etilish sababi:
+                            </strong>
+                            <span class="text-cream">{{ $post->moderation_reason ?? 'Tavsif yoki rasm xavfsizlik talablariga mos kelmadi.' }}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="{{ route('posts.edit', $post) }}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-pencil-square me-1"></i> E'lonni tahrirlash va qayta topshirish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @elseif($post->moderation_status === 'pending')
+            <div class="alert alert-warning border-warning border-opacity-50 rounded-4 p-3 mb-4 shadow-sm" style="background: rgba(255, 193, 7, 0.08);">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle p-2 bg-warning bg-opacity-25 text-warning flex-shrink-0">
+                        <i class="bi bi-clock-history fs-4"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="text-warning fw-bold mb-0">
+                            <i class="bi bi-robot me-1"></i> E'lon AI moderatsiyasida ko'rib chiqilmoqda
+                        </h6>
+                        <small class="text-cream-50">
+                            Groq AI tomonidan matn va rasmlar tekshirilmoqda. Tasdiqlangach, e'lon avtomatik ravishda umumiy marketplace'da barchaga ko'rinadi.
+                        </small>
+                    </div>
+                    <span class="badge bg-warning text-dark px-2 py-1">Kutilmoqda</span>
+                </div>
+            </div>
+        @endif
+    @endif
+
     {{-- ── MAIN DETAIL LAYOUT (2 COLUMNS) ── --}}
     <div class="row g-4">
 
@@ -69,6 +121,21 @@
                             <span class="gallery-glass-pill pill-cat">
                                 <i class="bi bi-tag-fill text-lime me-1"></i> {{ $post->category?->name ?? 'Hayvon' }}
                             </span>
+                            @if(auth()->check() && (auth()->id() === $post->user_id || auth()->user()->hasRole('admin')))
+                                @if($post->moderation_status === 'approved')
+                                    <span class="gallery-glass-pill text-success border border-success border-opacity-50">
+                                        <i class="bi bi-shield-check me-1"></i> Tasdiqlangan
+                                    </span>
+                                @elseif($post->moderation_status === 'rejected')
+                                    <span class="gallery-glass-pill text-danger border border-danger border-opacity-50">
+                                        <i class="bi bi-shield-x me-1"></i> Rad etilgan
+                                    </span>
+                                @else
+                                    <span class="gallery-glass-pill text-warning border border-warning border-opacity-50">
+                                        <i class="bi bi-clock me-1"></i> AI tekshiruvida
+                                    </span>
+                                @endif
+                            @endif
                             @if($post->isSoldOut())
                                 <span class="gallery-glass-pill pill-sold">
                                     <i class="bi bi-x-circle-fill me-1"></i> Sotilgan

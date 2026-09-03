@@ -331,6 +331,22 @@
                                 <i class="bi bi-box-seam-fill"></i> {{ $post->totalAvailableCount() }} ta
                             </span>
                         @endif
+
+                        @if(auth()->check() && auth()->user()->hasRole('seller'))
+                            @if($post->moderation_status === 'approved')
+                                <span class="card-tag-pill" style="background: rgba(40, 167, 69, 0.85); color: #fff;">
+                                    <i class="bi bi-shield-check"></i> Tasdiqlangan
+                                </span>
+                            @elseif($post->moderation_status === 'rejected')
+                                <span class="card-tag-pill" style="background: rgba(220, 53, 69, 0.9); color: #fff;" title="{{ $post->moderation_reason }}">
+                                    <i class="bi bi-shield-x"></i> Rad etilgan
+                                </span>
+                            @else
+                                <span class="card-tag-pill" style="background: rgba(255, 193, 7, 0.9); color: #212529;">
+                                    <i class="bi bi-clock-history"></i> AI tekshiruvida
+                                </span>
+                            @endif
+                        @endif
                     </div>
 
                     {{-- Floating Favorite Button (Top Right) --}}

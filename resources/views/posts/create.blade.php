@@ -48,6 +48,21 @@
         </div>
     @endif
 
+    {{-- AI Moderation Notice --}}
+    <div class="alert border border-lime border-opacity-25 rounded-4 p-3 mb-4" style="background: rgba(194, 240, 60, 0.05);">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle p-2 bg-lime-soft text-lime flex-shrink-0">
+                <i class="bi bi-robot fs-4"></i>
+            </div>
+            <div>
+                <strong class="text-lime d-block small">Sun'iy Intellekt (Groq AI) Moderatsiyasi</strong>
+                <span class="text-cream-50 small">
+                    Har bir e'lonning matni va fotosuratlari xavfsizlik, soxta e'lonlar va taqiqlangan turlarga qarshi Groq AI orqali avtomatik tekshiriladi. Faqat mezonlarga javob beradigan e'lonlar ommaga e'lon qilinadi.
+                </span>
+            </div>
+        </div>
+    </div>
+
     <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data" id="createPostForm">
         @csrf
 

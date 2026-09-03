@@ -70,8 +70,8 @@ class PurchaseRequestController extends Controller
             DB::transaction(function () use ($user, $animalId, $gender, $requestedQty) {
                 $animal = Post::where('id', $animalId)->lockForUpdate()->firstOrFail();
 
-                if (in_array($animal->status, ['sold', 'archived'], true) || $animal->totalAvailableCount() <= 0) {
-                    throw new \RuntimeException("Ushbu hayvon allaqachon sotilgan yoki mavjud emas.");
+                if ($animal->moderation_status !== 'approved' || in_array($animal->status, ['sold', 'archived'], true) || $animal->totalAvailableCount() <= 0) {
+                    throw new \RuntimeException("Ushbu hayvon sotuvda mavjud emas yoki hali tasdiqlanmagan.");
                 }
 
                 $available = $gender === 'male' ? $animal->availableMaleCount() : $animal->availableFemaleCount();

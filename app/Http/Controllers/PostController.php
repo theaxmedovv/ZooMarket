@@ -8,6 +8,7 @@ use App\Models\Chat;
 use App\Models\Post;
 use App\Models\PurchaseRequest;
 use App\Services\DatabaseImageService;
+use App\Services\GroqModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -80,6 +81,8 @@ class PostController extends Controller
 
         if (auth()->check() && auth()->user()->hasRole('seller')) {
             $postsQuery->where('user_id', auth()->id());
+        } else {
+            $postsQuery->where('moderation_status', 'approved');
         }
 
         $postsQuery->when($categoryId, function ($query) use ($categoryId) {
@@ -248,9 +251,22 @@ class PostController extends Controller
             $data['images'] = $uploadedImages;
         }
 
-        $request->user()->posts()->create($data);
+        $data['moderation_status'] = 'pending';
+        $post = $request->user()->posts()->create($data);
 
-        return redirect()->route('posts.index')->with('success', 'Post created successfully.');
+        // Run Groq AI moderation
+        $moderation = app(GroqModerationService::class)->moderate($post);
+
+        if ($moderation['status'] === 'approved') {
+            return redirect()->route('posts.show', $post)
+                ->with('success', "E'lon Groq AI tomonidan muvaffaqiyatli tekshirildi va e'lon qilindi!");
+        } elseif ($moderation['status'] === 'rejected') {
+            return redirect()->route('posts.show', $post)
+                ->with('warning', "E'lon Groq AI tomonidan rad etildi: " . ($moderation['reason'] ?? 'Xavfsizlik qoidalariga mos kelmadi.'));
+        }
+
+        return redirect()->route('posts.show', $post)
+            ->with('info', "E'lon qabul qilindi va ayni paytda AI tekshiruvida.");
     }
 
     /**
@@ -261,6 +277,13 @@ class PostController extends Controller
         $post = Post::with(['user', 'category'])
             ->withCount('likedByUsers')
             ->findOrFail($id);
+
+        if ($post->moderation_status !== 'approved') {
+            $user = auth()->user();
+            if (! $user || ($post->user_id !== $user->id && ! $user->hasRole('admin'))) {
+                abort(404, "Ushbu e'lon mavjud emas yoki hali tasdiqlanmagan.");
+            }
+        }
 
         if ($post->status === 'sold') {
             $user = auth()->user();
@@ -404,9 +427,22 @@ class PostController extends Controller
             $data['images'] = $uploadedImages;
         }
 
+        $data['moderation_status'] = 'pending';
         $post->update($data);
 
-        return redirect()->route('posts.index')->with('success', 'Post updated successfully.');
+        // Re-run Groq AI moderation upon update
+        $moderation = app(GroqModerationService::class)->moderate($post);
+
+        if ($moderation['status'] === 'approved') {
+            return redirect()->route('posts.show', $post)
+                ->with('success', "E'lon yangilandi va Groq AI moderatsiyasidan muvaffaqiyatli o'tdi!");
+        } elseif ($moderation['status'] === 'rejected') {
+            return redirect()->route('posts.show', $post)
+                ->with('warning', "E'lon yangilandi, biroq Groq AI moderatsiyasidan o'tmadi: " . ($moderation['reason'] ?? 'Xavfsizlik qoidalariga mos kelmadi.'));
+        }
+
+        return redirect()->route('posts.show', $post)
+            ->with('info', "E'lon yangilandi va AI tekshiruviga yuborildi.");
     }
 
     /**
@@ -455,6 +491,7 @@ class PostController extends Controller
         $user = $request->user();
 
         abort_unless($user && $user->hasRole('user'), 403);
+        abort_unless($post->moderation_status === 'approved', 404);
 
         if ($user->likedPosts()->whereKey($post->id)->exists()) {
             $user->likedPosts()->detach($post->id);
