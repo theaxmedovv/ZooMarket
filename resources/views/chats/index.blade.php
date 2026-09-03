@@ -53,8 +53,8 @@
                     {{-- Post Thumbnail --}}
                     <div class="chat-thumb-box">
                         @if($img)
-                            <div class="chat-thumb-backdrop" style="background-image: url('{{ asset('storage/' . $img) }}');"></div>
-                            <img src="{{ asset('storage/' . $img) }}" alt="{{ $chat->post?->title ?? '' }}">
+                            <div class="chat-thumb-backdrop" style="background-image: url('{{ route('images.show', ['path' => $img]) }}');"></div>
+                            <img src="{{ route('images.show', ['path' => $img]) }}" alt="{{ $chat->post?->title ?? '' }}">
                         @else
                             <div class="chat-thumb-placeholder"><i class="bi bi-image"></i></div>
                         @endif

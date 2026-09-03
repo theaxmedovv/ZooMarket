@@ -7,9 +7,9 @@ use App\Models\Category;
 use App\Models\Chat;
 use App\Models\Post;
 use App\Models\PurchaseRequest;
+use App\Services\DatabaseImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -240,7 +240,7 @@ class PostController extends Controller
 
         $uploadedImages = [];
         foreach ($request->file('images', []) as $file) {
-            $uploadedImages[] = $file->store('posts', 'public');
+            $uploadedImages[] = DatabaseImageService::store($file, 'posts');
         }
 
         if (!empty($uploadedImages)) {
@@ -386,11 +386,11 @@ class PostController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($post->allImages() as $old) {
-                Storage::disk('public')->delete($old);
+                DatabaseImageService::delete($old);
             }
             $uploadedImages = [];
             foreach ($request->file('images') as $file) {
-                $uploadedImages[] = $file->store('posts', 'public');
+                $uploadedImages[] = DatabaseImageService::store($file, 'posts');
             }
             $data['image'] = $uploadedImages[0];
             $data['images'] = $uploadedImages;
@@ -418,8 +418,8 @@ class PostController extends Controller
             403
         );
 
-        if ($post->image) {
-            Storage::disk('public')->delete($post->image);
+        foreach ($post->allImages() as $img) {
+            DatabaseImageService::delete($img);
         }
 
         $post->delete();

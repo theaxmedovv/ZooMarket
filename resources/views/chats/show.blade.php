@@ -20,8 +20,8 @@
             <div class="sidebar-post-card">
                 <div class="sidebar-post-img-box">
                     @if(!empty($imgs))
-                        <div class="sidebar-post-backdrop" style="background-image: url('{{ asset('storage/' . $imgs[0]) }}');"></div>
-                        <img src="{{ asset('storage/' . $imgs[0]) }}" alt="{{ $chat->post->title }}">
+                        <div class="sidebar-post-backdrop" style="background-image: url('{{ route('images.show', ['path' => $imgs[0]]) }}');"></div>
+                        <img src="{{ route('images.show', ['path' => $imgs[0]]) }}" alt="{{ $chat->post->title }}">
                     @else
                         <div class="sidebar-post-placeholder"><i class="bi bi-image"></i></div>
                     @endif

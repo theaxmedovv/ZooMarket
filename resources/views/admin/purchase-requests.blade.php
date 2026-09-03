@@ -101,7 +101,7 @@
                                     <a href="{{ route('posts.show', $request->animal) }}" class="d-flex align-items-center gap-2 text-decoration-none text-cream hover-lime">
                                         <div class="animal-thumb-mini">
                                             @if($request->animal->image)
-                                                <img src="{{ asset('storage/' . $request->animal->image) }}" alt="">
+                                                <img src="{{ $request->animal->imageUrl() }}" alt="">
                                             @else
                                                 <i class="bi bi-image text-muted"></i>
                                             @endif

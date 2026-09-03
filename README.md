@@ -8,7 +8,7 @@ Bu loyiha Laravel framework yordamida role va permission boshqarish tizimini ama
 - **PHP** 8.1+
 - **Spatie Laravel Permission** paket
 - **Bootstrap 5** (UI uchun)
-- **SQLite/MySQL** (ma'lumotlar bazasi)
+- **MySQL** (`zoobozor` ma'lumotlar bazasi)
 
 ## O'rnatish
 
@@ -34,12 +34,17 @@ Bu loyiha Laravel framework yordamida role va permission boshqarish tizimini ama
     php artisan key:generate
     ```
 
-4. **Ma'lumotlar bazasini yaratish:**
-    - `.env` faylida `DB_CONNECTION=sqlite` yoki MySQL sozlamalarini kiriting.
-    - Agar SQLite bo'lsa:
-        ```bash
-        touch database/database.sqlite
-        ```
+4. **Ma'lumotlar bazasi:**
+   - phpMyAdmin yoki MySQL orqali `zoobozor` bazasini tanlang.
+   - `.env` faylida:
+     ```env
+     DB_CONNECTION=mysql
+     DB_HOST=127.0.0.1
+     DB_PORT=3306
+     DB_DATABASE=zoobozor
+     DB_USERNAME=root
+     DB_PASSWORD=
+     ```
 
 5. **Migratsiya va seeder ishga tushirish:**
 
@@ -65,40 +70,24 @@ Bu loyiha Laravel framework yordamida role va permission boshqarish tizimini ama
 
 Test userlar:
 
-- **Editor**: test@example.com / password (create, read, edit qila oladi)
-- **Viewer**: viewer@example.com / password (faqat read qila oladi)
+- **Seller**: seller@example.com / password
+- **User**: user@example.com / password
 
 Login sahifasi: `http://localhost:8000/login`
 
 ### Rollar va Permissions
 
-- **Admin**: Barcha permissions (create, read, edit, delete)
-- **Editor**: create, read, edit permissions,
-- **Viewer**: Faqat read permission
+- **Seller (Admin)**: Barcha amallar
+- **User**: Ko'rish, buyurtma yuborish, chat
 
-### Sahifalar
+## Rasm Yuklash (MySQL Database Storage)
 
-- `/posts` – Postlar ro'yxati
-- `/posts/create` – Yangi post yaratish (title, content, image yuklash mumkin)
-- `/posts/{id}` – Postni ko'rish
-- `/posts/{id}/edit` – Postni tahrirlash (image o'zgartirish mumkin)
+Barcha rasmlar (profil avatarlari va e'lonlar rasmlari) to'g'ridan-to'g'ri **`zoobozor` MySQL bazasida** (`database_images` jadvali, `LONGBLOB`) saqlanadi. Loyihaning lokal fayl tizimida hech qanday rasm saqlanmaydi:
 
-## Xususiyatlar
-
-- Role va permission boshqarish (Spatie Laravel Permission)
-- Post yaratish, ko'rish, tahrirlash, o'chirish
-- Rasm yuklash va ko'rsatish (JPG, PNG, GIF, maksimal 2MB)
-- Responsive UI (Bootstrap 5)
-- Autentifikatsiya va avtorizatsiya
-
-## Rasm Yuklash
-
-Postlarga rasm qo'shish mumkin:
-
-- Formatlar: JPG, PNG, GIF
+- Formatlar: JPG, JPEG, PNG, WEBP, GIF
 - Maksimal hajm: 2MB
-- Saqlanish joyi: `storage/app/public/posts`
-- Ko'rsatish: `storage/` link orqali
+- Saqlanish joyi: MySQL `zoobozor.database_images`
+- Ko'rsatish: `/images/{path}` yoki `/storage/{path}` route orqali to'g'ridan-to'g'ri MySQL dan stream qilinadi.
 
 ## Qo'shimcha
 

@@ -82,6 +82,18 @@ class Post extends Model
         return array_values($list);
     }
 
+    public function imageUrl(): ?string
+    {
+        return $this->image ? route('images.show', ['path' => $this->image]) : null;
+    }
+
+    public function allImageUrls(): array
+    {
+        return array_map(function ($img) {
+            return route('images.show', ['path' => $img]);
+        }, $this->allImages());
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

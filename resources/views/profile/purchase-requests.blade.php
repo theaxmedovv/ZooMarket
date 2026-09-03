@@ -95,8 +95,8 @@
                         <div class="col-12 col-md-auto">
                             <div class="order-img-box">
                                 @if($request->animal && $request->animal->image)
-                                    <div class="order-img-backdrop" style="background-image: url('{{ asset('storage/' . $request->animal->image) }}');"></div>
-                                    <img src="{{ asset('storage/' . $request->animal->image) }}" alt="{{ $request->animal->title }}">
+                                    <div class="order-img-backdrop" style="background-image: url('{{ $request->animal->imageUrl() }}');"></div>
+                                    <img src="{{ $request->animal->imageUrl() }}" alt="{{ $request->animal->title }}">
                                 @else
                                     <div class="order-img-placeholder">
                                         <i class="bi bi-image"></i>

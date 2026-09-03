@@ -52,8 +52,8 @@
             <div class="gallery-card-shell mb-4">
                 <div class="gallery-main-view" id="galleryMainView">
                     @if(!empty($allImages))
-                        <div class="gallery-ambient-backdrop" id="ambientBackdrop" style="background-image: url('{{ asset('storage/' . $allImages[0]) }}');"></div>
-                        <img src="{{ asset('storage/' . $allImages[0]) }}"
+                        <div class="gallery-ambient-backdrop" id="ambientBackdrop" style="background-image: url('{{ route('images.show', ['path' => $allImages[0]]) }}');"></div>
+                        <img src="{{ route('images.show', ['path' => $allImages[0]]) }}"
                              alt="{{ $post->title }}"
                              class="gallery-main-img" id="mainImg">
                     @else
@@ -98,8 +98,8 @@
                     <div class="gallery-thumbnails-strip">
                         @foreach($allImages as $i => $img)
                             <button type="button" class="gallery-thumb-btn {{ $i === 0 ? 'active' : '' }}"
-                                    onclick="switchImage('{{ asset('storage/' . $img) }}', this, {{ $i + 1 }})">
-                                <img src="{{ asset('storage/' . $img) }}" alt="Rasm {{ $i + 1 }}">
+                                    onclick="switchImage('{{ route('images.show', ['path' => $img]) }}', this, {{ $i + 1 }})">
+                                <img src="{{ route('images.show', ['path' => $img]) }}" alt="Rasm {{ $i + 1 }}">
                             </button>
                         @endforeach
                     </div>

@@ -80,4 +80,8 @@ class User extends Authenticatable
         return $this->hasMany(Chat::class, 'seller_id');
     }
 
+    public function avatarUrl(): ?string
+    {
+        return $this->avatar ? route('images.show', ['path' => $this->avatar]) : null;
+    }
 }

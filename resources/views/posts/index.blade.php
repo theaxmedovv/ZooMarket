@@ -307,8 +307,8 @@
                 <div class="card-img-wrap">
                     <a href="{{ route('posts.show', $post) }}" class="card-img-link" aria-label="{{ $post->title }}">
                         @if($post->image)
-                            <div class="card-img-backdrop" style="background-image: url('{{ asset('storage/' . $post->image) }}');"></div>
-                            <img class="card-img" src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" loading="lazy">
+                            <div class="card-img-backdrop" style="background-image: url('{{ $post->imageUrl() }}');"></div>
+                            <img class="card-img" src="{{ $post->imageUrl() }}" alt="{{ $post->title }}" loading="lazy">
                         @else
                             <div class="card-img-placeholder">
                                 <i class="bi bi-image"></i> Rasm yuklanmagan

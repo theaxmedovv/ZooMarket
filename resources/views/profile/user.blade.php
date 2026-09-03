@@ -23,7 +23,7 @@
 
             <div class="profile-avatar-wrap">
                 @if($user->avatar)
-                    <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="profile-avatar-image">
+                    <img src="{{ $user->avatarUrl() }}" alt="{{ $user->name }}" class="profile-avatar-image">
                 @else
                     <div class="profile-avatar-fallback">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
                 @endif
@@ -86,7 +86,7 @@
                             <div class="profile-list-item {{ !$loop->last ? 'has-border' : '' }}">
                                 <div class="d-flex align-items-center gap-3 flex-grow-1">
                                     @if($post->image)
-                                        <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="liked-post-image">
+                                        <img src="{{ $post->imageUrl() }}" alt="{{ $post->title }}" class="liked-post-image">
                                     @else
                                         <div class="liked-post-placeholder">
                                             <i class="bi bi-image"></i>

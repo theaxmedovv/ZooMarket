@@ -3,10 +3,15 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ImageController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+
+// Stream images directly from MySQL database (zero filesystem storage)
+Route::get('/images/{path}', [ImageController::class, 'show'])->where('path', '.*')->name('images.show');
+Route::get('/storage/{path}', [ImageController::class, 'show'])->where('path', '.*');
 
 Route::get('/', function () {
     return redirect()->route('posts.index');

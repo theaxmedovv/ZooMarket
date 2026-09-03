@@ -69,7 +69,7 @@
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="animal-thumb-mini">
                                         @if($post->image)
-                                            <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}">
+                                            <img src="{{ $post->imageUrl() }}" alt="{{ $post->title }}">
                                         @else
                                             <i class="bi bi-image text-muted"></i>
                                         @endif
