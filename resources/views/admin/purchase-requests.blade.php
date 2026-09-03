@@ -98,7 +98,7 @@
                             {{-- Animal / Post --}}
                             <td>
                                 @if($request->animal)
-                                    <a href="{{ route('posts.show', $request->animal) }}" class="d-flex align-items-center gap-2 text-decoration-none text-cream hover-lime">
+                                    <div class="d-flex align-items-center gap-2">
                                         <div class="animal-thumb-mini">
                                             @if($request->animal->image)
                                                 <img src="{{ $request->animal->imageUrl() }}" alt="">
@@ -107,7 +107,9 @@
                                             @endif
                                         </div>
                                         <div>
-                                            <div class="fw-semibold">{{ Str::limit($request->animal->title, 28) }}</div>
+                                            <a href="{{ route('posts.show', $request->animal) }}" class="fw-semibold text-decoration-none text-cream hover-lime">
+                                                {{ Str::limit($request->animal->title, 28) }}
+                                            </a>
                                             <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
                                                 <span class="badge bg-panel-soft text-lime border border-line" style="font-size: 0.7rem;">
                                                     <i class="bi bi-box-seam me-1"></i>{{ $request->quantity ?? 1 }} ta
@@ -121,9 +123,14 @@
                                                         <i class="bi bi-gender-female me-1"></i>Urg'ochi
                                                     </span>
                                                 @endif
+                                                @if($request->animal->trashed())
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" style="font-size: 0.68rem;">
+                                                        <i class="bi bi-trash me-1"></i>O'chirilgan
+                                                    </span>
+                                                @endif
                                             </div>
                                         </div>
-                                    </a>
+                                    </div>
                                 @else
                                     <span class="text-muted small fst-italic">E'lon o'chirilgan</span>
                                 @endif
@@ -195,17 +202,17 @@
                                     @endif
 
                                     @if($request->status === 'approved')
-                                        <form action="{{ route('admin.purchase-requests.mark-sold', $request) }}" method="POST" class="m-0" onsubmit="return confirm('Hayvon sotilgan deb belgilansinmi?')">
+                                        <form action="{{ route('admin.purchase-requests.mark-sold', $request) }}" method="POST" class="m-0" onsubmit="return confirm('E\'lon sotilgan deb belgilansinmi? (E\'lon to\'liq yoki qisman sotilganda ham arxivga o\'tkaziladi va chat yopiladi)')">
                                             @csrf
-                                            <button type="submit" class="btn-req-action btn-approve" title="Sotilgan deb belgilash">
-                                                <i class="bi bi-bag-check-fill"></i> Sold
+                                            <button type="submit" class="btn-req-action btn-approve" title="Sotilgan deb belgilash va arxivga o'tkazish">
+                                                <i class="bi bi-bag-check-fill"></i> Sold (Arxiv)
                                             </button>
                                         </form>
 
-                                        <form action="{{ route('admin.purchase-requests.return-listing', $request) }}" method="POST" class="m-0" onsubmit="return confirm('E\'lonni yana marketga qaytarishni xohlaysizmi?')">
+                                        <form action="{{ route('admin.purchase-requests.reject', $request) }}" method="POST" class="m-0" onsubmit="return confirm('Ushbu tasdiqlangan so\'rovni bekor/rad qilishni xohlaysizmi?')">
                                             @csrf
-                                            <button type="submit" class="btn-req-action btn-reject" title="Return Listing">
-                                                <i class="bi bi-arrow-counterclockwise"></i> Return Listing
+                                            <button type="submit" class="btn-req-action btn-reject" title="Rad etish">
+                                                <i class="bi bi-x-lg"></i> Rad etish
                                             </button>
                                         </form>
                                     @endif

@@ -18,27 +18,22 @@ class AdminController extends Controller
     {
         $user = $request->user();
 
-        $archivedPosts = Post::with(['category', 'purchaseRequests' => function ($query) {
-                $query->where('status', 'approved')->with('user');
-            }])
+        $archivedPosts = Post::withTrashed()
+            ->with([
+                'category',
+                'purchaseRequests' => function ($query) {
+                    $query->where('status', 'sold')->with(['user', 'chat'])->latest('updated_at');
+                }
+            ])
             ->where('user_id', $user->id)
             ->whereIn('status', ['sold', 'archived'])
             ->latest('updated_at')
             ->paginate(15);
 
-        $totalArchived = Post::where('user_id', $user->id)->whereIn('status', ['sold', 'archived'])->count();
-        $totalSold = Post::where('user_id', $user->id)->where('status', 'sold')->count();
+        $totalArchived = Post::withTrashed()->where('user_id', $user->id)->whereIn('status', ['sold', 'archived'])->count();
+        $totalSold = Post::withTrashed()->where('user_id', $user->id)->where('status', 'sold')->count();
 
         return view('admin.archive', compact('archivedPosts', 'totalArchived', 'totalSold'));
-    }
-
-    public function restorePost(Request $request, Post $post): RedirectResponse
-    {
-        abort_unless($post->user_id === $request->user()->id, 403);
-
-        $post->update(['status' => 'active']);
-
-        return back()->with('success', 'E\'lon muvaffaqiyatli faollashtirildi va asosiy ro\'yxatga qaytarildi.');
     }
 
     public function archivePost(Request $request, Post $post): RedirectResponse

@@ -8,8 +8,11 @@
             <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="badge bg-secondary text-light fw-bold px-2 py-1 rounded-pill"><i class="bi bi-archive me-1"></i> Arxiv</span>
                 <h1 class="h3 fw-bold mb-0 text-cream font-serif">Arxivdagi e'lonlar</h1>
+                <span class="badge bg-dark border border-secondary text-muted px-2 py-1 rounded-pill small">
+                    <i class="bi bi-lock-fill me-1"></i> Faqat o'qish uchun (Read-only)
+                </span>
             </div>
-            <p class="text-muted small mb-0">Sotilgan yoki arxivga o'tkazilgan e'lonlaringiz ro'yxati</p>
+            <p class="text-muted small mb-0">Sotilgan (to'liq yoki qisman) yoki arxivga o'tkazilgan e'lonlar, xaridorlar va tranzaksiyalar tarixi</p>
         </div>
         <div class="d-flex align-items-center gap-2">
             <a href="{{ route('posts.index') }}" class="btn-panel-link">
@@ -28,7 +31,7 @@
                 <div class="stat-icon bg-lime-soft text-lime"><i class="bi bi-archive-fill"></i></div>
                 <div>
                     <div class="stat-value text-cream font-serif">{{ $totalArchived }} ta</div>
-                    <div class="stat-label">Jami arxivda</div>
+                    <div class="stat-label">Jami arxivda (Read-only)</div>
                 </div>
             </div>
         </div>
@@ -51,8 +54,9 @@
                     <tr>
                         <th>E'lon (Hayvon)</th>
                         <th>Kategoriya</th>
-                        <th>Narxi</th>
-                        <th>Xaridor ma'lumoti</th>
+                        <th>Xaridor(lar)</th>
+                        <th>Sotilgan miqdor & Jinsi</th>
+                        <th>Tranzaksiya / Buyurtma</th>
                         <th>Holati</th>
                         <th>Sana</th>
                         <th class="text-end">Amallar</th>
@@ -61,7 +65,8 @@
                 <tbody>
                     @forelse($archivedPosts as $post)
                         @php
-                            $approvedReq = $post->purchaseRequests->first();
+                            $soldRequests = $post->purchaseRequests;
+                            $primarySold = $soldRequests->first();
                         @endphp
                         <tr>
                             {{-- Animal / Post Info --}}
@@ -78,9 +83,14 @@
                                         <a href="{{ route('posts.show', $post) }}" class="fw-bold text-cream text-decoration-none hover-lime">
                                             {{ $post->title }}
                                         </a>
-                                        @if($post->breed)
-                                            <div class="small text-muted">{{ $post->breed }}</div>
-                                        @endif
+                                        <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
+                                            @if($post->breed)
+                                                <span class="small text-muted">{{ $post->breed }}</span>
+                                            @endif
+                                            <span class="badge-readonly-tag">
+                                                <i class="bi bi-lock-fill me-1"></i>Read-only
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -92,32 +102,102 @@
                                 </span>
                             </td>
 
-                            {{-- Price --}}
+                            {{-- Buyer Info --}}
                             <td>
-                                @if($post->price)
+                                @if($soldRequests->isNotEmpty())
+                                    <div class="d-flex flex-column gap-2">
+                                        @foreach($soldRequests as $soldReq)
+                                            @if($soldReq->user)
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="buyer-avatar">
+                                                        {{ mb_strtoupper(mb_substr($soldReq->user->name, 0, 1)) }}
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-semibold text-cream small">{{ $soldReq->user->name }}</div>
+                                                        <div class="text-muted" style="font-size: 0.72rem;">
+                                                            @if($soldReq->user->phone)
+                                                                <i class="bi bi-telephone text-lime me-1"></i>{{ $soldReq->user->phone }}
+                                                            @else
+                                                                {{ $soldReq->user->email }}
+                                                            @endif
+                                                        </div>
+                                                        @if($soldReq->user->telegram_username)
+                                                            <div style="font-size: 0.7rem;">
+                                                                <a href="https://t.me/{{ ltrim($soldReq->user->telegram_username, '@') }}" target="_blank" class="text-info text-decoration-none">
+                                                                    <i class="bi bi-telegram me-1"></i>{{ '@' . ltrim($soldReq->user->telegram_username, '@') }}
+                                                                </a>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <span class="text-muted small fst-italic">To'g'ridan-to'g'ri sotilgan / Arxiv</span>
+                                @endif
+                            </td>
+
+                            {{-- Quantity & Gender Sold --}}
+                            <td>
+                                @if($soldRequests->isNotEmpty())
+                                    <div class="d-flex flex-column gap-2">
+                                        @foreach($soldRequests as $soldReq)
+                                            <div class="d-flex align-items-center gap-1 flex-wrap">
+                                                <span class="badge bg-lime-soft text-lime border border-lime border-opacity-25" style="font-size: 0.75rem; font-weight: 700;">
+                                                    <i class="bi bi-box-seam me-1"></i>{{ $soldReq->quantity ?? 1 }} ta sotildi
+                                                </span>
+                                                @if($soldReq->gender === 'male')
+                                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 0.72rem;">
+                                                        <i class="bi bi-gender-male me-1"></i>Erkak ♂
+                                                    </span>
+                                                @elseif($soldReq->gender === 'female')
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" style="font-size: 0.72rem;">
+                                                        <i class="bi bi-gender-female me-1"></i>Urg'ochi ♀
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="small text-muted">
+                                        Umumiy: {{ $post->quantity }} ta
+                                    </div>
+                                @endif
+                            </td>
+
+                            {{-- Transaction / Order Info --}}
+                            <td>
+                                @if($soldRequests->isNotEmpty())
+                                    <div class="d-flex flex-column gap-2">
+                                        @foreach($soldRequests as $soldReq)
+                                            @php
+                                                $reqQty = $soldReq->quantity ?? 1;
+                                                $totalSum = (float) $post->price * $reqQty;
+                                            @endphp
+                                            <div>
+                                                <div class="order-id-tag">
+                                                    <i class="bi bi-receipt me-1"></i>#REQ-{{ str_pad($soldReq->id, 5, '0', STR_PAD_LEFT) }}
+                                                </div>
+                                                <div class="text-lime fw-bold font-serif small mt-1">
+                                                    {{ number_format($totalSum, 0, '.', ' ') }}
+                                                    <small class="text-cream opacity-75">{{ $post->currency }}</small>
+                                                </div>
+                                                @if($reqQty > 1)
+                                                    <div class="text-muted" style="font-size: 0.68rem;">
+                                                        ({{ $reqQty }} ta &times; {{ number_format((float) $post->price, 0, '.', ' ') }})
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @elseif($post->price)
                                     <span class="text-lime fw-bold font-serif">
                                         {{ number_format((float) $post->price, 0, '.', ' ') }}
                                         <small class="text-cream opacity-75">{{ $post->currency }}</small>
                                     </span>
                                 @else
                                     <span class="text-muted">—</span>
-                                @endif
-                            </td>
-
-                            {{-- Buyer Info --}}
-                            <td>
-                                @if($approvedReq && $approvedReq->user)
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="buyer-avatar">
-                                            {{ mb_strtoupper(mb_substr($approvedReq->user->name, 0, 1)) }}
-                                        </div>
-                                        <div>
-                                            <div class="fw-semibold text-cream small">{{ $approvedReq->user->name }}</div>
-                                            <small class="text-muted">{{ $approvedReq->user->phone ?: $approvedReq->user->email }}</small>
-                                        </div>
-                                    </div>
-                                @else
-                                    <span class="text-muted small">—</span>
                                 @endif
                             </td>
 
@@ -136,31 +216,31 @@
 
                             {{-- Date --}}
                             <td>
-                                <span class="text-muted small">{{ $post->updated_at->format('d.m.Y H:i') }}</span>
+                                <div class="text-cream small">{{ $post->updated_at->format('d.m.Y') }}</div>
+                                <small class="text-muted">{{ $post->updated_at->format('H:i') }}</small>
                             </td>
 
-                            {{-- Actions --}}
+                            {{-- Actions (Strictly Read-Only, No Restore Button) --}}
                             <td class="text-end">
                                 <div class="d-inline-flex gap-2 flex-wrap justify-content-end align-items-center">
-                                    <a href="{{ route('posts.show', $post) }}" class="btn-archive-action btn-view" title="Ko'rish">
+                                    <a href="{{ route('posts.show', $post) }}" class="btn-archive-action btn-view" title="E'lonni ko'rish (Faqat o'qish)">
                                         <i class="bi bi-eye"></i> Ko'rish
                                     </a>
-                                    <form action="{{ route('admin.posts.restore', $post) }}" method="POST" class="m-0" onsubmit="return confirm('Ushbu e\'lonni qayta faollashtirish va marketplace\'da ko\'rsatishni xohlaysizmi?')">
-                                        @csrf
-                                        <button type="submit" class="btn-archive-action btn-restore" title="Qayta faollashtirish">
-                                            <i class="bi bi-arrow-counterclockwise"></i> Qayta tiklash
-                                        </button>
-                                    </form>
+                                    @if($primarySold && $primarySold->chat)
+                                        <a href="{{ route('chats.show', $primarySold->chat) }}" class="btn-archive-action btn-chat-hist" title="Chat tarixini ko'rish">
+                                            <i class="bi bi-chat-left-text"></i> Chat tarixi
+                                        </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
-                                <div class="empty-state py-5">
-                                    <div class="empty-icon"><i class="bi bi-archive"></i></div>
-                                    <h4 class="empty-title">Arxiv bo'sh</h4>
-                                    <p class="empty-text">Hozircha sizda sotilgan yoki arxivga o'tkazilgan e'lonlar mavjud emas.</p>
+                            <td colspan="8">
+                                <div class="empty-state py-5 text-center">
+                                    <div class="empty-icon text-muted fs-1 mb-2"><i class="bi bi-archive"></i></div>
+                                    <h4 class="empty-title text-cream">Arxiv bo'sh</h4>
+                                    <p class="empty-text text-muted">Hozircha sizda sotilgan yoki arxivga o'tkazilgan e'lonlar mavjud emas.</p>
                                 </div>
                             </td>
                         </tr>
@@ -271,9 +351,9 @@
     }
 
     .animal-thumb-mini {
-        width: 44px;
-        height: 44px;
-        border-radius: 8px;
+        width: 46px;
+        height: 46px;
+        border-radius: 10px;
         overflow: hidden;
         background: #060d07;
         border: 1px solid var(--line);
@@ -295,6 +375,27 @@
         padding: 3px 9px;
         font-size: 0.72rem;
         font-weight: 600;
+    }
+
+    .badge-readonly-tag {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 0.65rem;
+        font-weight: 600;
+    }
+
+    .order-id-tag {
+        font-family: monospace;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--cream);
+        background: rgba(255, 255, 255, 0.05);
+        padding: 2px 6px;
+        border-radius: 6px;
+        display: inline-block;
     }
 
     .buyer-avatar {
@@ -356,14 +457,15 @@
     .btn-view:hover {
         border-color: var(--lime);
         color: var(--lime);
+        background: rgba(194, 240, 60, 0.06);
     }
 
-    .btn-restore {
-        background: rgba(194, 240, 60, 0.15);
+    .btn-chat-hist {
+        background: rgba(194, 240, 60, 0.1);
+        border: 1px solid rgba(194, 240, 60, 0.25);
         color: var(--lime);
-        border: 1px solid rgba(194, 240, 60, 0.3);
     }
-    .btn-restore:hover {
+    .btn-chat-hist:hover {
         background: var(--lime);
         color: var(--ink);
     }

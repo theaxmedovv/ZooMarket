@@ -369,11 +369,19 @@
                     @endif
 
                     @if(auth()->check() && (auth()->user()->can('edit posts') || auth()->id() === $post->user_id))
-                        <div class="mt-2">
-                            <a href="{{ route('posts.edit', $post) }}" class="btn-action-sub btn-sub-edit w-100">
-                                <i class="bi bi-pencil-square me-1"></i> E'lonni tahrirlash
-                            </a>
-                        </div>
+                        @if(! $post->isArchived())
+                            <div class="mt-2">
+                                <a href="{{ route('posts.edit', $post) }}" class="btn-action-sub btn-sub-edit w-100">
+                                    <i class="bi bi-pencil-square me-1"></i> E'lonni tahrirlash
+                                </a>
+                            </div>
+                        @else
+                            <div class="mt-2 text-center p-2 rounded-3 bg-panel-soft border border-line">
+                                <span class="text-muted small">
+                                    <i class="bi bi-lock-fill me-1"></i> Ushbu e'lon arxivlangan / sotilgan (Read-only)
+                                </span>
+                            </div>
+                        @endif
                     @endif
 
                     @guest

@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Post extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'title',
         'category_id',
@@ -68,9 +70,14 @@ class Post extends Model
         return $this->availableFemaleCount() > 0;
     }
 
+    public function isArchived(): bool
+    {
+        return in_array($this->status, ['sold', 'archived'], true) || $this->trashed();
+    }
+
     public function isSoldOut(): bool
     {
-        return $this->totalAvailableCount() <= 0 || $this->status === 'sold';
+        return $this->isArchived() || $this->totalAvailableCount() <= 0;
     }
 
     public function allImages(): array

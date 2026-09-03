@@ -76,6 +76,10 @@
                                     <span class="chat-price-pill font-serif text-lime">
                                         {{ number_format((float) $chat->post->price, 0, '.', ' ') }} {{ $chat->post->currency }}
                                     </span>
+                                @if(!empty($chat->is_closed))
+                                    <span class="badge bg-secondary bg-opacity-25 text-muted border border-secondary border-opacity-25" style="font-size: 0.68rem;">
+                                        <i class="bi bi-lock-fill me-1"></i> Yopilgan
+                                    </span>
                                 @endif
                             </div>
                             <span class="chat-time-tag">

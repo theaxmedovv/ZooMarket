@@ -91,7 +91,7 @@ class ExampleTest extends TestCase
         $response->assertSee('Xavfsiz xarid qoidalari');
     }
 
-    public function test_seller_approval_creates_chat_and_return_listing_reactivates_post(): void
+    public function test_seller_approval_creates_chat_and_mark_sold_archives_post_and_closes_chat(): void
     {
         $seller = User::factory()->create();
         $seller->assignRole('seller');
@@ -104,6 +104,9 @@ class ExampleTest extends TestCase
             'category_id' => 1,
             'breed' => 'Labrador',
             'gender' => 'male',
+            'quantity' => 10,
+            'male_quantity' => 10,
+            'female_quantity' => 0,
             'age' => '2 years',
             'color' => 'Black',
             'description' => 'Healthy pet',
@@ -119,6 +122,8 @@ class ExampleTest extends TestCase
         $request = PurchaseRequest::create([
             'user_id' => $buyer->id,
             'animal_id' => $post->id,
+            'gender' => 'male',
+            'quantity' => 1,
             'status' => 'pending',
         ]);
 
@@ -138,24 +143,32 @@ class ExampleTest extends TestCase
             'seller_id' => $seller->id,
         ]);
 
+        $chat = $request->chat;
+        $this->assertFalse($chat->isClosed());
+
+        // Mark sold (even with 9 animals remaining, it moves to Archive and closes chat)
         $this->actingAs($seller)
             ->post(route('admin.purchase-requests.mark-sold', $request))
             ->assertRedirect();
 
         $request->refresh();
         $post->refresh();
+        $chat->refresh();
 
         $this->assertSame('sold', $request->status);
         $this->assertSame('sold', $post->status);
+        $this->assertTrue($chat->isClosed());
 
-        $this->actingAs($seller)
-            ->post(route('admin.purchase-requests.return-listing', $request))
-            ->assertRedirect();
+        // Attempting to send new message in closed chat must fail
+        $response = $this->actingAs($buyer)
+            ->post(route('chats.messages.store', $chat), [
+                'body' => 'Can I buy another one?',
+            ]);
 
-        $post->refresh();
-        $request->refresh();
-
-        $this->assertSame('active', $post->status);
-        $this->assertSame('rejected', $request->status);
+        $response->assertSessionHasErrors('body');
+        $this->assertDatabaseMissing('messages', [
+            'chat_id' => $chat->id,
+            'body' => 'Can I buy another one?',
+        ]);
     }
 }

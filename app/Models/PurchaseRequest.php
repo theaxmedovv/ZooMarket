@@ -30,7 +30,7 @@ class PurchaseRequest extends Model
 
     public function animal(): BelongsTo
     {
-        return $this->belongsTo(Post::class, 'animal_id');
+        return $this->belongsTo(Post::class, 'animal_id')->withTrashed();
     }
 
     public function chat(): HasOne

@@ -125,6 +125,11 @@
                                             <i class="bi bi-geo-alt me-1 text-lime"></i>{{ $request->animal->location }}
                                         </span>
                                     @endif
+                                    @if($request->animal->trashed())
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" style="font-size: 0.68rem;">
+                                            <i class="bi bi-trash me-1"></i>E'lon sotuvchi tomonidan olib tashlangan
+                                        </span>
+                                    @endif
                                 </div>
                                 <h4 class="order-title mb-2">
                                     <a href="{{ route('posts.show', $request->animal) }}" class="text-cream text-decoration-none hover-lime">

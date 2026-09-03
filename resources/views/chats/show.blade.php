@@ -78,11 +78,16 @@
                 {{ mb_strtoupper(mb_substr($other->name, 0, 1)) }}
             </div>
             <div class="chat-header-info">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="chat-header-name">{{ $other->name }}</span>
                     <span class="badge-role-pill {{ $isSeller ? 'role-seller' : 'role-buyer' }}">
                         {{ $isSeller ? 'Sotuvchi' : 'Xaridor' }}
                     </span>
+                    @if($chat->isClosed())
+                        <span class="badge bg-secondary text-light px-2 py-1 rounded-pill small" style="font-size: 0.68rem;">
+                            <i class="bi bi-lock-fill me-1"></i> Yopilgan
+                        </span>
+                    @endif
                 </div>
                 <div class="chat-header-sub">
                     <i class="bi bi-box-seam me-1 text-lime"></i> {{ Str::limit($chat->post?->title ?? 'E\'lon', 35) }}
@@ -128,25 +133,37 @@
             @endif
         </div>
 
-        {{-- Input Bar --}}
+        {{-- Input Bar or Closed Notice --}}
         <div class="chat-input-area">
-            <form action="{{ route('chats.messages.store', $chat) }}" method="POST" class="chat-input-form">
-                @csrf
-                <div class="chat-input-wrapper">
-                    <textarea name="body"
-                              class="chat-input {{ $errors->has('body') ? 'is-invalid' : '' }}"
-                              placeholder="Xabaringizni yozing... (Ctrl + Enter yuborish)"
-                              rows="1"
-                              required
-                              maxlength="2000">{{ old('body') }}</textarea>
+            @if($chat->isClosed())
+                <div class="chat-closed-notice">
+                    <div class="d-flex align-items-center justify-content-center gap-2 text-warning fw-semibold mb-1">
+                        <i class="bi bi-lock-fill fs-5"></i>
+                        <span>Ushbu savdo suhbati yopilgan</span>
+                    </div>
+                    <p class="text-muted small text-center mb-0">
+                        E'lon sotilgan yoki arxivga o'tkazilganligi sababli yangi xabar yuborish imkoniyati to'xtatilgan. Oldingi barcha xabarlar tarixi to'liq saqlanib qolgan.
+                    </p>
                 </div>
-                <button type="submit" class="chat-send-btn" title="Yuborish">
-                    <i class="bi bi-send-fill"></i>
-                </button>
-            </form>
-            @error('body')
-                <div class="px-3 pb-2 text-danger small">{{ $message }}</div>
-            @enderror
+            @else
+                <form action="{{ route('chats.messages.store', $chat) }}" method="POST" class="chat-input-form">
+                    @csrf
+                    <div class="chat-input-wrapper">
+                        <textarea name="body"
+                                  class="chat-input {{ $errors->has('body') ? 'is-invalid' : '' }}"
+                                  placeholder="Xabaringizni yozing... (Ctrl + Enter yuborish)"
+                                  rows="1"
+                                  required
+                                  maxlength="2000">{{ old('body') }}</textarea>
+                    </div>
+                    <button type="submit" class="chat-send-btn" title="Yuborish">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </form>
+                @error('body')
+                    <div class="px-3 pb-2 text-danger small">{{ $message }}</div>
+                @enderror
+            @endif
         </div>
     </div>
 </div>
@@ -511,6 +528,13 @@
         background: var(--panel);
         border-top: 1px solid var(--line);
         flex-shrink: 0;
+    }
+
+    .chat-closed-notice {
+        background: rgba(255, 193, 7, 0.08);
+        border: 1px solid rgba(255, 193, 7, 0.25);
+        border-radius: 12px;
+        padding: 12px 18px;
     }
 
     .chat-input-form {

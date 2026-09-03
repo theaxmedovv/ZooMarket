@@ -14,7 +14,15 @@ class Chat extends Model
         'post_id',
         'buyer_id',
         'seller_id',
+        'closed_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'closed_at' => 'datetime',
+        ];
+    }
 
     public function purchaseRequest(): BelongsTo
     {
@@ -23,7 +31,7 @@ class Chat extends Model
 
     public function post(): BelongsTo
     {
-        return $this->belongsTo(Post::class);
+        return $this->belongsTo(Post::class)->withTrashed();
     }
 
     public function buyer(): BelongsTo
@@ -62,5 +70,22 @@ class Chat extends Model
             ->where('sender_id', '!=', $userId)
             ->whereNull('read_at')
             ->count();
+    }
+
+    public function isClosed(): bool
+    {
+        if ($this->closed_at !== null) {
+            return true;
+        }
+
+        if (! $this->post || in_array($this->post->status, ['sold', 'archived'], true) || $this->post->trashed()) {
+            return true;
+        }
+
+        if ($this->purchaseRequest && in_array($this->purchaseRequest->status, ['sold', 'rejected'], true)) {
+            return true;
+        }
+
+        return false;
     }
 }

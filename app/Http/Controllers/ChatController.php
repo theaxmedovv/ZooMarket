@@ -12,13 +12,14 @@ class ChatController extends Controller
     {
         $userId = $request->user()->id;
 
-        $chats = Chat::with(['post.category', 'buyer', 'seller', 'lastMessage.sender'])
+        $chats = Chat::with(['post.category', 'purchaseRequest', 'buyer', 'seller', 'lastMessage.sender'])
             ->where('buyer_id', $userId)
             ->orWhere('seller_id', $userId)
             ->latest('updated_at')
             ->get()
             ->map(function (Chat $chat) use ($userId) {
                 $chat->unread = $chat->unreadCountFor($userId);
+                $chat->is_closed = $chat->isClosed();
                 return $chat;
             });
 
@@ -35,7 +36,7 @@ class ChatController extends Controller
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        $chat->load(['post.category', 'buyer', 'seller', 'messages.sender']);
+        $chat->load(['post.category', 'purchaseRequest', 'buyer', 'seller', 'messages.sender']);
 
         return view('chats.show', compact('chat'));
     }
@@ -44,6 +45,10 @@ class ChatController extends Controller
     {
         $user = $request->user();
         abort_unless($chat->involvesUser($user->id), 403);
+
+        if ($chat->isClosed()) {
+            return back()->withErrors(['body' => 'Ushbu suhbat yopilgan. E\'lon sotilgan yoki o\'chirilganligi sababli yangi xabarlar yuborish to\'xtatilgan.']);
+        }
 
         $validated = $request->validate([
             'body' => 'required|string|max:2000',

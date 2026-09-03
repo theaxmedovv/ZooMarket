@@ -17,7 +17,7 @@ class PurchaseRequestController extends Controller
         $status = $request->query('status');
         $userId = $request->user()->id;
 
-        $query = PurchaseRequest::with(['animal.category', 'animal.user', 'chat'])
+        $query = PurchaseRequest::with(['animal' => fn($q) => $q->withTrashed()->with(['category', 'user']), 'chat'])
             ->where('user_id', $userId);
 
         if (in_array($status, ['pending', 'approved', 'sold', 'rejected'], true)) {
@@ -47,7 +47,7 @@ class PurchaseRequestController extends Controller
             'animal_id' => [
                 'required',
                 'integer',
-                Rule::exists('posts', 'id'),
+                Rule::exists('posts', 'id')->whereNull('deleted_at'),
             ],
             'gender' => [
                 'required',
@@ -70,7 +70,7 @@ class PurchaseRequestController extends Controller
             DB::transaction(function () use ($user, $animalId, $gender, $requestedQty) {
                 $animal = Post::where('id', $animalId)->lockForUpdate()->firstOrFail();
 
-                if ($animal->status === 'sold' || $animal->totalAvailableCount() <= 0) {
+                if (in_array($animal->status, ['sold', 'archived'], true) || $animal->totalAvailableCount() <= 0) {
                     throw new \RuntimeException("Ushbu hayvon allaqachon sotilgan yoki mavjud emas.");
                 }
 
@@ -113,9 +113,9 @@ class PurchaseRequestController extends Controller
         $status = $request->query('status');
         $userId = $request->user()->id;
 
-        $query = PurchaseRequest::with(['user', 'animal', 'chat'])
+        $query = PurchaseRequest::with(['user', 'animal' => fn($q) => $q->withTrashed(), 'chat'])
             ->whereHas('animal', function ($q) use ($userId) {
-                $q->where('user_id', $userId);
+                $q->withTrashed()->where('user_id', $userId);
             });
 
         if (in_array($status, ['pending', 'approved', 'sold', 'rejected'], true)) {
@@ -125,11 +125,11 @@ class PurchaseRequestController extends Controller
         $requests = $query->latest()->paginate(15)->withQueryString();
 
         $stats = [
-            'total' => PurchaseRequest::whereHas('animal', fn($q) => $q->where('user_id', $userId))->count(),
-            'pending' => PurchaseRequest::where('status', 'pending')->whereHas('animal', fn($q) => $q->where('user_id', $userId))->count(),
-            'approved' => PurchaseRequest::where('status', 'approved')->whereHas('animal', fn($q) => $q->where('user_id', $userId))->count(),
-            'sold' => PurchaseRequest::where('status', 'sold')->whereHas('animal', fn($q) => $q->where('user_id', $userId))->count(),
-            'rejected' => PurchaseRequest::where('status', 'rejected')->whereHas('animal', fn($q) => $q->where('user_id', $userId))->count(),
+            'total' => PurchaseRequest::whereHas('animal', fn($q) => $q->withTrashed()->where('user_id', $userId))->count(),
+            'pending' => PurchaseRequest::where('status', 'pending')->whereHas('animal', fn($q) => $q->withTrashed()->where('user_id', $userId))->count(),
+            'approved' => PurchaseRequest::where('status', 'approved')->whereHas('animal', fn($q) => $q->withTrashed()->where('user_id', $userId))->count(),
+            'sold' => PurchaseRequest::where('status', 'sold')->whereHas('animal', fn($q) => $q->withTrashed()->where('user_id', $userId))->count(),
+            'rejected' => PurchaseRequest::where('status', 'rejected')->whereHas('animal', fn($q) => $q->withTrashed()->where('user_id', $userId))->count(),
         ];
 
         return view('admin.purchase-requests', compact('requests', 'stats', 'status'));
@@ -173,55 +173,26 @@ class PurchaseRequestController extends Controller
         }
 
         DB::transaction(function () use ($purchaseRequest, $animal) {
+            // 1. Mark this purchase request as sold
             $purchaseRequest->update(['status' => 'sold']);
 
-            // If animal is out of inventory or request didn't specify quantity (legacy), mark post as sold
-            if ($purchaseRequest->quantity === null || $animal->quantity <= 0 || $animal->totalAvailableCount() <= 0) {
-                $animal->update(['status' => 'sold']);
+            // 2. Partial Sale -> Archive: Unconditionally move listing to Archive (status = 'sold')
+            $animal->update(['status' => 'sold']);
 
-                PurchaseRequest::query()
-                    ->where('animal_id', $purchaseRequest->animal_id)
-                    ->where('id', '!=', $purchaseRequest->id)
-                    ->whereIn('status', ['pending', 'approved'])
-                    ->update(['status' => 'rejected']);
-            }
+            // 3. Reject all other active requests (pending, approved) for this listing
+            PurchaseRequest::query()
+                ->where('animal_id', $animal->id)
+                ->where('id', '!=', $purchaseRequest->id)
+                ->whereIn('status', ['pending', 'approved'])
+                ->update(['status' => 'rejected']);
+
+            // 4. Close and deactivate all chats for this listing
+            Chat::query()
+                ->where('post_id', $animal->id)
+                ->update(['closed_at' => now()]);
         });
 
-        return back()->with('success', 'Buyurtma sotilgan deb belgilandi.');
-    }
-
-    public function returnListing(Request $request, PurchaseRequest $purchaseRequest): RedirectResponse
-    {
-        $animal = $purchaseRequest->animal;
-
-        if (! $animal || $animal->user_id !== $request->user()->id) {
-            return back()->withErrors(['purchase_request' => 'Ushbu amalni bajarish uchun ruxsat yo\'q.']);
-        }
-
-        DB::transaction(function () use ($purchaseRequest, $animal) {
-            $animal = Post::where('id', $animal->id)->lockForUpdate()->first();
-
-            // If not already rejected, restore inventory
-            if ($purchaseRequest->status !== 'rejected') {
-                $reqQty = max(1, (int) $purchaseRequest->quantity);
-                $restoreGender = $purchaseRequest->gender ?: ($animal->gender === 'female' ? 'female' : 'male');
-                if ($restoreGender === 'female') {
-                    $animal->female_quantity = $animal->female_quantity + $reqQty;
-                } else {
-                    $animal->male_quantity = $animal->male_quantity + $reqQty;
-                }
-                $animal->quantity = $animal->male_quantity + $animal->female_quantity;
-            }
-
-            if ($animal->quantity > 0) {
-                $animal->status = 'active';
-            }
-            $animal->save();
-
-            $purchaseRequest->update(['status' => 'rejected']);
-        });
-
-        return back()->with('success', 'E\'lon yana faol holatga qaytarildi va boshqa foydalanuvchilar uchun mavjud bo\'ldi.');
+        return back()->with('success', 'E\'lon sotilgan deb belgilandi va arxivga o\'tkazildi. Aloqador chatlar yopildi.');
     }
 
     public function reject(Request $request, PurchaseRequest $purchaseRequest): RedirectResponse
@@ -237,26 +208,30 @@ class PurchaseRequestController extends Controller
         }
 
         DB::transaction(function () use ($purchaseRequest, $animal) {
-            $animal = Post::where('id', $animal->id)->lockForUpdate()->first();
+            $animal = Post::withTrashed()->where('id', $animal->id)->lockForUpdate()->first();
 
-            // Restore inventory
-            $reqQty = max(1, (int) $purchaseRequest->quantity);
-            $restoreGender = $purchaseRequest->gender ?: ($animal->gender === 'female' ? 'female' : 'male');
-            if ($restoreGender === 'female') {
-                $animal->female_quantity = $animal->female_quantity + $reqQty;
-            } else {
-                $animal->male_quantity = $animal->male_quantity + $reqQty;
-            }
+            // Restore inventory only if the animal is not sold or archived, and not soft-deleted
+            if ($animal && ! in_array($animal->status, ['sold', 'archived'], true) && ! $animal->trashed()) {
+                $reqQty = max(1, (int) $purchaseRequest->quantity);
+                $restoreGender = $purchaseRequest->gender ?: ($animal->gender === 'female' ? 'female' : 'male');
+                if ($restoreGender === 'female') {
+                    $animal->female_quantity = $animal->female_quantity + $reqQty;
+                } else {
+                    $animal->male_quantity = $animal->male_quantity + $reqQty;
+                }
 
-            $animal->quantity = $animal->male_quantity + $animal->female_quantity;
-            if ($animal->quantity > 0 && $animal->status === 'sold') {
-                $animal->status = 'active';
+                $animal->quantity = $animal->male_quantity + $animal->female_quantity;
+                $animal->save();
             }
-            $animal->save();
 
             $purchaseRequest->update(['status' => 'rejected']);
+
+            // Close chat for this rejected request if exists
+            if ($purchaseRequest->chat) {
+                $purchaseRequest->chat->update(['closed_at' => now()]);
+            }
         });
 
-        return back()->with('success', 'So\'rov rad etildi va miqdor inventarga qaytarildi.');
+        return back()->with('success', 'So\'rov rad etildi.');
     }
 }

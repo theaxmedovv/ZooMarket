@@ -76,7 +76,7 @@ class PostController extends Controller
         $priceMax = is_numeric($priceMax) ? (float) $priceMax : null;
 
         $postsQuery = Post::with(['user', 'category'])
-            ->where('status', '!=', 'sold');
+            ->whereNotIn('status', ['sold', 'archived']);
 
         if (auth()->check() && auth()->user()->hasRole('seller')) {
             $postsQuery->where('user_id', auth()->id());
@@ -307,8 +307,12 @@ class PostController extends Controller
      */
     public function edit(string $id)
     {
-        $post = Post::findOrFail($id);
+        $post = Post::withTrashed()->findOrFail($id);
         Gate::authorize('edit posts');
+
+        if ($post->status === 'sold' || $post->status === 'archived' || $post->trashed()) {
+            abort(403, "Arxivlangan yoki sotilgan e'lonlar faqat o'qish uchun (read-only) saqlanadi va ularni tahrirlab bo'lmaydi.");
+        }
 
         $categories = Category::query()->orderBy('name')->get();
 
@@ -320,8 +324,12 @@ class PostController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $post = Post::findOrFail($id);
+        $post = Post::withTrashed()->findOrFail($id);
         Gate::authorize('edit posts');
+
+        if ($post->status === 'sold' || $post->status === 'archived' || $post->trashed()) {
+            abort(403, "Arxivlangan yoki sotilgan e'lonlar faqat o'qish uchun (read-only) saqlanadi va ularni tahrirlab bo'lmaydi.");
+        }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'title' => 'required|string|max:255',
@@ -406,7 +414,7 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        $post = Post::findOrFail($id);
+        $post = Post::withTrashed()->findOrFail($id);
         $user = auth()->user();
 
         abort_unless(
@@ -418,13 +426,28 @@ class PostController extends Controller
             403
         );
 
-        foreach ($post->allImages() as $img) {
-            DatabaseImageService::delete($img);
+        if ($post->status === 'sold' || $post->status === 'archived') {
+            return back()->withErrors(['error' => 'Sotilgan yoki arxivlangan e\'lonlar arxivda saqlanadi va ularni o\'chirib bo\'lmaydi.']);
         }
 
-        $post->delete();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($post) {
+            // Update active requests to rejected so listing is no longer active in request system
+            \App\Models\PurchaseRequest::where('animal_id', $post->id)
+                ->whereIn('status', ['pending', 'approved'])
+                ->update(['status' => 'rejected']);
 
-        return redirect()->route('posts.index')->with('success', 'Post deleted successfully.');
+            // Close all related chats
+            \App\Models\Chat::where('post_id', $post->id)
+                ->update(['closed_at' => now()]);
+
+            foreach ($post->allImages() as $img) {
+                DatabaseImageService::delete($img);
+            }
+
+            $post->delete();
+        });
+
+        return redirect()->route('posts.index')->with('success', 'E\'lon muvaffaqiyatli o\'chirildi va tegishli so\'rovlar yangilandi.');
     }
 
     public function toggleLike(Request $request, Post $post)
