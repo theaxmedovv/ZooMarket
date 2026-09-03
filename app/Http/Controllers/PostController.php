@@ -258,7 +258,7 @@ class PostController extends Controller
         $moderation = app(GroqModerationService::class)->moderate($post);
 
         if ($moderation['status'] === 'approved') {
-            return redirect()->route('posts.show', $post)
+            return redirect()->route('posts.index')
                 ->with('success', "E'lon Groq AI tomonidan muvaffaqiyatli tekshirildi va e'lon qilindi!");
         } elseif ($moderation['status'] === 'rejected') {
             return redirect()->route('posts.show', $post)

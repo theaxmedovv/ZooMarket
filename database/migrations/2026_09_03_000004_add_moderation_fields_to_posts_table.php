@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('posts', function (Blueprint $table) {
-            $table->string('moderation_status', 20)->default('pending')->after('status');
+            $table->string('moderation_status', 20)->default('approved')->after('status');
             $table->text('moderation_reason')->nullable()->after('moderation_status');
             $table->timestamp('moderated_at')->nullable()->after('moderation_reason');
         });

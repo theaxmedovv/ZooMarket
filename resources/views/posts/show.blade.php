@@ -43,7 +43,7 @@
     </div>
 
     {{-- ── AI MODERATION STATUS BANNER FOR SELLER ── --}}
-    @if(auth()->check() && (auth()->id() === $post->user_id || auth()->user()->hasRole('admin')))
+    @if(auth()->check() && ((int) auth()->id() === (int) $post->user_id || auth()->user()->hasRole('admin')))
         @if($post->moderation_status === 'rejected')
             <div class="alert alert-danger border-danger border-opacity-50 rounded-4 p-4 mb-4 shadow-sm" style="background: rgba(220, 53, 69, 0.08);">
                 <div class="d-flex align-items-start gap-3">
@@ -121,7 +121,7 @@
                             <span class="gallery-glass-pill pill-cat">
                                 <i class="bi bi-tag-fill text-lime me-1"></i> {{ $post->category?->name ?? 'Hayvon' }}
                             </span>
-                            @if(auth()->check() && (auth()->id() === $post->user_id || auth()->user()->hasRole('admin')))
+                            @if(auth()->check() && ((int) auth()->id() === (int) $post->user_id || auth()->user()->hasRole('admin')))
                                 @if($post->moderation_status === 'approved')
                                     <span class="gallery-glass-pill text-success border border-success border-opacity-50">
                                         <i class="bi bi-shield-check me-1"></i> Tasdiqlangan
