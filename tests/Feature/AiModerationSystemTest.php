@@ -312,4 +312,66 @@ class AiModerationSystemTest extends TestCase
 
         $purchaseResponse->assertSessionHasErrors(['quantity']);
     }
+
+    /**
+     * Test 6: When GROQ_API_KEY is missing, post is auto-approved immediately without waiting ("time bo'lmasin").
+     */
+    public function test_post_creation_is_auto_approved_immediately_when_groq_api_key_is_missing(): void
+    {
+        Config::set('services.groq.key', null);
+
+        $response = $this->actingAs($this->seller)->post(route('posts.store'), [
+            'title' => 'Kuchukcha (API kalitsiz)',
+            'category_id' => $this->category->id,
+            'breed' => 'Labrador',
+            'quantity' => 1,
+            'gender' => 'male',
+            'age' => '2 oylik',
+            'description' => 'Juda chiroyli kuchukcha',
+            'price' => 200000,
+            'currency' => 'UZS',
+            'location' => 'Toshkent',
+            'status' => 'active',
+        ]);
+
+        $post = Post::latest('id')->first();
+        $this->assertNotNull($post);
+        $this->assertEquals('approved', $post->moderation_status);
+        $this->assertNull($post->moderation_reason);
+
+        $response->assertRedirect(route('posts.index'));
+        $response->assertSessionHas('success');
+    }
+
+    /**
+     * Test 7: When Groq API returns error or timeout, post is auto-approved without hanging or pending queue.
+     */
+    public function test_post_creation_is_auto_approved_when_groq_api_fails_without_blocking(): void
+    {
+        Config::set('services.groq.key', 'gsk_mock_key');
+        Http::fake([
+            'api.groq.com/*' => Http::response(['error' => 'Rate limit or service error'], 500),
+        ]);
+
+        $response = $this->actingAs($this->seller)->post(route('posts.store'), [
+            'title' => 'To\'tiqush (API xatolik holatida)',
+            'category_id' => $this->category->id,
+            'breed' => 'To\'tiqush',
+            'quantity' => 1,
+            'gender' => 'female',
+            'age' => '1 yosh',
+            'description' => 'Gapiradigan chiroyli to\'tiqush',
+            'price' => 150000,
+            'currency' => 'UZS',
+            'location' => 'Samarqand',
+            'status' => 'active',
+        ]);
+
+        $post = Post::latest('id')->first();
+        $this->assertNotNull($post);
+        $this->assertEquals('approved', $post->moderation_status);
+        $this->assertNull($post->moderation_reason);
+
+        $response->assertRedirect(route('posts.index'));
+    }
 }

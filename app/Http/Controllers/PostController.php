@@ -257,16 +257,16 @@ class PostController extends Controller
         // Run Groq AI moderation
         $moderation = app(GroqModerationService::class)->moderate($post);
 
-        if ($moderation['status'] === 'approved') {
-            return redirect()->route('posts.index')
-                ->with('success', "E'lon Groq AI tomonidan muvaffaqiyatli tekshirildi va e'lon qilindi!");
-        } elseif ($moderation['status'] === 'rejected') {
+        if ($moderation['status'] === 'rejected') {
             return redirect()->route('posts.show', $post)
                 ->with('warning', "E'lon Groq AI tomonidan rad etildi: " . ($moderation['reason'] ?? 'Xavfsizlik qoidalariga mos kelmadi.'));
+        } elseif ($moderation['status'] === 'approved') {
+            return redirect()->route('posts.index')
+                ->with('success', "E'lon Groq AI tomonidan muvaffaqiyatli tekshirildi va e'lon qilindi!");
         }
 
         return redirect()->route('posts.show', $post)
-            ->with('info', "E'lon qabul qilindi va ayni paytda AI tekshiruvida.");
+            ->with('info', "E'lon qabul qilindi va moderatorlar ko'rib chiqishida.");
     }
 
     /**
@@ -433,16 +433,16 @@ class PostController extends Controller
         // Re-run Groq AI moderation upon update
         $moderation = app(GroqModerationService::class)->moderate($post);
 
-        if ($moderation['status'] === 'approved') {
-            return redirect()->route('posts.show', $post)
-                ->with('success', "E'lon yangilandi va Groq AI moderatsiyasidan muvaffaqiyatli o'tdi!");
-        } elseif ($moderation['status'] === 'rejected') {
+        if ($moderation['status'] === 'rejected') {
             return redirect()->route('posts.show', $post)
                 ->with('warning', "E'lon yangilandi, biroq Groq AI moderatsiyasidan o'tmadi: " . ($moderation['reason'] ?? 'Xavfsizlik qoidalariga mos kelmadi.'));
+        } elseif ($moderation['status'] === 'approved') {
+            return redirect()->route('posts.show', $post)
+                ->with('success', "E'lon yangilandi va Groq AI moderatsiyasidan muvaffaqiyatli o'tdi!");
         }
 
         return redirect()->route('posts.show', $post)
-            ->with('info', "E'lon yangilandi va AI tekshiruviga yuborildi.");
+            ->with('info', "E'lon yangilandi va moderatorlar ko'rib chiqishida.");
     }
 
     /**

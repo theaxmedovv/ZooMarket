@@ -7,6 +7,9 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
@@ -23,18 +26,18 @@ class AuthController extends Controller
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()
-                ->withErrors(['email' => 'Email yoki parol noto\'g\'ri.'])
-                ->onlyInput('email');
+            return back()->withErrors([
+                'email' => "Kiritilgan login yoki parol noto'g'ri.",
+            ])->onlyInput('email');
         }
 
         $request->session()->regenerate();
 
-        if ($request->user()->hasRole('seller')) {
-            return redirect()->intended(route('admin.dashboard'));
+        if (Auth::user()->hasRole('seller')) {
+            return redirect()->route('admin.dashboard');
         }
 
-        return redirect()->intended(route('posts.index'));
+        return redirect()->route('posts.index');
     }
 
     public function showRegisterForm()
@@ -51,13 +54,31 @@ class AuthController extends Controller
             'role' => ['required', 'in:seller,user'],
         ]);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-        ]);
+        $user = DB::transaction(function () use ($data) {
+            // Ensure the role and core permissions exist
+            $role = Role::firstOrCreate(['name' => $data['role'], 'guard_name' => 'web']);
 
-        $user->assignRole($data['role']);
+            if ($data['role'] === 'seller') {
+                $sellerPermissions = ['create posts', 'read posts', 'edit posts', 'delete posts'];
+                foreach ($sellerPermissions as $p) {
+                    Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
+                }
+                $role->syncPermissions($sellerPermissions);
+            } elseif ($data['role'] === 'user') {
+                $userPermission = Permission::firstOrCreate(['name' => 'read posts', 'guard_name' => 'web']);
+                $role->syncPermissions([$userPermission]);
+            }
+
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+            ]);
+
+            $user->assignRole($role);
+
+            return $user;
+        });
 
         Auth::login($user);
         $request->session()->regenerate();

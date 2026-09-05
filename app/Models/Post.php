@@ -49,6 +49,21 @@ class Post extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (Post $post) {
+            if (empty($post->content)) {
+                $post->content = $post->description ?? '';
+            }
+        });
+
+        static::updating(function (Post $post) {
+            if (empty($post->content)) {
+                $post->content = $post->description ?? '';
+            }
+        });
+    }
+
     public function isApproved(): bool
     {
         return $this->moderation_status === 'approved';

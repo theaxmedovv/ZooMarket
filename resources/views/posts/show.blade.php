@@ -78,17 +78,17 @@
             <div class="alert alert-warning border-warning border-opacity-50 rounded-4 p-3 mb-4 shadow-sm" style="background: rgba(255, 193, 7, 0.08);">
                 <div class="d-flex align-items-center gap-3">
                     <div class="rounded-circle p-2 bg-warning bg-opacity-25 text-warning flex-shrink-0">
-                        <i class="bi bi-clock-history fs-4"></i>
+                        <i class="bi bi-robot fs-4"></i>
                     </div>
                     <div class="flex-grow-1">
                         <h6 class="text-warning fw-bold mb-0">
-                            <i class="bi bi-robot me-1"></i> E'lon AI moderatsiyasida ko'rib chiqilmoqda
+                            <i class="bi bi-shield-check me-1"></i> E'lon AI moderatsiyasida
                         </h6>
                         <small class="text-cream-50">
-                            Groq AI tomonidan matn va rasmlar tekshirilmoqda. Tasdiqlangach, e'lon avtomatik ravishda umumiy marketplace'da barchaga ko'rinadi.
+                            Groq AI tomonidan xavfsizlik tekshiruvi amalga oshirilmoqda.
                         </small>
                     </div>
-                    <span class="badge bg-warning text-dark px-2 py-1">Kutilmoqda</span>
+                    <span class="badge bg-warning text-dark px-2 py-1">Tekshirilmoqda</span>
                 </div>
             </div>
         @endif
