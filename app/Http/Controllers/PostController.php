@@ -132,7 +132,7 @@ class PostController extends Controller
             $postsQuery->withCount('likedByUsers');
         }
 
-        $posts = $postsQuery->paginate(9)->withQueryString();
+        $posts = $postsQuery->paginate(12)->withQueryString();
 
         $likedPostIds = auth()->check()
             ? auth()->user()->likedPosts()->pluck('posts.id')->all()
@@ -493,12 +493,24 @@ class PostController extends Controller
         abort_unless($user && $user->hasRole('user'), 403);
         abort_unless($post->moderation_status === 'approved', 404);
 
-        if ($user->likedPosts()->whereKey($post->id)->exists()) {
-            $user->likedPosts()->detach($post->id);
-            $message = 'Post unlike qilindi.';
-        } else {
+        $liked = ! $user->likedPosts()->whereKey($post->id)->exists();
+
+        if ($liked) {
             $user->likedPosts()->attach($post->id);
-            $message = 'Post yoqtirildi.';
+            $message = "Sevimlilarga qo'shildi.";
+        } else {
+            $user->likedPosts()->detach($post->id);
+            $message = 'Sevimlilardan olib tashlandi.';
+        }
+
+        // The heart buttons toggle in place via fetch; plain form posts still redirect back.
+        if ($request->expectsJson()) {
+            return response()->json([
+                'liked' => $liked,
+                'likes' => $post->likedByUsers()->count(),
+                'favorites' => $user->likedPosts()->count(),
+                'message' => $message,
+            ]);
         }
 
         return back()->with('success', $message);

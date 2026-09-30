@@ -164,7 +164,7 @@ class ListingArchiveAndChatManagementTest extends TestCase
         $response->assertSee('Erkak ♂');
         $response->assertSee('2 400 000'); // 2 * 1 200 000
         $response->assertSee('REQ-' . str_pad($req->id, 5, '0', STR_PAD_LEFT));
-        $response->assertSee('Read-only');
+        $response->assertSee("Faqat ko'rish", false);
 
         // Confirm there is NO "Qayta tiklash" (restore) button in HTML
         $response->assertDontSee('Qayta tiklash');

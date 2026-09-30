@@ -1,25 +1,10 @@
-
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="mb-4">
-                <a href="{{ route('posts.index') }}" class="text-decoration-none text-muted small hover-primary">
-                    <i class="bi bi-arrow-left me-1"></i> Orqaga qaytish
-                </a>
-            </div>
+<div class="container page-shell">
+    <x-page-head title="E'lonni tahrirlash" :subtitle="$post->title" />
 
-            <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
-                <div class="row g-0">
-                    <div class="col-md-4 p-5 text-white d-flex flex-column justify-content-center" style="background: var(--blue)">
-                        <i class="bi bi-pencil-square display-4 mb-3"></i>
-                        <h2 class="fw-bold">Tahrirlash</h2>
-                        <p class="opacity-75">Hayvon e'loni ma'lumotlarini yangilang.</p>
-                    </div>
-
-                    <div class="col-md-8 bg-white p-5">
+    <div class="zm-form-card">
                         <form action="{{ route('posts.update', $post) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
@@ -54,7 +39,7 @@
                             @endif
 
                             <div class="mb-4">
-                                <label for="title" class="form-label fw-bold text-dark">Maqola sarlavhasi</label>
+                                <label for="title" class="form-label fw-bold text-dark">E'lon sarlavhasi</label>
                                 <input type="text" name="title" value="{{ old('title', $post->title) }}"
                                        class="form-control form-control-lg border-0 bg-light rounded-4 px-4"
                                        placeholder="Sarlavhani kiriting..." required>
@@ -73,11 +58,11 @@
                                     <label for="breed" class="form-label fw-bold text-dark">Zot</label>
                                     <input type="text" name="breed" id="breed" value="{{ old('breed', $post->breed) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label for="quantityEdit" class="form-label fw-bold text-dark">Jami soni</label>
                                     <input type="number" name="quantity" id="quantityEdit" min="1" max="100" value="{{ old('quantity', $post->quantity) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label for="genderEdit" class="form-label fw-bold text-dark">Jinsi</label>
                                     <select name="gender" id="genderEdit" class="form-select form-select-lg border-0 bg-light rounded-4 px-4" required>
                                         <option value="male" @selected(old('gender', $post->gender) === 'male')>Erkak</option>
@@ -100,11 +85,11 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label for="age" class="form-label fw-bold text-dark">Yoshi</label>
                                     <input type="text" name="age" id="age" value="{{ old('age', $post->age) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label for="color" class="form-label fw-bold text-dark">Rangi</label>
                                     <input type="text" name="color" id="color" value="{{ old('color', $post->color) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4">
                                 </div>
@@ -112,7 +97,7 @@
                                     <label for="price" class="form-label fw-bold text-dark">Narx</label>
                                     <input type="number" step="0.01" min="0" name="price" id="price" value="{{ old('price', $post->price) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-6 col-md-3">
                                     <label for="currency" class="form-label fw-bold text-dark">Valyuta</label>
                                     <select name="currency" id="currency" class="form-select form-select-lg border-0 bg-light rounded-4 px-4" required>
                                         <option value="UZS" @selected(old('currency', $post->currency) === 'UZS')>UZS</option>
@@ -121,12 +106,12 @@
                                         <option value="RUB" @selected(old('currency', $post->currency) === 'RUB')>RUB</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-6 col-md-3">
                                     <label for="status" class="form-label fw-bold text-dark">Holat</label>
                                     <select name="status" id="status" class="form-select form-select-lg border-0 bg-light rounded-4 px-4" required>
-                                        <option value="active" @selected(old('status', $post->status) === 'active')>Active</option>
-                                        <option value="reserved" @selected(old('status', $post->status) === 'reserved')>Reserved</option>
-                                        <option value="sold" @selected(old('status', $post->status) === 'sold')>Sold</option>
+                                        <option value="active" @selected(old('status', $post->status) === 'active')>Sotuvda</option>
+                                        <option value="reserved" @selected(old('status', $post->status) === 'reserved')>Band qilingan</option>
+                                        <option value="sold" @selected(old('status', $post->status) === 'sold')>Sotilgan</option>
                                     </select>
                                 </div>
                                 <div class="col-12">
@@ -175,19 +160,15 @@
                                 <p class="text-muted mt-2" style="font-size:0.75rem;"><i class="bi bi-info-circle me-1"></i>Max: 2MB har bir rasm</p>
                             </div>
 
-                            <div class="d-flex gap-3">
-                                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm">
-                                    Saqlash
+                            <div class="zm-form-actions">
+                                <button type="submit" class="zm-btn zm-btn-primary">
+                                    <i class="bi bi-check-lg"></i> O'zgarishlarni saqlash
                                 </button>
-                                <a href="{{ route('posts.index') }}" class="btn btn-light btn-lg rounded-pill px-4 text-muted border-0">
+                                <a href="{{ route('posts.show', $post) }}" class="zm-btn zm-btn-ghost">
                                     Bekor qilish
                                 </a>
                             </div>
                         </form>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 

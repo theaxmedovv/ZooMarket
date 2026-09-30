@@ -1,35 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4 page-shell">
-    {{-- Breadcrumb & Back Navigation --}}
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-        <a href="{{ route('posts.index') }}" class="btn-back-link">
-            <i class="bi bi-arrow-left"></i> E'lonlarga qaytish
-        </a>
-        <div class="d-flex align-items-center gap-2">
-            <span class="badge bg-lime-soft text-lime px-3 py-1-5 rounded-pill">
-                <i class="bi bi-plus-circle me-1"></i> Yangi e'lon
-            </span>
-        </div>
-    </div>
-
-    {{-- Page Hero Header --}}
-    <div class="create-hero-banner mb-4">
-        <div class="row align-items-center g-3">
-            <div class="col-md-8">
-                <h1 class="create-hero-title">Hayvon sotuv e'lonini joylash</h1>
-                <p class="create-hero-subtitle">
-                    Hayvoningiz haqidagi ma'lumotlarni aniq to'ldiring, sifatli fotosuratlarni yuklang va xaridorlarga taqdim eting.
-                </p>
-            </div>
-            <div class="col-md-4 text-md-end">
-                <span class="text-muted small d-inline-flex align-items-center gap-1">
-                    <i class="bi bi-shield-check text-lime fs-6"></i> Xavfsiz va tezkor savdo
-                </span>
-            </div>
-        </div>
-    </div>
+<div class="container page-shell">
+    <x-page-head title="Yangi e'lon" subtitle="Hayvoningiz haqida aniq ma'lumot va sifatli rasmlar qo'shing — o'ng tomonda e'lon xaridorlarga qanday ko'rinishini kuzatib borasiz." />
 
     {{-- Error Banner --}}
     @if($errors->any())

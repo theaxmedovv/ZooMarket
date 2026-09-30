@@ -16,7 +16,7 @@
         @if($badge)<span class="p-card-badge">{{ $badge }}</span>@endif
         @auth
             @if(auth()->user()->hasRole('user'))
-                <form action="{{ route('posts.like', $post) }}" method="POST" class="p-card-fav">
+                <form action="{{ route('posts.like', $post) }}" method="POST" class="p-card-fav" data-like-form>
                     @csrf
                     <button type="submit" class="{{ $liked ? 'is-liked' : '' }}" aria-label="Sevimlilarga qo'shish">
                         <i class="bi {{ $liked ? 'bi-heart-fill' : 'bi-heart' }}"></i>
@@ -24,7 +24,7 @@
                 </form>
             @endif
         @else
-            <a href="{{ route('login') }}" class="p-card-fav"><button type="button" aria-label="Sevimlilarga qo'shish"><i class="bi bi-heart"></i></button></a>
+            <a href="{{ route('login') }}" class="p-card-fav" aria-label="Sevimlilarga qo'shish uchun kiring"><span class="fav-btn"><i class="bi bi-heart"></i></span></a>
         @endauth
     </div>
     <div class="p-card-body">

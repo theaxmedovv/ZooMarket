@@ -1,34 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4 page-shell">
-    {{-- Header --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary-soft text-primary fw-bold px-2 py-1 rounded-pill">
-                    <i class="bi bi-bag-check-fill me-1"></i> Xaridor
-                </span>
-                <h1 class="h3 fw-bold mb-0 text-cream font-serif">Mening buyurtmalarim</h1>
-            </div>
-            <p class="text-muted small mb-0">Siz yuborgan barcha xarid so'rovlari, ularning holati va sotuvchilar bilan aloqa</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ route('posts.index') }}" class="btn-panel-link">
-                <i class="bi bi-compass me-1"></i> E'lonlarni ko'rish
-            </a>
-            <a href="{{ route('user.profile.show') }}" class="btn-panel-link">
-                <i class="bi bi-person me-1"></i> Profil
-            </a>
-        </div>
-    </div>
+<div class="container page-shell">
+    <x-page-head title="Mening buyurtmalarim" subtitle="Yuborgan xarid so'rovlaringiz va ularning holati." />
 
-    @if(session('success'))
-        <div class="alert-banner mb-4 rounded-3 py-2 px-3 d-flex align-items-center gap-2">
-            <i class="bi bi-check-circle-fill text-lime fs-5"></i>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
 
     {{-- Filter Tabs --}}
     <div class="admin-tabs-nav mb-4">

@@ -1,65 +1,39 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4 page-shell">
+<div class="container page-shell">
     <div class="profile-shell">
-        <div class="profile-header">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 w-100">
-                <div>
-                    <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
-                        <span class="badge bg-primary-soft text-primary fw-bold px-3 py-2 rounded-pill">
-                            <i class="bi bi-person-badge me-1"></i> Admin profil
-                        </span>
-                        <span class="badge bg-panel-soft text-muted fw-semibold px-2 py-1 rounded-pill">Seller dashboard</span>
-                    </div>
-                    <h1 class="h2 fw-bold mb-2 text-cream font-serif m-0">{{ $user->name }}</h1>
-                    <p class="text-muted small mb-0">Sotuvchi kabinetingiz. E'lonlarni boshqaring, so'rovlarni kuzatib boring va profil ma'lumotlarini yangilang.</p>
-                </div>
-
-                <div class="d-flex align-items-center gap-2 flex-wrap justify-content-lg-end">
-                    <span class="badge bg-panel-soft text-muted fw-semibold px-2 py-1 rounded-pill align-self-start">Admin</span>
-                </div>
-            </div>
-
+        <div class="profile-header justify-content-start">
             <div class="profile-avatar-wrap">
                 @if($user->avatar)
                     <img src="{{ $user->avatarUrl() }}" alt="{{ $user->name }}" class="profile-avatar-image">
                 @else
-                    <div class="profile-avatar-fallback">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                    <div class="profile-avatar-fallback">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</div>
                 @endif
+            </div>
+            <div class="min-w-0">
+                <h1 class="profile-name">{{ $user->name }}</h1>
+                <p class="profile-meta">{{ $user->email }} · Sotuvchi</p>
+                <p class="profile-sub">E'lonlaringiz statistikasi va profil sozlamalari.</p>
             </div>
         </div>
 
-        @if(session('success'))
-            <div class="alert-banner mb-4 rounded-3 py-2 px-3 d-flex align-items-center gap-2">
-                <i class="bi bi-check-circle-fill text-lime fs-5"></i>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
-
         <div class="row g-4 mb-4">
-            <div class="col-12 col-md-6 col-xl-3">
-                <div class="metric-card">
-                    <div class="metric-icon icon-mail"><i class="bi bi-envelope-fill"></i></div>
-                    <div class="metric-label">Email</div>
-                    <div class="metric-value">{{ $user->email }}</div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xl-3">
+            <div class="col-12 col-md-4">
                 <div class="metric-card">
                     <div class="metric-icon icon-posts"><i class="bi bi-postcard-fill"></i></div>
                     <div class="metric-label">Postlar</div>
                     <div class="metric-value">{{ $user->posts_count ?? 0 }} <span class="metric-small">ta</span></div>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-xl-3">
+            <div class="col-12 col-md-4">
                 <div class="metric-card">
                     <div class="metric-icon icon-phone"><i class="bi bi-telephone-fill"></i></div>
                     <div class="metric-label">Telefon</div>
                     <div class="metric-value">{{ $user->phone ?: 'Kiritilmagan' }}</div>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-xl-3">
+            <div class="col-12 col-md-4">
                 <div class="metric-card">
                     <div class="metric-icon icon-telegram"><i class="bi bi-telegram"></i></div>
                     <div class="metric-label">Telegram</div>
@@ -77,7 +51,7 @@
                             <p class="panel-subtitle">Yaratilgan postlar ro'yxati</p>
                         </div>
                         <a href="{{ route('posts.index') }}" class="btn-panel-link small-link">
-                            <i class="bi bi-plus-lg me-1"></i> Hammasi
+                            Hammasi <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
 
@@ -234,16 +208,6 @@
         overflow: hidden;
     }
 
-    .profile-header::before {
-        content: "";
-        position: absolute;
-        inset: -40% auto auto 65%;
-        width: 220px;
-        height: 220px;
-        border-radius: 50%;
-        background: rgba(0, 142, 204, 0.08);
-        filter: blur(12px);
-    }
 
     .profile-avatar-wrap {
         position: relative;

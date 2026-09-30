@@ -8,22 +8,45 @@
     $zmActiveCategory = (int) request()->query('category_id');
     // On the listing page, switching category keeps the other active filters.
     $zmKeep = request()->routeIs('posts.index') ? request()->except('category_id', 'page') : [];
+    // Filters only apply to guests/buyers (the listing controller ignores them for sellers).
+    $zmCanFilter = ! $zmIsSeller;
+    $zmOnListing = request()->routeIs('posts.index');
+    $zmF = [
+        'category_id' => $zmOnListing ? (string) request('category_id', '') : '',
+        'gender' => $zmOnListing ? (string) request('gender', '') : '',
+        'currency' => $zmOnListing ? (string) request('currency', '') : '',
+        'price_min' => $zmOnListing ? (string) request('price_min', '') : '',
+        'price_max' => $zmOnListing ? (string) request('price_max', '') : '',
+        'location' => $zmOnListing ? (string) request('location', '') : '',
+    ];
+    $zmFilterCount = count(array_filter($zmF, fn ($v) => $v !== ''));
     $zmUnread = (int) ($globalUnreadCount ?? 0);
+    $zmFavorites = (int) ($favoritesCount ?? 0);
+
+    // Every message a redirect can carry, as toasts. Error keys listed here are ones
+    // no page renders inline (e.g. a failed purchase request bounced back to the listing).
+    $zmToasts = [];
+    foreach (['success', 'info', 'warning', 'error'] as $zmType) {
+        if (session($zmType)) {
+            $zmToasts[] = ['type' => $zmType, 'text' => session($zmType)];
+        }
+    }
+    $zmErrorBag = session('errors')?->getBag('default');
+    foreach (['purchase_request', 'quantity', 'gender', 'animal_id', 'error'] as $zmKey) {
+        if ($zmErrorBag?->has($zmKey)) {
+            $zmToasts[] = ['type' => 'error', 'text' => $zmErrorBag->first($zmKey)];
+        }
+    }
     $zmPending = (int) ($pendingRequestsCount ?? 0);
 @endphp
 
-{{-- Top bar --}}
+{{-- Top bar: information only (every destination lives in the header or tab row) --}}
 <div class="zm-topbar">
     <div class="zm-wrap">
         <span class="zm-welcome">ZooMarket'ga xush kelibsiz — uy hayvonlari bozori!</span>
         <div class="zm-topbar-right">
-            <a href="{{ route('posts.index', ['location' => 'Toshkent']) }}"><i class="bi bi-geo-alt"></i>Toshkent</a>
-            @if($zmIsSeller)
-                <a href="{{ route('admin.purchase-requests.index') }}"><i class="bi bi-inbox"></i>So'rovlar</a>
-            @else
-                <a href="{{ $zmUser ? route('user.purchase-requests.index') : route('login') }}"><i class="bi bi-truck"></i>Buyurtmani kuzatish</a>
-            @endif
-            <a href="{{ route('posts.index', ['sort' => 'price_asc']) }}" class="zm-hide-sm"><i class="bi bi-percent"></i>Barcha takliflar</a>
+            <span><i class="bi bi-shield-check"></i>Har bir e'lon moderatsiyadan o'tadi</span>
+            <a href="tel:+998712000000" class="zm-hide-sm"><i class="bi bi-telephone"></i>+998 71 200 00 00</a>
         </div>
     </div>
 </div>
@@ -31,41 +54,104 @@
 {{-- Header --}}
 <header class="zm-header">
     <div class="zm-wrap zm-header-row">
-        <div class="zm-brand">
-            <button type="button" class="zm-menu-btn" id="zmMenuBtn" aria-expanded="false" aria-controls="zmDrawer" aria-label="Menyu"><i class="bi bi-list"></i></button>
-            <a href="{{ route('home') }}" class="zm-logo">ZooMarket</a>
-        </div>
+        <a href="{{ route('home') }}" class="zm-logo">ZooMarket</a>
 
-        <form class="zm-search" action="{{ route('posts.index') }}" method="GET" role="search">
+        {{-- Single search + filter form for the whole site --}}
+        <form class="zm-search" id="zmSearchForm" action="{{ route('posts.index') }}" method="GET" role="search">
             <button type="submit" aria-label="Qidirish"><i class="bi bi-search"></i></button>
-            <input type="search" name="q" value="{{ request()->routeIs('posts.index') ? request('q') : '' }}" placeholder="Hayvon, zot yoki shahar bo'yicha qidiring..." aria-label="Qidirish">
-            <a href="{{ route('posts.index') }}" aria-label="Barcha e'lonlar"><i class="bi bi-sliders"></i></a>
+            <input type="search" name="q" value="{{ $zmOnListing ? request('q') : '' }}" placeholder="{{ $zmIsSeller ? "E'lonlaringiz ichidan qidiring..." : "Hayvon, zot yoki shahar bo'yicha qidiring..." }}" aria-label="Qidirish">
+            @if($zmOnListing && request('sort'))
+                <input type="hidden" name="sort" value="{{ request('sort') }}">
+            @endif
+
+            @if($zmCanFilter)
+                <button type="button" class="zm-filter-btn {{ $zmFilterCount ? 'has-filters' : '' }}" id="zmFilterBtn" aria-expanded="false" aria-controls="zmFilterPanel" aria-label="Filtrlar">
+                    <i class="bi bi-sliders"></i>
+                    @if($zmFilterCount)<em class="zm-badge">{{ $zmFilterCount }}</em>@endif
+                </button>
+
+                <div class="zm-filter-panel" id="zmFilterPanel">
+                    <div class="zm-filter-grid">
+                        <label class="zm-field">
+                            <span><i class="bi bi-grid-3x3-gap"></i> Kategoriya</span>
+                            <select name="category_id">
+                                <option value="">Barcha kategoriyalar</option>
+                                @foreach($zmCategories as $category)
+                                    <option value="{{ $category->id }}" @selected($zmF['category_id'] === (string) $category->id)>{{ $category->emoji }} {{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+
+                        <div class="zm-field">
+                            <span><i class="bi bi-gender-ambiguous"></i> Jinsi</span>
+                            <div class="zm-segment">
+                                <label><input type="radio" name="gender" value="" @checked($zmF['gender'] === '')><span>Hammasi</span></label>
+                                <label><input type="radio" name="gender" value="male" @checked($zmF['gender'] === 'male')><span>Erkak ♂</span></label>
+                                <label><input type="radio" name="gender" value="female" @checked($zmF['gender'] === 'female')><span>Urg'ochi ♀</span></label>
+                            </div>
+                        </div>
+
+                        <div class="zm-field">
+                            <span><i class="bi bi-tag"></i> Narx oralig'i</span>
+                            <div class="zm-price">
+                                <input type="number" name="price_min" min="0" step="0.01" value="{{ $zmF['price_min'] }}" placeholder="Min">
+                                <input type="number" name="price_max" min="0" step="0.01" value="{{ $zmF['price_max'] }}" placeholder="Max">
+                                <select name="currency" aria-label="Valyuta">
+                                    <option value="">Valyuta</option>
+                                    @foreach(['UZS', 'USD', 'EUR', 'RUB'] as $currency)
+                                        <option value="{{ $currency }}" @selected($zmF['currency'] === $currency)>{{ $currency }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <label class="zm-field">
+                            <span><i class="bi bi-geo-alt"></i> Manzil</span>
+                            <input type="text" name="location" value="{{ $zmF['location'] }}" placeholder="Shahar yoki viloyat">
+                        </label>
+                    </div>
+
+                    <div class="zm-filter-actions">
+                        <span>{{ $zmFilterCount ? $zmFilterCount . ' ta filtr faol' : "Qo'shimcha parametrlar bo'yicha saralash" }}</span>
+                        <div>
+                            @if($zmFilterCount)
+                                <a href="{{ route('posts.index', array_filter(['q' => request('q'), 'sort' => request('sort')])) }}" class="zm-filter-reset"><i class="bi bi-arrow-counterclockwise"></i> Tozalash</a>
+                            @endif
+                            <button type="submit" class="zm-filter-apply"><i class="bi bi-funnel-fill"></i> Qo'llash</button>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </form>
 
-        <nav class="zm-actions">
+        <nav class="zm-actions" aria-label="Hisob">
             @auth
                 @if($zmIsSeller)
-                    <a href="{{ route('posts.create') }}" class="zm-btn-new"><i class="bi bi-plus-lg"></i><span>Yangi e'lon</span></a>
+                    {{-- The one and only "new listing" entry point --}}
+                    <a href="{{ route('posts.create') }}" class="zm-btn-new {{ request()->routeIs('posts.create') ? 'active' : '' }}"><i class="bi bi-plus-lg"></i><span>Yangi e'lon</span></a>
+                @else
+                    <a href="{{ route('user.profile.show') }}#saved" class="zm-action" aria-label="Sevimlilar">
+                        <i class="bi bi-heart"></i><span class="zm-label">Sevimlilar</span>
+                        <em class="zm-badge" data-favorites-count @if($zmFavorites === 0) hidden @endif>{{ $zmFavorites }}</em>
+                    </a>
+                    <a href="{{ route('user.purchase-requests.index') }}" class="zm-action {{ request()->routeIs('user.purchase-requests.*') ? 'current' : '' }}" aria-label="Buyurtmalar">
+                        <i class="bi bi-bag-check"></i><span class="zm-label">Buyurtmalar</span>
+                    </a>
                 @endif
-                <a href="{{ route('chats.index') }}" class="zm-action">
+                <a href="{{ route('chats.index') }}" class="zm-action {{ request()->routeIs('chats.*') ? 'current' : '' }}" aria-label="Xabarlar">
                     <i class="bi bi-chat-dots"></i><span class="zm-label">Xabarlar</span>
                     @if($zmUnread > 0)<em class="zm-badge">{{ $zmUnread > 99 ? '99+' : $zmUnread }}</em>@endif
                 </a>
                 <div class="zm-profile">
-                    <button type="button" class="zm-action" id="zmProfileBtn" aria-expanded="false" aria-controls="zmProfileMenu">
-                        <i class="bi bi-person"></i><span class="zm-label">{{ \Illuminate\Support\Str::limit($zmUser->name, 14) }}</span><i class="bi bi-chevron-down" style="font-size: 12px"></i>
+                    <button type="button" class="zm-action zm-avatar-btn" id="zmProfileBtn" aria-expanded="false" aria-controls="zmProfileMenu" aria-label="Hisob menyusi">
+                        <span class="zm-avatar">{{ mb_strtoupper(mb_substr($zmUser->name, 0, 1)) }}</span><i class="bi bi-chevron-down zm-caret"></i>
                     </button>
                     <div class="zm-profile-menu" id="zmProfileMenu">
-                        <a href="{{ $zmProfileUrl }}"><i class="bi bi-person-circle"></i>Profil</a>
-                        @if($zmIsSeller)
-                            <a href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2"></i>Boshqaruv paneli</a>
-                            <a href="{{ route('posts.index') }}"><i class="bi bi-collection"></i>Mening e'lonlarim</a>
-                            <a href="{{ route('admin.purchase-requests.index') }}"><i class="bi bi-inbox"></i>So'rovlar @if($zmPending > 0)<em class="zm-badge" style="position: static">{{ $zmPending }}</em>@endif</a>
-                            <a href="{{ route('admin.archive.index') }}"><i class="bi bi-archive"></i>Arxiv</a>
-                        @else
-                            <a href="{{ route('user.purchase-requests.index') }}"><i class="bi bi-bag-check"></i>Buyurtmalarim</a>
-                        @endif
-                        <a href="{{ route('chats.index') }}"><i class="bi bi-chat-dots"></i>Xabarlar</a>
+                        <div class="zm-profile-head">
+                            <b>{{ $zmUser->name }}</b>
+                            <small>{{ $zmUser->email }} · {{ $zmIsSeller ? 'Sotuvchi' : 'Xaridor' }}</small>
+                        </div>
+                        <a href="{{ $zmProfileUrl }}"><i class="bi bi-person-circle"></i>Profil va sozlamalar</a>
                         <hr>
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
@@ -75,54 +161,35 @@
                 </div>
             @else
                 <a href="{{ route('login') }}" class="zm-action"><i class="bi bi-person"></i><span class="zm-label">Kirish</span></a>
-                <a href="{{ route('register') }}" class="zm-action"><i class="bi bi-person-plus"></i><span class="zm-label">Ro'yxatdan o'tish</span></a>
+                <a href="{{ route('register') }}" class="zm-btn-new zm-btn-outline"><span>Ro'yxatdan o'tish</span></a>
             @endauth
         </nav>
     </div>
-
-    {{-- Menu drawer --}}
-    <div class="zm-drawer" id="zmDrawer">
-        <div class="zm-wrap">
-            <div class="zm-drawer-panel">
-                @if($zmIsSeller)
-                    <a href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2"></i>Boshqaruv paneli</a>
-                    <a href="{{ route('posts.index') }}"><i class="bi bi-collection"></i>Mening e'lonlarim</a>
-                    <a href="{{ route('posts.create') }}"><i class="bi bi-plus-circle"></i>Yangi e'lon</a>
-                    <a href="{{ route('admin.purchase-requests.index') }}"><i class="bi bi-inbox"></i>So'rovlar</a>
-                    <a href="{{ route('admin.archive.index') }}"><i class="bi bi-archive"></i>Arxiv</a>
-                    <a href="{{ route('chats.index') }}"><i class="bi bi-chat-dots"></i>Xabarlar</a>
-                @else
-                    @foreach($zmCategories as $category)
-                        <a href="{{ route('posts.index', ['category_id' => $category->id]) }}"><span class="emoji">{{ $category->emoji }}</span>{{ $category->name }}</a>
-                    @endforeach
-                    <a href="{{ route('posts.index') }}"><span class="emoji">📋</span>Barcha e'lonlar</a>
-                @endif
-            </div>
-        </div>
-    </div>
 </header>
 
-{{-- Pills: categories for buyers/guests, workspace links for sellers --}}
-<nav class="zm-pills" aria-label="Bo'limlar">
+{{-- Tab row: the seller's workspace, or the storefront's categories --}}
+<nav class="zm-pills" aria-label="{{ $zmIsSeller ? "Sotuvchi bo'limlari" : 'Kategoriyalar' }}">
     <div class="zm-wrap">
         @if($zmIsSeller)
             <a href="{{ route('posts.index') }}" class="zm-pill {{ request()->routeIs('posts.index', 'posts.show', 'posts.edit') ? 'active' : '' }}"><i class="bi bi-collection"></i>E'lonlarim</a>
-            <a href="{{ route('posts.create') }}" class="zm-pill {{ request()->routeIs('posts.create') ? 'active' : '' }}"><i class="bi bi-plus-circle"></i>Yangi e'lon</a>
             <a href="{{ route('admin.purchase-requests.index') }}" class="zm-pill {{ request()->routeIs('admin.purchase-requests.*') ? 'active' : '' }}"><i class="bi bi-inbox"></i>So'rovlar @if($zmPending > 0)<em class="zm-badge">{{ $zmPending > 99 ? '99+' : $zmPending }}</em>@endif</a>
             <a href="{{ route('admin.archive.index') }}" class="zm-pill {{ request()->routeIs('admin.archive.*', 'admin.sold-animals.*') ? 'active' : '' }}"><i class="bi bi-archive"></i>Arxiv</a>
-            <a href="{{ route('chats.index') }}" class="zm-pill {{ request()->routeIs('chats.*') ? 'active' : '' }}"><i class="bi bi-chat-dots"></i>Xabarlar @if($zmUnread > 0)<em class="zm-badge">{{ $zmUnread > 99 ? '99+' : $zmUnread }}</em>@endif</a>
-            <a href="{{ route('admin.dashboard') }}" class="zm-pill {{ request()->routeIs('admin.dashboard', 'profile.show') ? 'active' : '' }}"><i class="bi bi-speedometer2"></i>Panel</a>
         @else
-            <a href="{{ route('posts.index', $zmKeep) }}" class="zm-pill {{ request()->routeIs('posts.index') && ! $zmActiveCategory ? 'active' : '' }}">Barchasi <i class="bi bi-chevron-down"></i></a>
+            <a href="{{ route('posts.index', $zmKeep) }}" class="zm-pill {{ request()->routeIs('posts.index') && ! $zmActiveCategory ? 'active' : '' }}">Barchasi</a>
             @foreach($zmCategories as $category)
-                <a href="{{ route('posts.index', array_merge($zmKeep, ['category_id' => $category->id])) }}" class="zm-pill {{ $zmActiveCategory === $category->id ? 'active' : '' }}">{{ $category->name }} <i class="bi bi-chevron-down"></i></a>
+                <a href="{{ route('posts.index', array_merge($zmKeep, ['category_id' => $category->id])) }}" class="zm-pill {{ $zmActiveCategory === $category->id ? 'active' : '' }}"><span aria-hidden="true">{{ $category->emoji }}</span>{{ $category->name }}</a>
             @endforeach
-            @auth
-                <a href="{{ route('user.purchase-requests.index') }}" class="zm-pill {{ request()->routeIs('user.purchase-requests.*') ? 'active' : '' }}"><i class="bi bi-bag-check"></i>Buyurtmalarim</a>
-            @endauth
         @endif
     </div>
 </nav>
 
-@if(session('success'))<div class="zm-flash"><i class="bi bi-check-circle"></i> {{ session('success') }}</div>@endif
-@if(session('error'))<div class="zm-flash err"><i class="bi bi-exclamation-circle"></i> {{ session('error') }}</div>@endif
+{{-- Toasts: server messages render here; JS adds more (e.g. after a like) via window.zmToast --}}
+<div class="zm-toasts" id="zmToasts" aria-live="polite" aria-atomic="false">
+    @foreach($zmToasts as $toast)
+        <div class="zm-toast zm-toast-{{ $toast['type'] }}" role="{{ $toast['type'] === 'error' ? 'alert' : 'status' }}">
+            <i class="bi {{ ['success' => 'bi-check-circle-fill', 'info' => 'bi-info-circle-fill', 'warning' => 'bi-exclamation-triangle-fill', 'error' => 'bi-x-circle-fill'][$toast['type']] }}"></i>
+            <span>{{ $toast['text'] }}</span>
+            <button type="button" class="zm-toast-close" aria-label="Yopish"><i class="bi bi-x-lg"></i></button>
+        </div>
+    @endforeach
+</div>

@@ -8,38 +8,20 @@
     $defaultGender = $maleAvail > 0 ? 'male' : ($femaleAvail > 0 ? 'female' : 'male');
 @endphp
 
-<div class="container py-4 post-detail-container">
+<div class="container page-shell post-detail-container">
 
-    {{-- ── TOP NAVIGATION & BREADCRUMB BAR ── --}}
-    <div class="detail-topbar mb-4">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-                <a href="{{ route('posts.index') }}" class="btn-back-crumb">
-                    <i class="bi bi-arrow-left me-1"></i> Barcha e'lonlar
-                </a>
-                <nav aria-label="breadcrumb" class="d-none d-md-block">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('posts.index') }}">E'lonlar</a></li>
-                        @if($post->category)
-                            <li class="breadcrumb-item"><a href="{{ route('posts.index', ['category_id' => $post->category_id]) }}">{{ $post->category->name }}</a></li>
-                        @endif
-                        <li class="breadcrumb-item active" aria-current="page">{{ Str::limit($post->title, 32) }}</li>
-                    </ol>
-                </nav>
-            </div>
-
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge-post-meta">
-                    <i class="bi bi-hash text-lime"></i> ID: {{ $post->id }}
-                </span>
-                <span class="badge-post-meta">
-                    <i class="bi bi-clock me-1 text-lime"></i> {{ $post->created_at->diffForHumans() }}
-                </span>
-                <span class="badge-post-meta d-none d-sm-inline-flex">
-                    <i class="bi bi-heart-fill me-1 text-orange"></i> {{ $post->liked_by_users_count }}
-                </span>
-            </div>
-        </div>
+    {{-- Breadcrumb is the only "back" navigation; posting time is the only meta worth showing here. --}}
+    <div class="zm-crumbs">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('posts.index') }}">{{ auth()->user()?->hasRole('seller') ? "E'lonlarim" : "E'lonlar" }}</a></li>
+                @if($post->category)
+                    <li class="breadcrumb-item"><a href="{{ route('posts.index', ['category_id' => $post->category_id]) }}">{{ $post->category->name }}</a></li>
+                @endif
+                <li class="breadcrumb-item active" aria-current="page">{{ Str::limit($post->title, 40) }}</li>
+            </ol>
+        </nav>
+        <span class="zm-crumbs-meta"><i class="bi bi-clock"></i> {{ $post->created_at->diffForHumans() }}</span>
     </div>
 
     {{-- ── AI MODERATION STATUS BANNER FOR SELLER ── --}}
@@ -413,12 +395,12 @@
                         @endif
 
                         <div class="action-secondary-row mt-2">
-                            <form action="{{ route('posts.like', $post) }}" method="POST" class="flex-grow-1">
+                            <form action="{{ route('posts.like', $post) }}" method="POST" class="flex-grow-1" data-like-form>
                                 @csrf
                                 <button type="submit" class="btn-action-sub btn-sub-like {{ $isLiked ? 'liked' : '' }}">
                                     <i class="bi {{ $isLiked ? 'bi-heart-fill' : 'bi-heart' }} me-1"></i>
-                                    <span>{{ $isLiked ? 'Yoqtirilgan' : 'Yoqtirish' }}</span>
-                                    <span class="like-counter">({{ $post->liked_by_users_count }})</span>
+                                    <span data-like-label data-on="Yoqtirilgan" data-off="Yoqtirish">{{ $isLiked ? 'Yoqtirilgan' : 'Yoqtirish' }}</span>
+                                    <span class="like-counter">(<span data-like-count>{{ $post->liked_by_users_count }}</span>)</span>
                                 </button>
                             </form>
 

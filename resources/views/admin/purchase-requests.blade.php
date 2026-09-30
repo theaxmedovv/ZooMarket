@@ -1,25 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4 page-shell">
-    {{-- Header --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-lime text-dark fw-bold px-2 py-1 rounded-pill">Sotuvchi</span>
-                <h1 class="h3 fw-bold mb-0 text-cream font-serif">Sotib olish so'rovlari</h1>
-            </div>
-            <p class="text-muted small mb-0">Sizning e'lonlaringizga kelgan barcha xaridorlar so'rovlari ro'yxati</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ route('posts.index') }}" class="btn-panel-link">
-                <i class="bi bi-collection me-1"></i> Mening e'lonlarim
-            </a>
-            <a href="{{ route('admin.archive.index') }}" class="btn-panel-link">
-                <i class="bi bi-archive me-1"></i> Arxiv
-            </a>
-        </div>
-    </div>
+<div class="container page-shell">
+    <x-page-head title="Sotib olish so'rovlari" subtitle="E'lonlaringizga kelgan xaridorlar so'rovlari: tasdiqlang, rad eting yoki sotilgan deb belgilang." />
 
     {{-- Status Tabs --}}
     <div class="admin-tabs-nav mb-4">
@@ -205,7 +188,7 @@
                                         <form action="{{ route('admin.purchase-requests.mark-sold', $request) }}" method="POST" class="m-0" onsubmit="return confirm('E\'lon sotilgan deb belgilansinmi? (E\'lon to\'liq yoki qisman sotilganda ham arxivga o\'tkaziladi va chat yopiladi)')">
                                             @csrf
                                             <button type="submit" class="btn-req-action btn-approve" title="Sotilgan deb belgilash va arxivga o'tkazish">
-                                                <i class="bi bi-bag-check-fill"></i> Sold (Arxiv)
+                                                <i class="bi bi-bag-check-fill"></i> Sotildi
                                             </button>
                                         </form>
 

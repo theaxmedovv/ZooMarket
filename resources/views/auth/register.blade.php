@@ -154,7 +154,7 @@
         position: relative;
         overflow: hidden;
         background: var(--ink);
-        padding: 32px 0 8px;
+        padding: 40px 0 64px;
     }
 
     .auth-ambient-glow {

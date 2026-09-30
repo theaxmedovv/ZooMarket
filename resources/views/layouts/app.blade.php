@@ -19,58 +19,29 @@
         .text-muted { color:var(--muted) !important; }
         .form-control, .form-select { color:#222; }
         .container { max-width: 1240px; padding-left: 16px; padding-right: 16px; }
-        .page-shell { padding: 16px 0 60px; }
-        
-        /* Navbar Filter Button */
-        .btn-nav-filter { height: 32px; padding: 0 10px; background: rgba(0, 0, 0, 0.06); border: 1px solid var(--line); border-radius: 7px; color: var(--cream); font-size: 0.76rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap; transition: all .2s ease; }
-        .btn-nav-filter:hover, .btn-nav-filter.active { border-color: var(--lime); color: var(--lime); background: rgba(0, 142, 204, 0.09); }
-        .btn-nav-filter i { font-size: 0.82rem; color: var(--lime); }
-        .nav-filter-badge { background: var(--lime); color: var(--ink); border-radius: 9999px; font-size: 0.65rem; font-weight: 700; padding: 1px 5px; }
+        /* Profile header: avatar + identity, no badges */
+        .profile-header.justify-content-start { gap: 20px; padding: 24px; }
+        .profile-header.justify-content-start .profile-avatar-wrap { width: 76px; height: 76px; border-radius: 50%; box-shadow: none; flex-shrink: 0; }
+        .profile-header.justify-content-start .profile-avatar-image,
+        .profile-header.justify-content-start .profile-avatar-fallback { border-radius: 50%; font-size: 1.9rem; color: #fff; }
+        .profile-name { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.02em; color: #222; }
+        .profile-meta { margin: 4px 0 0; font-size: 14px; font-weight: 600; color: var(--muted); overflow-wrap: anywhere; }
+        .profile-sub { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+        @media (max-width: 991.98px) { .profile-header.justify-content-start { flex-direction: row !important; align-items: center !important; } }
 
-        /* Filter Modal */
-        .nav-filter-modal-content { background: #ffffff !important; border: 1px solid var(--line) !important; border-radius: 16px; color: var(--cream); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12); }
-        .filter-modal-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(0, 142, 204, 0.12); color: var(--lime); display: grid; place-items: center; font-size: 1.1rem; }
-        .btn-modal-cancel { height: 38px; padding: 0 16px; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 8px; font-size: 0.8rem; font-weight: 600; transition: all .2s; }
-        .btn-modal-cancel:hover { border-color: var(--cream); color: var(--cream); }
-        
-        /* Category Quick Strip */
-        .category-strip { padding: 12px 0 6px; background: transparent; border: 0; }
-        .category-strip-inner { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; -ms-overflow-style: none; align-items: center; }
-        .category-strip-inner::-webkit-scrollbar { display: none; }
-        .category-strip-pill { flex-shrink: 0; padding: 5px 13px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; background: #ffffff; color: #666666; border: 1px solid #ededed; transition: all 0.15s ease; white-space: nowrap; line-height: 1.25; }
-        .category-strip-pill:hover { border-color: rgba(0, 142, 204, 0.35); color: #222222; background: rgba(0, 142, 204, 0.05); }
-        .category-strip-pill.active { background: #008ecc; color: #ffffff; border-color: #008ecc; font-weight: 700; box-shadow: 0 2px 10px rgba(0, 142, 204, 0.2); }
+        /* One vertical rhythm for every page: 32px under the tab row, 64px before the footer. */
+        .page-shell { padding-top: 32px !important; padding-bottom: 64px !important; }
+        .zm-footer { margin-top: 0; }
+        @media (max-width: 768px) { .page-shell { padding-top: 20px !important; padding-bottom: 48px !important; } }
 
-        /* Unified Top Search & Filter Bar */
-        .search-filter-hero { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12); margin-bottom: 22px; }
-        .search-filter-bar { display: flex; align-items: center; gap: 10px; }
-        .search-input-group { position: relative; flex: 1; display: flex; align-items: center; }
-        .search-group-icon { position: absolute; left: 14px; color: var(--muted); font-size: 0.95rem; pointer-events: none; }
-        .search-hero-input { width: 100%; height: 44px; padding: 0 14px 0 42px; background: #f5f7f9; border: 1px solid var(--line); border-radius: 10px; color: var(--cream); font-size: 0.88rem; outline: none; transition: border-color .2s, box-shadow .2s; }
-        .search-hero-input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(0, 142, 204, 0.15); }
-        .search-hero-input::placeholder { color: var(--muted); }
         
-        .btn-filter-trigger { height: 44px; padding: 0 16px; background: #f5f7f9; border: 1px solid var(--line); border-radius: 10px; color: var(--cream); font-size: 0.84rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer; transition: all 0.2s ease; }
-        .btn-filter-trigger:hover, .btn-filter-trigger.active, .btn-filter-trigger[aria-expanded="true"] { border-color: var(--lime); color: var(--lime); background: rgba(0, 142, 204, 0.08); }
-        .btn-filter-trigger i { font-size: 1rem; color: var(--lime); }
-        .filter-badge-count { background: var(--lime); color: var(--ink); border-radius: 9999px; font-size: 0.7rem; font-weight: 700; padding: 2px 7px; }
+
+        
         
         .btn-search-submit { height: 44px; padding: 0 18px; background: var(--lime); color: var(--ink); border: 0; border-radius: 10px; font-weight: 700; font-size: 0.84rem; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
         .btn-search-submit:hover { background: #0073a8; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0, 142, 204, 0.25); }
 
-        .filter-expand-box { background: #f5f7f9; border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin-top: 14px; }
-
-        .filter-section { margin-bottom: 0; }
-        .filter-sec-label { display: block; color: var(--muted); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
-        .filter-input-wrap { position: relative; display: flex; align-items: center; }
-        .filter-input-icon { position: absolute; left: 10px; color: var(--muted); font-size: 0.8rem; pointer-events: none; }
-        .filter-input.with-icon { padding-left: 32px; }
         
-        .filter-input, .filter-select { width: 100%; height: 38px; background: #ffffff; border: 1px solid var(--line); color: var(--cream); border-radius: 8px; padding: 0 10px; outline: none; font-size: 0.82rem; transition: border-color .2s, box-shadow .2s; }
-        .filter-input:focus, .filter-select:focus { border-color: var(--lime); box-shadow: 0 0 0 2px rgba(0, 142, 204, 0.12); }
-        .filter-select option { background: #ffffff; color: var(--cream); }
-        .filter-mini-select { height: 24px; background: #ffffff; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; font-size: 0.7rem; padding: 0 6px; outline: none; cursor: pointer; }
-        .filter-mini-select:focus { border-color: var(--lime); color: var(--cream); }
         
         /* Segmented Radio Controls (Gender, etc.) */
         .segmented-control { display: flex; background: #ffffff; border: 1px solid var(--line); border-radius: 8px; padding: 2px; gap: 2px; height: 38px; align-items: center; }
@@ -83,8 +54,6 @@
         /* Filter Action Buttons */
         .btn-filter-apply { background: var(--lime); color: var(--ink); border: 0; border-radius: 8px; height: 38px; font-weight: 700; font-size: 0.82rem; transition: all .2s; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
         .btn-filter-apply:hover { background: #0073a8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 142, 204, 0.25); }
-        .btn-filter-reset { border: 1px solid var(--line); border-radius: 8px; color: var(--muted); text-decoration: none; height: 38px; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; transition: all .2s; background: transparent; }
-        .btn-filter-reset:hover { border-color: var(--lime); color: var(--lime); background: rgba(0, 142, 204, 0.05); }
 
         /* Catalog Toolbar */
         .catalog-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
@@ -93,8 +62,6 @@
         
         .btn-sort-dropdown { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--cream); font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; }
         .btn-sort-dropdown:hover, .btn-sort-dropdown[aria-expanded="true"] { border-color: var(--lime); color: var(--lime); }
-        .btn-mobile-filter { display: inline-flex; align-items: center; padding: 6px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--cream); font-size: .78rem; font-weight: 600; text-decoration: none; transition: all .2s; }
-        .btn-mobile-filter:hover, .btn-mobile-filter.active { border-color: var(--lime); color: var(--lime); }
 
         /* Active Filter Chips Bar */
         .active-filter-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; padding: 8px 12px; background: rgba(255, 255, 255, 0.7); border: 1px solid var(--line); border-radius: 12px; }
@@ -105,13 +72,6 @@
         .chip-clear-all { background: rgba(0, 0, 0, 0.05); border-color: var(--line); color: var(--muted); }
         .chip-clear-all:hover { background: rgba(255, 60, 60, 0.15); border-color: #dc3545; color: #dc3545; }
 
-        /* Mobile Offcanvas Filter Drawer */
-        .offcanvas-filter { background: #ffffff !important; border-right: 1px solid var(--line) !important; max-width: 320px; color: var(--cream); }
-        .offcanvas-filter .offcanvas-header { border-bottom: 1px solid var(--line); padding: 14px 18px; }
-        .offcanvas-filter .offcanvas-title { font-family: var(--serif); font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; color: var(--cream); }
-        .offcanvas-filter .offcanvas-body { padding: 18px; }
-        .btn-close-filter { background: transparent; border: 0; color: var(--muted); font-size: 1.2rem; cursor: pointer; transition: color .15s; }
-        .btn-close-filter:hover { color: var(--cream); }
 
         /* Listing Grid & Cards */
         /* Modern Marketplace Card Styles */

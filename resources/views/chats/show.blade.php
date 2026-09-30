@@ -17,7 +17,7 @@
 
         {{-- Post card --}}
         @if($chat->post)
-            <div class="sidebar-post-card">
+            <a href="{{ route('posts.show', $chat->post) }}" class="sidebar-post-card" title="E'lonni ochish">
                 <div class="sidebar-post-img-box">
                     @if(!empty($imgs))
                         <div class="sidebar-post-backdrop" style="background-image: url('{{ route('images.show', ['path' => $imgs[0]]) }}');"></div>
@@ -39,32 +39,10 @@
                         </span>
                     @endif
                 </div>
-            </div>
-
-            <a href="{{ route('posts.show', $chat->post) }}" class="sidebar-view-btn">
-                <i class="bi bi-eye me-1"></i> E'lonni to'liq ko'rish
             </a>
+
         @endif
 
-        {{-- Other participant --}}
-        <div class="sidebar-user-card">
-            <div class="sidebar-user-avatar">
-                {{ mb_strtoupper(mb_substr($other->name, 0, 1)) }}
-            </div>
-            <div class="sidebar-user-meta">
-                <div class="sidebar-user-name">{{ $other->name }}</div>
-                <div class="d-flex align-items-center gap-1 mt-1">
-                    <span class="badge-role-pill {{ $isSeller ? 'role-seller' : 'role-buyer' }}">
-                        {{ $isSeller ? 'Sotuvchi' : 'Xaridor' }}
-                    </span>
-                    @if($other->phone)
-                        <span class="text-muted small ms-1" style="font-size: 0.72rem;">
-                            <i class="bi bi-telephone text-lime me-1"></i>{{ $other->phone }}
-                        </span>
-                    @endif
-                </div>
-            </div>
-        </div>
     </aside>
 
     {{-- ── CHAT MAIN ── --}}
@@ -91,10 +69,13 @@
                 </div>
                 <div class="chat-header-sub">
                     <i class="bi bi-box-seam me-1 text-lime"></i> {{ Str::limit($chat->post?->title ?? 'E\'lon', 35) }}
+                    @if($other->phone)
+                        <span class="ms-2"><i class="bi bi-telephone me-1 text-lime"></i><a href="tel:{{ $other->phone }}" class="text-reset text-decoration-none">{{ $other->phone }}</a></span>
+                    @endif
                 </div>
             </div>
             @if($chat->post)
-                <a href="{{ route('posts.show', $chat->post) }}" class="chat-header-post-link d-none d-sm-inline-flex">
+                <a href="{{ route('posts.show', $chat->post) }}" class="chat-header-post-link d-inline-flex d-md-none">
                     <i class="bi bi-box-arrow-up-right me-1"></i> E'lon
                 </a>
             @endif
@@ -177,12 +158,20 @@
     .chat-page-container {
         display: grid;
         grid-template-columns: 300px 1fr;
-        height: calc(100vh - 70px);
+        width: calc(100% - 32px);
+        max-width: 1208px;
+        height: min(760px, calc(100vh - 250px));
+        min-height: 460px;
+        margin: 32px auto 64px;
         background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 16px;
         overflow: hidden;
     }
+    .sidebar-post-card { text-decoration: none; color: inherit; transition: border-color .15s; }
+    .sidebar-post-card:hover { border-color: var(--lime); }
     @media (max-width: 768px) {
-        .chat-page-container { grid-template-columns: 1fr; }
+        .chat-page-container { grid-template-columns: 1fr; width: 100%; margin: 0; border: 0; border-radius: 0; height: calc(100vh - 190px); }
         .chat-sidebar { display: none; }
     }
 

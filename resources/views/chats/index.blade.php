@@ -1,33 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4 page-shell" style="max-width: 860px;">
-    {{-- Header --}}
-    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-lime-soft text-lime fw-bold px-2 py-1 rounded-pill">
-                    <i class="bi bi-chat-dots-fill me-1"></i> Xabarlar markazi
-                </span>
-                <h1 class="h3 fw-bold mb-0 text-cream font-serif">Xabarlar</h1>
-            </div>
-            <p class="text-muted small mb-0">Savdo va buyurtmalar bo'yicha barcha shaxsiy suhbatlaringiz</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ route('posts.index') }}" class="btn-panel-link">
-                <i class="bi bi-compass me-1"></i> E'lonlarni ko'rish
-            </a>
-            @if(auth()->user()->hasRole('seller'))
-                <a href="{{ route('admin.purchase-requests.index') }}" class="btn-panel-link">
-                    <i class="bi bi-inbox me-1"></i> So'rovlar
-                </a>
-            @else
-                <a href="{{ route('user.purchase-requests.index') }}" class="btn-panel-link">
-                    <i class="bi bi-bag-check me-1"></i> Buyurtmalarim
-                </a>
-            @endif
-        </div>
-    </div>
+<div class="container page-shell" style="max-width: 860px;">
+    <x-page-head title="Xabarlar" subtitle="Tasdiqlangan xaridlar bo'yicha sotuvchi va xaridor suhbatlari." />
 
     @if($chats->isEmpty())
         <div class="empty-state py-5">

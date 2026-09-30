@@ -1,13 +1,3 @@
-@php
-    // Colored brand-card backgrounds from the MegaMart layout.
-    $cardThemes = [
-        ['bg' => '#313131', 'fg' => '#ffffff'],
-        ['bg' => '#fff3cc', 'fg' => '#222222'],
-        ['bg' => '#ffecdf', 'fg' => '#222222'],
-        ['bg' => '#e5f4fb', 'fg' => '#222222'],
-        ['bg' => '#e9f9ee', 'fg' => '#222222'],
-    ];
-@endphp
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -73,8 +63,8 @@
         .p-card-placeholder { font-size: 80px; }
         .p-card-badge { position: absolute; top: 0; right: 0; background: var(--blue); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .03em; padding: 10px 10px 8px 12px; border-radius: 0 0 0 14px; max-width: 60%; text-align: center; line-height: 1.1; }
         .p-card-fav { position: absolute; top: 10px; left: 10px; margin: 0; }
-        .p-card-fav button { width: 34px; height: 34px; border-radius: 50%; border: 0; background: #fff; cursor: pointer; display: grid; place-items: center; font-size: 16px; color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-        .p-card-fav button:hover, .p-card-fav button.is-liked { color: #ff4d2e; }
+        .p-card-fav button, .p-card-fav .fav-btn { width: 34px; height: 34px; border-radius: 50%; border: 0; background: #fff; cursor: pointer; display: grid; place-items: center; font-size: 16px; color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+        .p-card-fav button:hover, .p-card-fav .fav-btn:hover, .p-card-fav button.is-liked { color: #ff4d2e; }
         .p-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
         .p-card-title { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 40px; }
         .p-card-title:hover { color: var(--blue); }
@@ -90,18 +80,6 @@
         .circle:hover .circle-img { border-color: var(--blue); background: var(--blue-soft); transform: translateY(-3px); }
         .circle:hover { color: var(--blue); }
         .circle small { display: block; font-weight: 600; color: var(--muted); font-size: 12px; margin-top: 2px; }
-
-        /* ---------- Colored category cards (brands row) ---------- */
-        .brand-row { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 2 * 20px) / 3); gap: 20px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory; }
-        .brand-row::-webkit-scrollbar { display: none; }
-        .brand-card { scroll-snap-align: start; border-radius: 18px; padding: 26px 28px; min-height: 190px; display: grid; grid-template-columns: 1fr auto; align-items: center; position: relative; overflow: hidden; transition: transform .2s; }
-        .brand-card:hover { transform: translateY(-3px); }
-        .brand-card .tag { display: inline-block; font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 6px; background: rgba(255,255,255,.18); margin-bottom: 14px; }
-        .brand-card:not(.dark) .tag { background: #fff; }
-        .brand-card h3 { margin: 0 0 8px; font-size: 24px; font-weight: 900; }
-        .brand-card p { margin: 0; font-weight: 700; font-size: 16px; }
-        .brand-card .art { font-size: 104px; line-height: 1; }
-        .brand-card::after { content: ''; position: absolute; right: -40px; bottom: -60px; width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,.12); }
 
         /* ---------- Breeds strip (daily essentials) ---------- */
         .breeds { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
@@ -122,7 +100,6 @@
         }
         @media (max-width: 1024px) {
             .rail { grid-auto-columns: calc((100% - 2 * 18px) / 3); }
-            .brand-row { grid-auto-columns: calc((100% - 20px) / 2); }
             .breeds { grid-template-columns: repeat(3, 1fr); }
             .slide { padding: 36px 70px; }
             .slide-art { font-size: 150px; }
@@ -135,7 +112,6 @@
             .rail { grid-auto-columns: calc((100% - 14px) / 2.2); gap: 14px; }
             .sec-head h2 { font-size: 18px; }
             .arrows { display: none; }
-            .brand-row { grid-auto-columns: 85%; }
             .circle-img { width: 96px; height: 96px; font-size: 46px; }
             .circles { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 16px; }
         }
@@ -158,7 +134,7 @@
                     <div>
                         <p class="slide-eyebrow">Eng yaxshi e'lonlar onlayn</p>
                         <h2>Sodiq do'stlar.</h2>
-                        <p class="slide-off">Barcha hayvonlar — <b>{{ $stats['posts'] }}+</b> e'lon</p>
+                        <p class="slide-off">@if($stats['posts'] > 0)Barcha hayvonlar — <b>{{ $stats['posts'] }}</b> ta e'lon @else Birinchi e'lonlar <b>tez orada</b>@endif</p>
                         <a href="{{ route('posts.index') }}" class="slide-cta">Ko'rish <i class="bi bi-arrow-right"></i></a>
                     </div>
                     <div class="slide-art">🐕</div>
@@ -172,6 +148,7 @@
                     </div>
                     <div class="slide-art">🐈</div>
                 </div>
+                @guest
                 <div class="slide slide-3">
                     <div>
                         <p class="slide-eyebrow">Sotuvchilar uchun</p>
@@ -181,6 +158,7 @@
                     </div>
                     <div class="slide-art">🦜</div>
                 </div>
+                @endguest
             </div>
         </div>
         <button class="hero-nav prev" type="button" aria-label="Oldingi"><i class="bi bi-chevron-left"></i></button>
@@ -222,29 +200,6 @@
                     <a href="{{ route('posts.index', ['category_id' => $category->id]) }}" class="circle">
                         <span class="circle-img">{{ \App\Models\Category::emojiFor($category->name) }}</span>
                         <span>{{ $category->name }}<small>{{ $category->posts_count }} ta e'lon</small></span>
-                    </a>
-                @endforeach
-            </div>
-        </section>
-    @endif
-
-    {{-- ============ Colored category cards ============ --}}
-    @if($categories->isNotEmpty())
-        <section class="section">
-            <div class="sec-head">
-                <h2>Mashhur <span>bo'limlar</span></h2>
-                <div class="sec-head-right"><a href="{{ route('posts.index') }}" class="view-all">Hammasi <i class="bi bi-chevron-right"></i></a></div>
-            </div>
-            <div class="brand-row">
-                @foreach($categories->sortByDesc('posts_count')->values() as $i => $category)
-                    @php $theme = $cardThemes[$i % count($cardThemes)]; @endphp
-                    <a href="{{ route('posts.index', ['category_id' => $category->id]) }}" class="brand-card {{ $theme['fg'] === '#ffffff' ? 'dark' : '' }}" style="background: {{ $theme['bg'] }}; color: {{ $theme['fg'] }}">
-                        <div>
-                            <span class="tag" style="color: {{ $theme['fg'] === '#ffffff' ? '#fff' : 'var(--ink)' }}">{{ mb_strtoupper($category->name) }}</span>
-                            <h3>{{ $category->name }}</h3>
-                            <p>{{ $category->posts_count }} ta e'lon</p>
-                        </div>
-                        <span class="art">{{ \App\Models\Category::emojiFor($category->name) }}</span>
                     </a>
                 @endforeach
             </div>

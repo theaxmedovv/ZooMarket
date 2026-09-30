@@ -1,41 +1,21 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4 page-shell">
-    {{-- Header --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-secondary text-light fw-bold px-2 py-1 rounded-pill"><i class="bi bi-archive me-1"></i> Arxiv</span>
-                <h1 class="h3 fw-bold mb-0 text-cream font-serif">Arxivdagi e'lonlar</h1>
-                <span class="badge bg-light border text-muted px-2 py-1 rounded-pill small">
-                    <i class="bi bi-lock-fill me-1"></i> Faqat o'qish uchun (Read-only)
-                </span>
-            </div>
-            <p class="text-muted small mb-0">Sotilgan (to'liq yoki qisman) yoki arxivga o'tkazilgan e'lonlar, xaridorlar va tranzaksiyalar tarixi</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ route('posts.index') }}" class="btn-panel-link">
-                <i class="bi bi-collection me-1"></i> Mening e'lonlarim
-            </a>
-            <a href="{{ route('admin.purchase-requests.index') }}" class="btn-panel-link">
-                <i class="bi bi-inbox me-1"></i> So'rovlar
-            </a>
-        </div>
-    </div>
+<div class="container page-shell">
+    <x-page-head title="Arxiv" subtitle="Sotilgan va arxivlangan e'lonlar tarixi. Bu yerdagi ma'lumotlarni o'zgartirib bo'lmaydi." />
 
     {{-- Stats Cards --}}
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-4">
+        <div class="col-6">
             <div class="admin-stat-card">
                 <div class="stat-icon bg-lime-soft text-lime"><i class="bi bi-archive-fill"></i></div>
                 <div>
                     <div class="stat-value text-cream font-serif">{{ $totalArchived }} ta</div>
-                    <div class="stat-label">Jami arxivda (Read-only)</div>
+                    <div class="stat-label">Jami arxivda</div>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-4">
+        <div class="col-6">
             <div class="admin-stat-card">
                 <div class="stat-icon bg-orange-soft text-orange"><i class="bi bi-bag-check-fill"></i></div>
                 <div>
@@ -88,7 +68,7 @@
                                                 <span class="small text-muted">{{ $post->breed }}</span>
                                             @endif
                                             <span class="badge-readonly-tag">
-                                                <i class="bi bi-lock-fill me-1"></i>Read-only
+                                                <i class="bi bi-lock-fill me-1"></i>Faqat ko'rish
                                             </span>
                                         </div>
                                     </div>
