@@ -13,7 +13,7 @@
 
             <div class="card border-0 shadow-lg rounded-5 overflow-hidden">
                 <div class="row g-0">
-                    <div class="col-md-4 bg-primary p-5 text-white d-flex flex-column justify-content-center">
+                    <div class="col-md-4 p-5 text-white d-flex flex-column justify-content-center" style="background: var(--blue)">
                         <i class="bi bi-pencil-square display-4 mb-3"></i>
                         <h2 class="fw-bold">Tahrirlash</h2>
                         <p class="opacity-75">Hayvon e'loni ma'lumotlarini yangilang.</p>

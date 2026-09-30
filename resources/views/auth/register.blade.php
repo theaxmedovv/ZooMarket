@@ -147,15 +147,14 @@
 </div>
 
 <style>
-    /* Auth Page Styles (ZooMarket Dark Luxury Theme) */
+    /* Auth Page Styles (ZooMarket light theme) */
     .auth-page-wrapper {
-        min-height: calc(100vh - 56px);
         display: flex;
         align-items: center;
         position: relative;
         overflow: hidden;
         background: var(--ink);
-        padding: 20px 0;
+        padding: 32px 0 8px;
     }
 
     .auth-ambient-glow {
@@ -165,7 +164,7 @@
         transform: translate(-50%, -50%);
         width: 550px;
         height: 550px;
-        background: radial-gradient(circle, rgba(194, 240, 60, 0.08) 0%, rgba(6, 13, 7, 0) 70%);
+        background: radial-gradient(circle, rgba(0, 142, 204, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
         pointer-events: none;
         z-index: 1;
     }
@@ -175,7 +174,7 @@
         border: 1px solid var(--line);
         border-radius: 20px;
         padding: 32px 28px;
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
         backdrop-filter: blur(12px);
     }
 
@@ -189,7 +188,7 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(0, 0, 0, 0.04);
         border: 1px solid var(--line);
         padding: 5px 14px;
         border-radius: 9999px;
@@ -236,7 +235,7 @@
     .auth-alert-error {
         background: rgba(255, 107, 43, 0.1);
         border: 1px solid rgba(255, 107, 43, 0.35);
-        color: #ffaa80;
+        color: #d9541e;
         border-radius: 12px;
         padding: 12px 16px;
         font-size: 0.83rem;
@@ -258,7 +257,7 @@
     }
 
     .role-option-card {
-        background: #081209;
+        background: #f5f7f9;
         border: 1.5px solid var(--line);
         border-radius: 14px;
         padding: 14px;
@@ -271,14 +270,14 @@
     }
 
     .role-option-card:hover {
-        border-color: rgba(194, 240, 60, 0.4);
-        background: rgba(194, 240, 60, 0.03);
+        border-color: rgba(0, 142, 204, 0.4);
+        background: rgba(0, 142, 204, 0.03);
     }
 
     .role-option-card.active {
         border-color: var(--lime);
-        background: rgba(194, 240, 60, 0.08);
-        box-shadow: 0 0 0 1px var(--lime), 0 4px 16px rgba(194, 240, 60, 0.12);
+        background: rgba(0, 142, 204, 0.08);
+        box-shadow: 0 0 0 1px var(--lime), 0 4px 16px rgba(0, 142, 204, 0.12);
     }
 
     .role-card-header {
@@ -303,7 +302,7 @@
     }
 
     .user-icon {
-        background: rgba(194, 240, 60, 0.15);
+        background: rgba(0, 142, 204, 0.15);
         color: var(--lime);
     }
 
@@ -351,7 +350,7 @@
         width: 100%;
         height: 46px;
         padding: 0 14px 0 42px;
-        background: #081209;
+        background: #f5f7f9;
         border: 1px solid var(--line);
         border-radius: 12px;
         color: var(--cream);
@@ -362,7 +361,7 @@
 
     .auth-input:focus {
         border-color: var(--lime);
-        box-shadow: 0 0 0 3px rgba(194, 240, 60, 0.15);
+        box-shadow: 0 0 0 3px rgba(0, 142, 204, 0.15);
     }
 
     .auth-input-group:focus-within .input-icon {
@@ -408,13 +407,13 @@
         gap: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
-        box-shadow: 0 4px 14px rgba(194, 240, 60, 0.2);
+        box-shadow: 0 4px 14px rgba(0, 142, 204, 0.2);
     }
 
     .btn-auth-submit:hover {
-        background: #d7ff62;
+        background: #0073a8;
         transform: translateY(-1px);
-        box-shadow: 0 8px 22px rgba(194, 240, 60, 0.35);
+        box-shadow: 0 8px 22px rgba(0, 142, 204, 0.35);
     }
 
     .btn-auth-submit:active {
@@ -435,7 +434,7 @@
     }
 
     .auth-link:hover {
-        color: #d7ff62;
+        color: #0073a8;
         text-decoration: underline;
     }
 

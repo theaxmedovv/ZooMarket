@@ -52,23 +52,6 @@
     };
 @endphp
 
-{{-- ── TOP CATEGORY QUICK SCROLLER ───────────────────────────── --}}
-<section class="category-strip">
-    <div class="container">
-        <div class="category-strip-inner">
-            <a class="category-strip-pill {{ empty($activeFilters['category_id']) ? 'active' : '' }}" href="{{ route('posts.index', request()->except('category_id', 'page')) }}">
-                🐾 Barchasi
-            </a>
-            @foreach($categories as $category)
-                @php $emoji = $getCategoryEmoji($category->name); @endphp
-                <a class="category-strip-pill {{ (string)($activeFilters['category_id'] ?? '') === (string)$category->id ? 'active' : '' }}" href="{{ route('posts.index', array_merge(request()->except('page'), ['category_id' => $category->id])) }}">
-                    {{ $emoji }} {{ $category->name }}
-                </a>
-            @endforeach
-        </div>
-    </div>
-</section>
-
 <div class="container page-shell">
     {{-- ── UNIFIED SEARCH & FILTER BAR (QIDIRUV VA FILTR YONMA-YON) ───────────────────────────── --}}
     @if($showFilters)

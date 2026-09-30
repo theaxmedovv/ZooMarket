@@ -178,7 +178,7 @@
         display: grid;
         grid-template-columns: 300px 1fr;
         height: calc(100vh - 70px);
-        background: #060d07;
+        background: #ffffff;
         overflow: hidden;
     }
     @media (max-width: 768px) {
@@ -210,7 +210,7 @@
     .back-link:hover { color: var(--lime); }
 
     .sidebar-post-card {
-        background: #081209;
+        background: #f5f7f9;
         border: 1px solid var(--line);
         border-radius: 12px;
         padding: 12px;
@@ -224,7 +224,7 @@
         height: 60px;
         border-radius: 10px;
         overflow: hidden;
-        background: #040905;
+        background: #f5f5f5;
         border: 1px solid var(--line);
         position: relative;
         display: flex;
@@ -304,7 +304,7 @@
     .sidebar-view-btn:hover {
         border-color: var(--lime);
         color: var(--lime);
-        background: rgba(194, 240, 60, 0.06);
+        background: rgba(0, 142, 204, 0.06);
     }
 
     .sidebar-user-card {
@@ -312,7 +312,7 @@
         align-items: center;
         gap: 10px;
         padding: 12px;
-        background: #081209;
+        background: #f5f7f9;
         border: 1px solid var(--line);
         border-radius: 12px;
         margin-top: auto;
@@ -322,7 +322,7 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: #1c2e1e;
+        background: #e5f4fb;
         color: var(--lime);
         font-size: 0.85rem;
         font-weight: 700;
@@ -351,9 +351,9 @@
         border: 1px solid rgba(255, 107, 43, 0.3);
     }
     .role-buyer {
-        background: rgba(194, 240, 60, 0.15);
+        background: rgba(0, 142, 204, 0.15);
         color: var(--lime);
-        border: 1px solid rgba(194, 240, 60, 0.3);
+        border: 1px solid rgba(0, 142, 204, 0.3);
     }
 
     /* ── CHAT MAIN ── */
@@ -361,7 +361,7 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        background: #060d07;
+        background: #ffffff;
         overflow: hidden;
     }
 
@@ -386,7 +386,7 @@
         width: 38px;
         height: 38px;
         border-radius: 50%;
-        background: #1c2e1e;
+        background: #e5f4fb;
         color: var(--lime);
         font-size: 0.88rem;
         font-weight: 700;
@@ -414,7 +414,7 @@
     .chat-header-post-link {
         padding: 5px 12px;
         border: 1px solid var(--line);
-        background: #081209;
+        background: #f5f7f9;
         color: var(--cream);
         border-radius: 8px;
         font-size: 0.76rem;
@@ -436,7 +436,7 @@
         flex-direction: column;
         gap: 12px;
         scroll-behavior: smooth;
-        background: radial-gradient(circle at top right, rgba(194, 240, 60, 0.03) 0%, transparent 60%);
+        background: radial-gradient(circle at top right, rgba(0, 142, 204, 0.03) 0%, transparent 60%);
     }
 
     .no-messages-box {
@@ -477,7 +477,7 @@
         width: 28px;
         height: 28px;
         border-radius: 50%;
-        background: #1c2e1e;
+        background: #e5f4fb;
         color: var(--lime);
         font-size: 0.7rem;
         font-weight: 700;
@@ -492,12 +492,12 @@
         border-radius: 16px;
         max-width: 100%;
         word-break: break-word;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
     .bubble-mine {
-        background: #152c18;
+        background: #e5f4fb;
         color: var(--cream);
-        border: 1px solid rgba(194, 240, 60, 0.25);
+        border: 1px solid rgba(0, 142, 204, 0.25);
         border-bottom-right-radius: 4px;
     }
     .bubble-theirs {
@@ -545,7 +545,7 @@
 
     .chat-input-wrapper {
         flex: 1;
-        background: #081209;
+        background: #f5f7f9;
         border: 1px solid var(--line);
         border-radius: 14px;
         padding: 2px;
@@ -553,7 +553,7 @@
     }
     .chat-input-wrapper:focus-within {
         border-color: var(--lime);
-        box-shadow: 0 0 0 3px rgba(194, 240, 60, 0.15);
+        box-shadow: 0 0 0 3px rgba(0, 142, 204, 0.15);
     }
 
     .chat-input {
@@ -588,12 +588,12 @@
         justify-content: center;
         cursor: pointer;
         transition: all 0.2s;
-        box-shadow: 0 4px 14px rgba(194, 240, 60, 0.25);
+        box-shadow: 0 4px 14px rgba(0, 142, 204, 0.25);
     }
     .chat-send-btn:hover {
-        background: #d7ff62;
+        background: #0073a8;
         transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(194, 240, 60, 0.35);
+        box-shadow: 0 6px 18px rgba(0, 142, 204, 0.35);
     }
     .chat-send-btn:active {
         transform: scale(0.95);

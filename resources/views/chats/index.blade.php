@@ -133,7 +133,7 @@
     .font-serif { font-family: var(--serif); }
     .text-cream { color: var(--cream) !important; }
     .text-lime { color: var(--lime) !important; }
-    .bg-lime-soft { background: rgba(194, 240, 60, 0.12) !important; }
+    .bg-lime-soft { background: rgba(0, 142, 204, 0.12) !important; }
 
     .btn-panel-link {
         padding: 6px 14px;
@@ -151,7 +151,7 @@
     .btn-panel-link:hover {
         border-color: var(--lime);
         color: var(--lime);
-        background: rgba(194, 240, 60, 0.08);
+        background: rgba(0, 142, 204, 0.08);
     }
 
     /* Chat List */
@@ -177,15 +177,15 @@
     }
 
     .chat-item-card:hover {
-        border-color: rgba(194, 240, 60, 0.4);
+        border-color: rgba(0, 142, 204, 0.4);
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         color: inherit;
     }
 
     .chat-item-card.has-unread {
         border-left: 4px solid var(--lime);
-        background: rgba(13, 24, 14, 0.95);
+        background: rgba(255, 255, 255, 0.95);
     }
 
     /* Thumbnail */
@@ -194,7 +194,7 @@
         height: 64px;
         border-radius: 12px;
         overflow: hidden;
-        background: #040905;
+        background: #f5f5f5;
         border: 1px solid var(--line);
         position: relative;
         display: flex;
@@ -250,7 +250,7 @@
     }
 
     .badge-cat-tag {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.05);
         color: var(--muted);
         border: 1px solid var(--line);
         border-radius: 6px;
@@ -290,7 +290,7 @@
         width: 26px;
         height: 26px;
         border-radius: 50%;
-        background: #1c2e1e;
+        background: #e5f4fb;
         color: var(--lime);
         display: grid;
         place-items: center;
@@ -326,9 +326,9 @@
     }
 
     .role-buyer {
-        background: rgba(194, 240, 60, 0.15);
+        background: rgba(0, 142, 204, 0.15);
         color: var(--lime);
-        border: 1px solid rgba(194, 240, 60, 0.3);
+        border: 1px solid rgba(0, 142, 204, 0.3);
     }
 
     .chat-msg-preview-wrap {
@@ -365,7 +365,7 @@
         justify-content: center;
         padding: 0 6px;
         flex-shrink: 0;
-        box-shadow: 0 0 10px rgba(194, 240, 60, 0.4);
+        box-shadow: 0 0 10px rgba(0, 142, 204, 0.4);
     }
 
     .chat-arrow-indicator {

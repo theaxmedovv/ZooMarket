@@ -455,7 +455,7 @@
                         <div class="guest-action-card text-center p-3 rounded-3 mt-2">
                             <div class="small text-muted mb-2">Hayvonni sotib olish yoki sotuvchi bilan bog'lanish uchun tizimga kiring:</div>
                             <div class="d-flex gap-2 justify-content-center">
-                                <a href="{{ route('login') }}" class="btn btn-sm btn-outline-light rounded-pill px-3">Kirish</a>
+                                <a href="{{ route('login') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Kirish</a>
                                 <a href="{{ route('register') }}" class="btn btn-sm btn-success rounded-pill px-3">Ro'yxatdan o'tish</a>
                             </div>
                         </div>
@@ -477,7 +477,7 @@
                     <h5 class="modal-title fw-bold text-cream" id="buyModalLabel">
                         <i class="bi bi-cart-check-fill text-lime me-2"></i> Sotib olish so'rovi
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Yopish"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Yopish"></button>
                 </div>
                 <form action="{{ route('purchase-requests.store') }}" method="POST" id="buyerPurchaseForm">
                     @csrf
@@ -588,7 +588,7 @@
 
 /* Topbar & Breadcrumb */
 .detail-topbar {
-    background: rgba(13, 24, 14, 0.75);
+    background: rgba(255, 255, 255, 0.75);
     border: 1px solid var(--line);
     border-radius: 14px;
     padding: 10px 16px;
@@ -598,7 +598,7 @@
     display: inline-flex;
     align-items: center;
     padding: 5px 12px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.05);
     border: 1px solid var(--line);
     border-radius: 999px;
     color: var(--muted);
@@ -610,7 +610,7 @@
 .btn-back-crumb:hover {
     color: var(--lime);
     border-color: var(--lime);
-    background: rgba(194, 240, 60, 0.08);
+    background: rgba(0, 142, 204, 0.08);
     transform: translateX(-2px);
 }
 .breadcrumb {
@@ -639,8 +639,8 @@
     align-items: center;
     font-size: 0.72rem;
     color: var(--muted);
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.035);
+    border: 1px solid rgba(0, 0, 0, 0.06);
     padding: 3px 9px;
     border-radius: 999px;
 }
@@ -652,14 +652,14 @@
     border-radius: 20px;
     overflow: hidden;
     padding: 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 .gallery-main-view {
     height: 460px;
     position: relative;
     border-radius: 16px;
     overflow: hidden;
-    background: #040804;
+    background: #f5f5f5;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -716,16 +716,16 @@
     padding: 5px 12px;
     border-radius: 9999px;
     backdrop-filter: blur(12px);
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 .gallery-glass-pill.pill-cat {
-    background: rgba(8, 18, 9, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.15);
     color: var(--cream);
 }
 .gallery-glass-pill.pill-active {
-    background: rgba(194, 240, 60, 0.18);
-    border: 1px solid rgba(194, 240, 60, 0.5);
+    background: rgba(0, 142, 204, 0.18);
+    border: 1px solid rgba(0, 142, 204, 0.5);
     color: var(--lime);
 }
 .gallery-glass-pill.pill-reserved {
@@ -736,11 +736,11 @@
 .gallery-glass-pill.pill-sold {
     background: rgba(239, 68, 68, 0.25);
     border: 1px solid rgba(239, 68, 68, 0.6);
-    color: #ff6b6b;
+    color: #dc3545;
 }
 .gallery-glass-pill.pill-counter {
-    background: rgba(8, 18, 9, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.15);
     color: var(--cream);
 }
 
@@ -757,7 +757,7 @@
     height: 76px;
     border-radius: 12px;
     overflow: hidden;
-    background: #081209;
+    background: #f5f7f9;
     border: 2px solid var(--line);
     padding: 0;
     cursor: pointer;
@@ -771,12 +771,12 @@
     display: block;
 }
 .gallery-thumb-btn:hover {
-    border-color: rgba(194, 240, 60, 0.5);
+    border-color: rgba(0, 142, 204, 0.5);
     transform: translateY(-2px);
 }
 .gallery-thumb-btn.active {
     border-color: var(--lime);
-    box-shadow: 0 0 14px rgba(194, 240, 60, 0.35);
+    box-shadow: 0 0 14px rgba(0, 142, 204, 0.35);
 }
 
 /* Detail Section Cards */
@@ -785,7 +785,7 @@
     border: 1px solid var(--line);
     border-radius: 20px;
     padding: 22px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 .section-card-title {
     font-family: var(--serif);
@@ -799,13 +799,13 @@
 .ad-full-text {
     font-size: 0.92rem;
     line-height: 1.7;
-    color: rgba(238, 233, 222, 0.88);
+    color: rgba(34, 34, 34, 0.88);
 }
 
 /* Trust Features */
 .trust-mini-feature {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     border-radius: 14px;
     padding: 16px;
     height: 100%;
@@ -814,7 +814,7 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: rgba(194, 240, 60, 0.12);
+    background: rgba(0, 142, 204, 0.12);
     color: var(--lime);
     display: grid;
     place-items: center;
@@ -845,7 +845,7 @@
     border: 1px solid var(--line);
     border-radius: 20px;
     padding: 20px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 /* Price Box */
@@ -872,14 +872,14 @@
 .ad-price-unit {
     font-size: 0.95rem;
     font-weight: 600;
-    color: rgba(238, 233, 222, 0.75);
+    color: rgba(34, 34, 34, 0.75);
 }
 .badge-negotiable-glow {
     font-size: 0.72rem;
     font-weight: 700;
-    background: rgba(194, 240, 60, 0.12);
+    background: rgba(0, 142, 204, 0.12);
     color: var(--lime);
-    border: 1px solid rgba(194, 240, 60, 0.35);
+    border: 1px solid rgba(0, 142, 204, 0.35);
     padding: 3px 10px;
     border-radius: 9999px;
 }
@@ -896,8 +896,8 @@
     align-items: center;
     font-size: 0.75rem;
     color: var(--muted);
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.07);
     padding: 3px 9px;
     border-radius: 8px;
 }
@@ -913,17 +913,17 @@
     font-weight: 700;
     padding: 3px 10px;
     border-radius: 999px;
-    background: rgba(194, 240, 60, 0.14);
+    background: rgba(0, 142, 204, 0.14);
     color: var(--lime);
-    border: 1px solid rgba(194, 240, 60, 0.3);
+    border: 1px solid rgba(0, 142, 204, 0.3);
 }
 .stock-total-badge.sold-badge {
     background: rgba(239, 68, 68, 0.15);
-    color: #ff6b6b;
+    color: #dc3545;
     border-color: rgba(239, 68, 68, 0.4);
 }
 .stock-breakdown-card {
-    background: #081209;
+    background: #f5f7f9;
     border: 1px solid var(--line);
     border-radius: 12px;
     padding: 10px 12px;
@@ -934,8 +934,8 @@
 }
 .stock-breakdown-card.depleted {
     opacity: 0.45;
-    background: #140d0d;
-    border-color: #2b1717;
+    background: #fff5f4;
+    border-color: #fff1f0;
 }
 .stock-card-icon {
     width: 32px;
@@ -948,7 +948,7 @@
 }
 .stock-card-icon.male-icon {
     background: rgba(13, 202, 240, 0.12);
-    color: #0dcaf0;
+    color: #0a8fb0;
 }
 .stock-card-icon.female-icon {
     background: rgba(220, 53, 69, 0.12);
@@ -971,7 +971,7 @@
     gap: 8px;
 }
 .spec-cell {
-    background: #081209;
+    background: #f5f7f9;
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 9px 12px;
@@ -997,8 +997,8 @@
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: #192b1b;
-    border: 1.5px solid rgba(194, 240, 60, 0.4);
+    background: #e5f4fb;
+    border: 1.5px solid rgba(0, 142, 204, 0.4);
     color: var(--lime);
     display: grid;
     place-items: center;
@@ -1014,9 +1014,9 @@
 .badge-seller-tag {
     font-size: 0.65rem;
     font-weight: 700;
-    background: rgba(194, 240, 60, 0.12);
+    background: rgba(0, 142, 204, 0.12);
     color: var(--lime);
-    border: 1px solid rgba(194, 240, 60, 0.3);
+    border: 1px solid rgba(0, 142, 204, 0.3);
     padding: 1px 6px;
     border-radius: 999px;
 }
@@ -1042,8 +1042,8 @@
     transition: all 0.2s ease;
 }
 .seller-contact-btn.btn-call {
-    background: rgba(194, 240, 60, 0.12);
-    border: 1px solid rgba(194, 240, 60, 0.35);
+    background: rgba(0, 142, 204, 0.12);
+    border: 1px solid rgba(0, 142, 204, 0.35);
     color: var(--lime);
 }
 .seller-contact-btn.btn-call:hover {
@@ -1054,11 +1054,11 @@
 .seller-contact-btn.btn-tg {
     background: rgba(13, 202, 240, 0.12);
     border: 1px solid rgba(13, 202, 240, 0.35);
-    color: #0dcaf0;
+    color: #0a8fb0;
 }
 .seller-contact-btn.btn-tg:hover {
-    background: #0dcaf0;
-    color: #05161c;
+    background: #0a8fb0;
+    color: #f3f9fb;
     font-weight: 700;
 }
 
@@ -1082,17 +1082,17 @@
 .btn-main-buy {
     background: var(--lime);
     color: var(--ink);
-    box-shadow: 0 6px 20px rgba(194, 240, 60, 0.28);
+    box-shadow: 0 6px 20px rgba(0, 142, 204, 0.28);
 }
 .btn-main-buy:hover {
-    background: #d4f564;
+    background: #0073a8;
     transform: translateY(-2px);
-    box-shadow: 0 8px 26px rgba(194, 240, 60, 0.4);
+    box-shadow: 0 8px 26px rgba(0, 142, 204, 0.4);
 }
 .btn-main-sold {
-    background: #2b1717;
-    color: #ff6b6b;
-    border: 1px solid #4a1f1f;
+    background: #fff1f0;
+    color: #dc3545;
+    border: 1px solid #ffd6d1;
     cursor: not-allowed;
 }
 
@@ -1126,16 +1126,16 @@
 }
 .btn-sub-chat {
     padding: 0 16px;
-    background: rgba(194, 240, 60, 0.08);
-    border-color: rgba(194, 240, 60, 0.3);
+    background: rgba(0, 142, 204, 0.08);
+    border-color: rgba(0, 142, 204, 0.3);
     color: var(--lime);
 }
 .btn-sub-chat:hover {
-    background: rgba(194, 240, 60, 0.18);
+    background: rgba(0, 142, 204, 0.18);
     color: var(--lime);
 }
 .btn-sub-edit {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(0, 0, 0, 0.04);
     color: var(--muted);
 }
 .btn-sub-edit:hover {
@@ -1147,19 +1147,19 @@
     font-size: 0.76rem;
 }
 .guest-action-card {
-    background: rgba(13, 24, 14, 0.75);
+    background: rgba(255, 255, 255, 0.75);
     border: 1px dashed var(--line);
 }
 
 /* Buy Modal Customization */
 .modal-buy-custom {
-    background: #0d180e !important;
+    background: #ffffff !important;
     border: 1px solid var(--line) !important;
     color: var(--cream);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important;
 }
 .post-summary-card {
-    background: #081209;
+    background: #f5f7f9;
     border: 1px solid var(--line);
     border-radius: 12px;
     padding: 12px 14px;
@@ -1171,7 +1171,7 @@
 }
 .buyer-gender-card .gender-card-inner {
     border: 1.5px solid var(--line);
-    background: #081209;
+    background: #f5f7f9;
     border-radius: 12px;
     padding: 12px;
     text-align: center;
@@ -1183,8 +1183,8 @@
 }
 .buyer-gender-card input:checked + .gender-card-inner {
     border-color: var(--lime);
-    background: rgba(194, 240, 60, 0.12);
-    box-shadow: 0 0 12px rgba(194, 240, 60, 0.2);
+    background: rgba(0, 142, 204, 0.12);
+    box-shadow: 0 0 12px rgba(0, 142, 204, 0.2);
 }
 .buyer-gender-card.disabled {
     cursor: not-allowed;
@@ -1204,7 +1204,7 @@
 .buyer-quantity-stepper {
     display: flex;
     align-items: center;
-    background: #081209;
+    background: #f5f7f9;
     border: 1.5px solid var(--line);
     border-radius: 12px;
     overflow: hidden;
@@ -1225,7 +1225,7 @@
     transition: background 0.2s ease;
 }
 .btn-stepper:hover {
-    background: rgba(194, 240, 60, 0.15);
+    background: rgba(0, 142, 204, 0.15);
 }
 .btn-stepper:disabled {
     opacity: 0.25;
@@ -1243,7 +1243,7 @@
 
 /* Total Panel */
 .buyer-total-panel {
-    background: #050c06;
+    background: #f5f7f9;
     border: 1px solid var(--line);
 }
 .btn-buy-confirm {
@@ -1254,7 +1254,7 @@
     transition: all 0.2s ease;
 }
 .btn-buy-confirm:hover {
-    background: #d4f564;
+    background: #0073a8;
     color: var(--ink);
     transform: translateY(-1px);
 }

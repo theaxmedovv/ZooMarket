@@ -26,11 +26,58 @@ class ExampleTest extends TestCase
     }
 
     /**
-     * Test that home page redirects to posts page
+     * Test that the storefront home page loads for guests
      */
-    public function test_home_redirects_to_posts(): void
+    public function test_home_page_loads(): void
     {
         $response = $this->get('/');
+
+        $response->assertStatus(200);
+        $response->assertSee('ZooMarket');
+    }
+
+    /**
+     * Test that the home page shows approved listings and categories
+     */
+    public function test_home_page_shows_approved_listings(): void
+    {
+        $seller = User::factory()->create();
+        $seller->assignRole('seller');
+
+        Post::create([
+            'title' => 'Kuchuk bola',
+            'category_id' => 1,
+            'breed' => 'Labrador',
+            'gender' => 'male',
+            'description' => 'Sog\'lom kuchukcha',
+            'price' => 1500000,
+            'currency' => 'UZS',
+            'location' => 'Toshkent',
+            'status' => 'active',
+            'moderation_status' => 'approved',
+            'user_id' => $seller->id,
+        ]);
+
+        $buyer = User::factory()->create();
+        $buyer->assignRole('user');
+
+        $response = $this->actingAs($buyer)->get('/');
+
+        $response->assertStatus(200);
+        $response->assertSee('Kuchuk bola');
+        $response->assertSee('Big Cats');
+        $response->assertSee('1 500 000');
+    }
+
+    /**
+     * Test that sellers are sent to their listings instead of the storefront
+     */
+    public function test_home_redirects_sellers_to_posts(): void
+    {
+        $seller = User::factory()->create();
+        $seller->assignRole('seller');
+
+        $response = $this->actingAs($seller)->get('/');
 
         $response->assertRedirect(route('posts.index'));
     }

@@ -219,8 +219,8 @@
     .text-cream { color: var(--cream) !important; }
     .text-lime { color: var(--lime) !important; }
     .text-muted { color: var(--muted) !important; }
-    .bg-primary-soft { background: rgba(194, 240, 60, 0.12) !important; color: var(--lime) !important; }
-    .bg-panel-soft { background: rgba(255,255,255,0.04) !important; color: var(--muted) !important; }
+    .bg-primary-soft { background: rgba(0, 142, 204, 0.12) !important; color: var(--lime) !important; }
+    .bg-panel-soft { background: rgba(0, 0, 0, 0.04) !important; color: var(--muted) !important; }
     .hover-lime:hover { color: var(--lime) !important; }
     .border-danger-subtle { border-color: rgba(255, 107, 43, 0.35) !important; }
     .text-line { color: rgba(255,255,255,.22); }
@@ -235,7 +235,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 20px;
-        background: linear-gradient(135deg, rgba(12, 18, 13, 0.96), rgba(16, 29, 18, 0.96));
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.96));
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 24px 24px 20px;
@@ -250,7 +250,7 @@
         width: 220px;
         height: 220px;
         border-radius: 50%;
-        background: rgba(194, 240, 60, 0.08);
+        background: rgba(0, 142, 204, 0.08);
         filter: blur(12px);
     }
 
@@ -260,12 +260,12 @@
         width: 110px;
         height: 110px;
         border-radius: 28px;
-        border: 1px solid rgba(194, 240, 60, 0.35);
-        background: rgba(194, 240, 60, 0.08);
+        border: 1px solid rgba(0, 142, 204, 0.35);
+        background: rgba(0, 142, 204, 0.08);
         display: grid;
         place-items: center;
         overflow: hidden;
-        box-shadow: 0 16px 30px rgba(0,0,0,0.2);
+        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.12);
     }
 
     .profile-avatar-image,
@@ -280,7 +280,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, var(--lime), #dff77c);
+        background: linear-gradient(135deg, var(--lime), #0073a8);
         color: var(--ink);
         font-size: 2.4rem;
         font-weight: 800;
@@ -295,7 +295,7 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
-        box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
     }
 
     .metric-icon {
@@ -307,10 +307,10 @@
         font-size: 1.05rem;
     }
 
-    .icon-mail { background: rgba(194, 240, 60, 0.12); color: var(--lime); }
+    .icon-mail { background: rgba(0, 142, 204, 0.12); color: var(--lime); }
     .icon-phone { background: rgba(255, 107, 43, 0.12); color: var(--orange); }
-    .icon-heart { background: rgba(255, 90, 120, 0.12); color: #ff8faa; }
-    .icon-telegram { background: rgba(94, 164, 255, 0.12); color: #7bb8ff; }
+    .icon-heart { background: rgba(255, 90, 120, 0.12); color: #d63384; }
+    .icon-telegram { background: rgba(94, 164, 255, 0.12); color: #1a6fd1; }
 
     .metric-label {
         color: var(--muted);
@@ -339,7 +339,7 @@
         border: 1px solid var(--line);
         border-radius: 16px;
         padding: 20px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
     .panel-header {
@@ -403,7 +403,7 @@
         width: 62px;
         height: 62px;
         border-radius: 12px;
-        background: rgba(194, 240, 60, 0.08);
+        background: rgba(0, 142, 204, 0.08);
         border: 1px solid var(--line);
         display: grid;
         place-items: center;
@@ -439,7 +439,7 @@
     .profile-action-btn:hover {
         border-color: var(--lime);
         color: var(--lime);
-        background: rgba(194, 240, 60, 0.08);
+        background: rgba(0, 142, 204, 0.08);
     }
 
     .profile-action-btn.delete-btn:hover {
@@ -454,7 +454,7 @@
     .profile-input {
         width: 100%;
         border-radius: 10px;
-        background: #0a130b;
+        background: #ffffff;
         border: 1px solid var(--line);
         color: var(--cream);
         min-height: 42px;
@@ -464,9 +464,9 @@
     }
 
     .profile-input:focus {
-        background: #0a130b;
+        background: #ffffff;
         border-color: var(--lime);
-        box-shadow: 0 0 0 3px rgba(194, 240, 60, 0.12);
+        box-shadow: 0 0 0 3px rgba(0, 142, 204, 0.12);
         color: var(--cream);
     }
 
@@ -478,7 +478,7 @@
         padding: 46px 20px 30px;
         border: 1px dashed var(--line);
         border-radius: 16px;
-        background: rgba(255,255,255,0.02);
+        background: rgba(0, 0, 0, 0.02);
         text-align: center;
     }
 

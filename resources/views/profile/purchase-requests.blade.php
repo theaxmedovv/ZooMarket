@@ -256,7 +256,7 @@
     .text-cream { color: var(--cream) !important; }
     .text-lime { color: var(--lime) !important; }
     .text-orange { color: var(--orange) !important; }
-    .bg-primary-soft { background: rgba(194, 240, 60, 0.15) !important; color: var(--lime) !important; }
+    .bg-primary-soft { background: rgba(0, 142, 204, 0.15) !important; color: var(--lime) !important; }
     .hover-lime:hover { color: var(--lime) !important; }
 
     .btn-panel-link {
@@ -275,7 +275,7 @@
     .btn-panel-link:hover {
         border-color: var(--lime);
         color: var(--lime);
-        background: rgba(194, 240, 60, 0.08);
+        background: rgba(0, 142, 204, 0.08);
     }
 
     /* Tabs */
@@ -289,7 +289,7 @@
 
     .admin-tab-item {
         padding: 8px 14px;
-        background: rgba(255,255,255,0.02);
+        background: rgba(0, 0, 0, 0.02);
         border: 1px solid var(--line);
         border-radius: 12px;
         color: var(--muted);
@@ -303,20 +303,20 @@
     }
 
     .admin-tab-item:hover {
-        border-color: rgba(194, 240, 60, 0.45);
+        border-color: rgba(0, 142, 204, 0.45);
         color: var(--cream);
-        background: rgba(194, 240, 60, 0.04);
+        background: rgba(0, 142, 204, 0.04);
     }
 
     .admin-tab-item.active {
-        background: rgba(194, 240, 60, 0.12);
-        border-color: rgba(194, 240, 60, 0.5);
+        background: rgba(0, 142, 204, 0.12);
+        border-color: rgba(0, 142, 204, 0.5);
         color: var(--lime);
-        box-shadow: inset 0 0 0 1px rgba(194, 240, 60, 0.12);
+        box-shadow: inset 0 0 0 1px rgba(0, 142, 204, 0.12);
     }
 
     .tab-count {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.08);
         color: var(--cream);
         padding: 1px 7px;
         border-radius: 100px;
@@ -338,18 +338,18 @@
     }
 
     .order-card {
-        background: linear-gradient(180deg, rgba(13, 24, 14, 0.96) 0%, rgba(9, 16, 11, 0.98) 100%);
-        border: 1px solid rgba(255,255,255,0.06);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.98) 100%);
+        border: 1px solid rgba(0, 0, 0, 0.06);
         border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
         transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
     }
 
     .order-card:hover {
-        border-color: rgba(194, 240, 60, 0.4);
+        border-color: rgba(0, 142, 204, 0.4);
         transform: translateY(-2px);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
     }
 
     .order-card-approved {
@@ -362,8 +362,8 @@
 
     .order-card-header {
         padding: 14px 18px;
-        background: rgba(7, 15, 9, 0.85);
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.85);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -375,7 +375,7 @@
         font-family: monospace;
         font-weight: 700;
         color: var(--cream);
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.05);
         padding: 5px 9px;
         border-radius: 8px;
         font-size: 0.78rem;
@@ -391,7 +391,7 @@
     }
 
     .order-relative-time {
-        color: rgba(238, 233, 222, 0.72);
+        color: rgba(34, 34, 34, 0.72);
         margin-left: 3px;
     }
 
@@ -405,8 +405,8 @@
         height: 96px;
         border-radius: 16px;
         overflow: hidden;
-        background: #071108;
-        border: 1px solid rgba(255,255,255,0.05);
+        background: #f5f7f9;
+        border: 1px solid rgba(0, 0, 0, 0.05);
         position: relative;
         display: flex;
         align-items: center;
@@ -440,9 +440,9 @@
     }
 
     .badge-cat-tag {
-        background: rgba(194, 240, 60, 0.1);
+        background: rgba(0, 142, 204, 0.1);
         color: var(--lime);
-        border: 1px solid rgba(194, 240, 60, 0.2);
+        border: 1px solid rgba(0, 142, 204, 0.2);
         padding: 4px 9px;
         border-radius: 999px;
         font-size: 0.7rem;
@@ -450,7 +450,7 @@
     }
 
     .badge-sub-tag {
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(0, 0, 0, 0.04);
         color: var(--muted);
         border: 1px solid var(--line);
         padding: 4px 8px;
@@ -484,19 +484,19 @@
         width: 28px;
         height: 28px;
         border-radius: 50%;
-        background: linear-gradient(135deg, rgba(194,240,60,0.22), rgba(255,255,255,0.04));
+        background: linear-gradient(135deg, rgba(0, 142, 204, 0.22), rgba(0, 0, 0, 0.04));
         color: var(--lime);
         display: grid;
         place-items: center;
         font-size: 0.72rem;
         font-weight: 800;
         flex-shrink: 0;
-        border: 1px solid rgba(194,240,60,0.3);
+        border: 1px solid rgba(0, 142, 204, 0.3);
     }
 
     .order-price-panel {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.04);
+        background: rgba(0, 0, 0, 0.02);
+        border: 1px solid rgba(0, 0, 0, 0.04);
         border-radius: 14px;
         padding: 10px 12px;
         min-width: 122px;
@@ -536,19 +536,19 @@
     }
 
     .badge-approved {
-        background: rgba(194, 240, 60, 0.14);
+        background: rgba(0, 142, 204, 0.14);
         color: var(--lime);
-        border: 1px solid rgba(194, 240, 60, 0.35);
+        border: 1px solid rgba(0, 142, 204, 0.35);
     }
 
     .badge-sold {
         background: rgba(110, 142, 255, 0.12);
-        color: #aad1ff;
+        color: #1a6fd1;
         border: 1px solid rgba(110, 142, 255, 0.35);
     }
 
     .badge-rejected {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.05);
         color: var(--muted);
         border: 1px solid var(--line);
     }
@@ -570,8 +570,8 @@
     /* Order Card Footer */
     .order-card-footer {
         padding: 14px 18px;
-        background: rgba(6, 14, 8, 0.9);
-        border-top: 1px solid rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.9);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -614,21 +614,21 @@
         color: var(--cream);
     }
     .btn-view-post:hover {
-        border-color: rgba(194, 240, 60, 0.45);
+        border-color: rgba(0, 142, 204, 0.45);
         color: var(--lime);
-        background: rgba(194, 240, 60, 0.06);
+        background: rgba(0, 142, 204, 0.06);
     }
 
     .btn-open-chat {
         background: var(--lime);
         color: var(--ink);
         border: 0;
-        box-shadow: 0 4px 12px rgba(194, 240, 60, 0.25);
+        box-shadow: 0 4px 12px rgba(0, 142, 204, 0.25);
     }
     .btn-open-chat:hover {
-        background: #d7ff62;
+        background: #0073a8;
         transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(194, 240, 60, 0.35);
+        box-shadow: 0 6px 18px rgba(0, 142, 204, 0.35);
     }
 
     .badge-unread-pill {

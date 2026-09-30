@@ -275,7 +275,7 @@
     .btn-panel-link:hover {
         border-color: var(--lime);
         color: var(--lime);
-        background: rgba(194, 240, 60, 0.08);
+        background: rgba(0, 142, 204, 0.08);
     }
 
     /* Tab navigation */
@@ -303,18 +303,18 @@
     }
 
     .admin-tab-item:hover {
-        border-color: rgba(194, 240, 60, 0.4);
+        border-color: rgba(0, 142, 204, 0.4);
         color: var(--cream);
     }
 
     .admin-tab-item.active {
-        background: rgba(194, 240, 60, 0.1);
+        background: rgba(0, 142, 204, 0.1);
         border-color: var(--lime);
         color: var(--lime);
     }
 
     .tab-count {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.08);
         color: var(--cream);
         padding: 1px 7px;
         border-radius: 100px;
@@ -332,7 +332,7 @@
         border: 1px solid var(--line);
         border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
     }
 
     .table-custom {
@@ -341,7 +341,7 @@
     }
 
     .table-custom th {
-        background: #081209;
+        background: #f5f7f9;
         color: var(--muted);
         font-size: 0.75rem;
         font-weight: 700;
@@ -359,14 +359,14 @@
     }
 
     .table-custom tbody tr:hover {
-        background: rgba(255, 255, 255, 0.02);
+        background: rgba(0, 0, 0, 0.02);
     }
 
     .user-avatar-circle {
         width: 34px;
         height: 34px;
         border-radius: 50%;
-        background: #1c2e1e;
+        background: #e5f4fb;
         color: var(--lime);
         display: grid;
         place-items: center;
@@ -380,7 +380,7 @@
         height: 42px;
         border-radius: 8px;
         overflow: hidden;
-        background: #060d07;
+        background: #ffffff;
         border: 1px solid var(--line);
         display: grid;
         place-items: center;
@@ -409,13 +409,13 @@
     }
 
     .badge-approved {
-        background: rgba(194, 240, 60, 0.15);
+        background: rgba(0, 142, 204, 0.15);
         color: var(--lime);
-        border: 1px solid rgba(194, 240, 60, 0.3);
+        border: 1px solid rgba(0, 142, 204, 0.3);
     }
 
     .badge-rejected {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.05);
         color: var(--muted);
         border: 1px solid var(--line);
     }
@@ -441,28 +441,28 @@
         color: var(--ink);
     }
     .btn-approve:hover {
-        background: #d7ff62;
+        background: #0073a8;
         transform: translateY(-1px);
     }
 
     .btn-reject {
         background: rgba(255, 60, 60, 0.15);
-        color: #ff6666;
+        color: #dc3545;
         border: 1px solid rgba(255, 60, 60, 0.3);
     }
     .btn-reject:hover {
-        background: #ff5555;
+        background: #dc3545;
         color: #fff;
     }
 
     .btn-chat {
-        background: #1c2e1e;
+        background: #e5f4fb;
         color: var(--lime);
-        border: 1px solid rgba(194, 240, 60, 0.3);
+        border: 1px solid rgba(0, 142, 204, 0.3);
         position: relative;
     }
     .btn-chat:hover {
-        background: rgba(194, 240, 60, 0.2);
+        background: rgba(0, 142, 204, 0.2);
         color: var(--lime);
     }
 
@@ -477,7 +477,7 @@
     .admin-table-footer {
         padding: 14px 18px;
         border-top: 1px solid var(--line);
-        background: #081209;
+        background: #f5f7f9;
     }
 </style>
 @endsection

@@ -8,7 +8,7 @@
             <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="badge bg-secondary text-light fw-bold px-2 py-1 rounded-pill"><i class="bi bi-archive me-1"></i> Arxiv</span>
                 <h1 class="h3 fw-bold mb-0 text-cream font-serif">Arxivdagi e'lonlar</h1>
-                <span class="badge bg-dark border border-secondary text-muted px-2 py-1 rounded-pill small">
+                <span class="badge bg-light border text-muted px-2 py-1 rounded-pill small">
                     <i class="bi bi-lock-fill me-1"></i> Faqat o'qish uchun (Read-only)
                 </span>
             </div>
@@ -261,7 +261,7 @@
     .font-serif { font-family: var(--serif); }
     .text-cream { color: var(--cream) !important; }
     .text-lime { color: var(--lime) !important; }
-    .bg-lime-soft { background: rgba(194, 240, 60, 0.12); }
+    .bg-lime-soft { background: rgba(0, 142, 204, 0.12); }
     .bg-orange-soft { background: rgba(255, 107, 43, 0.12); }
     .text-orange { color: var(--orange) !important; }
     .hover-lime:hover { color: var(--lime) !important; }
@@ -282,7 +282,7 @@
     .btn-panel-link:hover {
         border-color: var(--lime);
         color: var(--lime);
-        background: rgba(194, 240, 60, 0.08);
+        background: rgba(0, 142, 204, 0.08);
     }
 
     /* Stat Cards */
@@ -320,7 +320,7 @@
         border: 1px solid var(--line);
         border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
     }
 
     .table-custom {
@@ -329,7 +329,7 @@
     }
 
     .table-custom th {
-        background: #081209;
+        background: #f5f7f9;
         color: var(--muted);
         font-size: 0.75rem;
         font-weight: 700;
@@ -347,7 +347,7 @@
     }
 
     .table-custom tbody tr:hover {
-        background: rgba(255, 255, 255, 0.02);
+        background: rgba(0, 0, 0, 0.02);
     }
 
     .animal-thumb-mini {
@@ -355,7 +355,7 @@
         height: 46px;
         border-radius: 10px;
         overflow: hidden;
-        background: #060d07;
+        background: #ffffff;
         border: 1px solid var(--line);
         display: grid;
         place-items: center;
@@ -368,7 +368,7 @@
     }
 
     .badge-cat-pill {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.05);
         color: var(--muted);
         border: 1px solid var(--line);
         border-radius: 100px;
@@ -378,9 +378,9 @@
     }
 
     .badge-readonly-tag {
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(0, 0, 0, 0.04);
         color: var(--muted);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
         border-radius: 4px;
         padding: 1px 5px;
         font-size: 0.65rem;
@@ -392,7 +392,7 @@
         font-size: 0.72rem;
         font-weight: 700;
         color: var(--cream);
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.05);
         padding: 2px 6px;
         border-radius: 6px;
         display: inline-block;
@@ -402,7 +402,7 @@
         width: 28px;
         height: 28px;
         border-radius: 50%;
-        background: #1c2e1e;
+        background: #e5f4fb;
         color: var(--lime);
         display: grid;
         place-items: center;
@@ -428,7 +428,7 @@
     }
 
     .badge-archived {
-        background: rgba(255, 255, 255, 0.06);
+        background: rgba(0, 0, 0, 0.06);
         color: var(--muted);
         border: 1px solid var(--line);
     }
@@ -457,12 +457,12 @@
     .btn-view:hover {
         border-color: var(--lime);
         color: var(--lime);
-        background: rgba(194, 240, 60, 0.06);
+        background: rgba(0, 142, 204, 0.06);
     }
 
     .btn-chat-hist {
-        background: rgba(194, 240, 60, 0.1);
-        border: 1px solid rgba(194, 240, 60, 0.25);
+        background: rgba(0, 142, 204, 0.1);
+        border: 1px solid rgba(0, 142, 204, 0.25);
         color: var(--lime);
     }
     .btn-chat-hist:hover {
@@ -473,7 +473,7 @@
     .admin-table-footer {
         padding: 14px 18px;
         border-top: 1px solid var(--line);
-        background: #081209;
+        background: #f5f7f9;
     }
 </style>
 @endsection

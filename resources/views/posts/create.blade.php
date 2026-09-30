@@ -49,7 +49,7 @@
     @endif
 
     {{-- AI Moderation Notice --}}
-    <div class="alert border border-lime border-opacity-25 rounded-4 p-3 mb-4" style="background: rgba(194, 240, 60, 0.05);">
+    <div class="alert border border-lime border-opacity-25 rounded-4 p-3 mb-4" style="background: rgba(0, 142, 204, 0.05);">
         <div class="d-flex align-items-center gap-3">
             <div class="rounded-circle p-2 bg-lime-soft text-lime flex-shrink-0">
                 <i class="bi bi-robot fs-4"></i>
@@ -532,25 +532,25 @@
 
 <style>
     :root {
-        --ink: #060d07;
-        --panel: #0d180e;
-        --line: #1a2b1c;
-        --lime: #c2f03c;
+        --ink: #ffffff;
+        --panel: #ffffff;
+        --line: #ededed;
+        --lime: #008ecc;
         --orange: #ff6b2b;
-        --cream: #eee9de;
-        --muted: #7a9a7d;
+        --cream: #222222;
+        --muted: #666666;
         --serif: 'Space Grotesk', sans-serif;
         --sans: 'DM Sans', sans-serif;
     }
 
     .font-serif { font-family: var(--serif); }
     .text-cream { color: var(--cream) !important; }
-    .text-cream-50 { color: rgba(238, 233, 222, 0.7) !important; }
+    .text-cream-50 { color: rgba(34, 34, 34, 0.7) !important; }
     .text-lime { color: var(--lime) !important; }
     .text-orange { color: var(--orange) !important; }
     .text-muted { color: var(--muted) !important; }
-    .bg-lime-soft { background: rgba(194, 240, 60, 0.12) !important; }
-    .bg-panel-soft { background: rgba(255, 255, 255, 0.04) !important; }
+    .bg-lime-soft { background: rgba(0, 142, 204, 0.12) !important; }
+    .bg-panel-soft { background: rgba(0, 0, 0, 0.04) !important; }
     .py-1-5 { padding-top: 0.38rem; padding-bottom: 0.38rem; }
 
     /* Navigation */
@@ -560,7 +560,7 @@
         gap: 6px;
         padding: 6px 13px;
         border-radius: 9999px;
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(0, 0, 0, 0.04);
         border: 1px solid var(--line);
         color: var(--muted);
         text-decoration: none;
@@ -571,13 +571,13 @@
     .btn-back-link:hover {
         border-color: var(--lime);
         color: var(--lime);
-        background: rgba(194, 240, 60, 0.08);
+        background: rgba(0, 142, 204, 0.08);
         transform: translateX(-2px);
     }
 
     /* Hero Banner */
     .create-hero-banner {
-        background: linear-gradient(135deg, rgba(13, 24, 14, 0.95), rgba(18, 36, 20, 0.95));
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95));
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 24px 28px;
@@ -591,7 +591,7 @@
         width: 260px;
         height: 260px;
         border-radius: 50%;
-        background: rgba(194, 240, 60, 0.08);
+        background: rgba(0, 142, 204, 0.08);
         filter: blur(14px);
     }
     .create-hero-title {
@@ -624,11 +624,11 @@
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 22px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         transition: border-color 0.2s ease;
     }
     .form-section-card:hover {
-        border-color: rgba(194, 240, 60, 0.25);
+        border-color: rgba(0, 142, 204, 0.25);
     }
     .section-card-header {
         display: flex;
@@ -642,7 +642,7 @@
         width: 40px;
         height: 40px;
         border-radius: 12px;
-        background: rgba(194, 240, 60, 0.1);
+        background: rgba(0, 142, 204, 0.1);
         color: var(--lime);
         display: grid;
         place-items: center;
@@ -697,7 +697,7 @@
     .custom-form-select,
     .custom-form-textarea {
         width: 100%;
-        background: #081209;
+        background: #f5f7f9;
         border: 1px solid var(--line);
         border-radius: 10px;
         color: var(--cream);
@@ -711,18 +711,18 @@
     .custom-form-select:focus,
     .custom-form-textarea:focus {
         border-color: var(--lime);
-        box-shadow: 0 0 0 3px rgba(194, 240, 60, 0.14);
+        box-shadow: 0 0 0 3px rgba(0, 142, 204, 0.14);
     }
     .custom-form-input::placeholder,
     .custom-form-textarea::placeholder {
-        color: #536d56;
+        color: #9a9a9a;
     }
     .custom-form-select {
         cursor: pointer;
         padding-right: 30px;
     }
     .custom-form-select option {
-        background: #0d180e;
+        background: #ffffff;
         color: var(--cream);
     }
 
@@ -737,7 +737,7 @@
     /* Gender Segmented Control */
     .gender-segmented-control {
         display: flex;
-        background: #081209;
+        background: #f5f7f9;
         border: 1px solid var(--line);
         border-radius: 10px;
         padding: 3px;
@@ -772,13 +772,13 @@
         background: var(--lime);
         color: var(--ink);
         font-weight: 700;
-        box-shadow: 0 2px 8px rgba(194, 240, 60, 0.25);
+        box-shadow: 0 2px 8px rgba(0, 142, 204, 0.25);
     }
 
     /* Mixed Gender Breakdown Box */
     .mixed-split-box {
-        background: #081209;
-        border: 1px dashed rgba(194, 240, 60, 0.35);
+        background: #f5f7f9;
+        border: 1px dashed rgba(0, 142, 204, 0.35);
         border-radius: 12px;
         padding: 16px;
         margin-top: 4px;
@@ -788,15 +788,15 @@
         border-radius: 999px;
         font-size: 0.74rem;
         font-weight: 700;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.05);
         color: var(--muted);
         border: 1px solid var(--line);
         transition: all 0.2s ease;
     }
     .mixed-sum-status.valid {
-        background: rgba(194, 240, 60, 0.15);
+        background: rgba(0, 142, 204, 0.15);
         color: var(--lime);
-        border-color: rgba(194, 240, 60, 0.4);
+        border-color: rgba(0, 142, 204, 0.4);
     }
     .mixed-sum-status.invalid {
         background: rgba(255, 107, 43, 0.15);
@@ -808,7 +808,7 @@
     .price-input-group {
         display: flex;
         align-items: center;
-        background: #081209;
+        background: #f5f7f9;
         border: 1px solid var(--line);
         border-radius: 10px;
         overflow: hidden;
@@ -816,7 +816,7 @@
     }
     .price-input-group:focus-within {
         border-color: var(--lime);
-        box-shadow: 0 0 0 3px rgba(194, 240, 60, 0.14);
+        box-shadow: 0 0 0 3px rgba(0, 142, 204, 0.14);
     }
     .price-input-wrap {
         position: relative;
@@ -833,7 +833,7 @@
     }
     .currency-select {
         height: 44px;
-        background: #0d180e;
+        background: #ffffff;
         border: none;
         border-left: 1px solid var(--line);
         color: var(--lime);
@@ -844,7 +844,7 @@
         cursor: pointer;
     }
     .currency-select option {
-        background: #0d180e;
+        background: #ffffff;
         color: var(--cream);
     }
 
@@ -855,7 +855,7 @@
         gap: 12px;
         height: 44px;
         padding: 0 14px;
-        background: #081209;
+        background: #f5f7f9;
         border: 1px solid var(--line);
         border-radius: 10px;
         cursor: pointer;
@@ -864,7 +864,7 @@
         transition: border-color 0.2s ease;
     }
     .negotiable-toggle-box:hover {
-        border-color: rgba(194, 240, 60, 0.3);
+        border-color: rgba(0, 142, 204, 0.3);
     }
     .negotiable-checkbox {
         display: none;
@@ -872,7 +872,7 @@
     .toggle-track {
         width: 38px;
         height: 22px;
-        background: #192b1b;
+        background: #e5f4fb;
         border-radius: 999px;
         position: relative;
         transition: background 0.2s ease;
@@ -916,7 +916,7 @@
         height: 150px;
         border-radius: 14px;
         border: 1.5px dashed var(--line);
-        background: #081209;
+        background: #f5f7f9;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -927,22 +927,22 @@
     }
     .image-upload-slot:hover {
         border-color: var(--lime);
-        background: rgba(194, 240, 60, 0.03);
+        background: rgba(0, 142, 204, 0.03);
     }
     .image-upload-slot.slot-main {
-        border-color: rgba(194, 240, 60, 0.35);
+        border-color: rgba(0, 142, 204, 0.35);
     }
     .upload-badge {
         position: absolute;
         top: 8px;
         left: 8px;
-        background: rgba(194, 240, 60, 0.15);
+        background: rgba(0, 142, 204, 0.15);
         color: var(--lime);
         font-size: 0.65rem;
         font-weight: 700;
         padding: 2px 8px;
         border-radius: 999px;
-        border: 1px solid rgba(194, 240, 60, 0.3);
+        border: 1px solid rgba(0, 142, 204, 0.3);
         z-index: 2;
         pointer-events: none;
     }
@@ -992,7 +992,7 @@
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.75);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #ff5555;
+        color: #dc3545;
         display: grid;
         place-items: center;
         font-size: 0.8rem;
@@ -1008,7 +1008,7 @@
 
     /* Quick Description Pills */
     .quick-pill-btn {
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(0, 0, 0, 0.04);
         border: 1px solid var(--line);
         border-radius: 9999px;
         color: var(--muted);
@@ -1019,7 +1019,7 @@
         transition: all 0.15s ease;
     }
     .quick-pill-btn:hover {
-        background: rgba(194, 240, 60, 0.09);
+        background: rgba(0, 142, 204, 0.09);
         border-color: var(--lime);
         color: var(--lime);
         transform: translateY(-1px);
@@ -1041,12 +1041,12 @@
         align-items: center;
         cursor: pointer;
         transition: all 0.2s ease;
-        box-shadow: 0 4px 18px rgba(194, 240, 60, 0.25);
+        box-shadow: 0 4px 18px rgba(0, 142, 204, 0.25);
     }
     .btn-submit-post:hover {
-        background: #d8ff61;
+        background: #0073a8;
         transform: translateY(-2px);
-        box-shadow: 0 6px 22px rgba(194, 240, 60, 0.35);
+        box-shadow: 0 6px 22px rgba(0, 142, 204, 0.35);
     }
     .btn-cancel-post {
         height: 48px;
@@ -1079,7 +1079,7 @@
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 16px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
     .preview-header-bar {
         display: flex;
@@ -1110,9 +1110,9 @@
     }
 
     .tag-negotiable {
-        background: rgba(194, 240, 60, 0.12);
+        background: rgba(0, 142, 204, 0.12);
         color: var(--lime);
-        border: 1px solid rgba(194, 240, 60, 0.3);
+        border: 1px solid rgba(0, 142, 204, 0.3);
         border-radius: 9999px;
         padding: 2px 8px;
         font-size: 0.68rem;
@@ -1121,7 +1121,7 @@
 
     /* Tips Card */
     .tips-card {
-        background: rgba(13, 24, 14, 0.85);
+        background: rgba(255, 255, 255, 0.85);
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 18px;
