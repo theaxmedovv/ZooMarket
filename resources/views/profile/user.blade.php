@@ -1,492 +1,61 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container page-shell">
-    <div class="profile-shell">
-        <div class="profile-header justify-content-start">
-            <div class="profile-avatar-wrap">
-                @if($user->avatar)
-                    <img src="{{ $user->avatarUrl() }}" alt="{{ $user->name }}" class="profile-avatar-image">
-                @else
-                    <div class="profile-avatar-fallback">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</div>
-                @endif
-            </div>
-            <div class="min-w-0">
-                <h1 class="profile-name">{{ $user->name }}</h1>
-                <p class="profile-meta">{{ $user->email }} · Xaridor</p>
-                <p class="profile-sub">Saqlangan e'lonlaringiz va profil sozlamalari.</p>
-            </div>
-        </div>
+<div class="page">
+    @include('profile.partials.header', ['role' => 'Xaridor', 'description' => "Saqlangan e'lonlaringiz va profil sozlamalari."])
 
-        <div class="row g-4 mb-4">
-            <div class="col-12 col-md-4">
-                <div class="metric-card">
-                    <div class="metric-icon icon-phone"><i class="bi bi-telephone-fill"></i></div>
-                    <div class="metric-label">Telefon</div>
-                    <div class="metric-value">{{ $user->phone ?: 'Kiritilmagan' }}</div>
-                </div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="metric-card">
-                    <div class="metric-icon icon-heart"><i class="bi bi-heart-fill"></i></div>
-                    <div class="metric-label">Yoqtirganlar</div>
-                    <div class="metric-value">{{ $user->liked_posts_count ?? 0 }} <span class="metric-small">ta</span></div>
-                </div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="metric-card">
-                    <div class="metric-icon icon-telegram"><i class="bi bi-telegram"></i></div>
-                    <div class="metric-label">Telegram</div>
-                    <div class="metric-value">{{ $user->telegram_username ? '@' . ltrim($user->telegram_username, '@') : 'Kiritilmagan' }}</div>
-                </div>
-            </div>
-        </div>
+    <div class="mb-6 grid gap-6 md:grid-cols-3">
+        <x-metric-card icon="bi-telephone-fill" label="Telefon" tone="bg-accent/12 text-accent">{{ $user->phone ?: 'Kiritilmagan' }}</x-metric-card>
+        <x-metric-card icon="bi-heart-fill" label="Yoqtirganlar" tone="bg-[#ff5a78]/12 text-[#d63384]">{{ $user->liked_posts_count ?? 0 }} <span class="text-xs font-semibold text-muted">ta</span></x-metric-card>
+        <x-metric-card icon="bi-telegram" label="Telegram" tone="bg-[#5ea4ff]/12 text-[#1a6fd1]">{{ $user->telegram_username ? '@' . ltrim($user->telegram_username, '@') : 'Kiritilmagan' }}</x-metric-card>
+    </div>
 
-        <div class="row g-4 align-items-start">
-            <div class="col-12 col-xl-7">
-                <div class="panel-box">
-                    <div class="panel-header">
-                        <div>
-                            <h3 class="panel-title" id="saved">Saqlangan e'lonlar</h3>
-                            <p class="panel-subtitle">Sizga yoqqan mahsulotlar ro'yxati</p>
-                        </div>
-                        <a href="{{ route('posts.index') }}" class="btn-panel-link small-link">
-                            E'lonlarni ko'rish <i class="bi bi-arrow-right ms-1"></i>
-                        </a>
-                    </div>
+    <div class="grid items-start gap-6 xl:grid-cols-12">
+        <x-panel class="xl:col-span-7" title="Saqlangan e'lonlar" title-id="saved" subtitle="Sizga yoqqan mahsulotlar ro'yxati">
+            <x-slot:action>
+                <a href="{{ route('posts.index') }}" class="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-[7px] text-xs font-semibold text-ink transition hover:border-brand hover:bg-brand/8 hover:text-brand">E'lonlarni ko'rish <i class="bi bi-arrow-right"></i></a>
+            </x-slot:action>
 
-                    <div class="profile-list">
-                        @forelse($likedPosts as $post)
-                            <div class="profile-list-item {{ !$loop->last ? 'has-border' : '' }}">
-                                <div class="d-flex align-items-center gap-3 flex-grow-1">
-                                    @if($post->image)
-                                        <img src="{{ $post->imageUrl() }}" alt="{{ $post->title }}" class="liked-post-image">
-                                    @else
-                                        <div class="liked-post-placeholder">
-                                            <i class="bi bi-image"></i>
-                                        </div>
-                                    @endif
-                                    <div class="flex-grow-1 min-w-0">
-                                        <h6 class="profile-post-title mb-1">
-                                            <a href="{{ route('posts.show', $post) }}" class="text-decoration-none text-cream hover-lime">
-                                                {{ $post->title }}
-                                            </a>
-                                        </h6>
-                                        <div class="text-muted small">
-                                            <i class="bi bi-person me-1"></i> {{ $post->user->name }}
-                                            <span class="mx-2 text-line">•</span>
-                                            <i class="bi bi-calendar3 me-1"></i> {{ optional($post->pivot->created_at)->format('d M') }}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex align-items-center gap-2">
-                                    <form action="{{ route('posts.like', $post) }}" method="POST" onsubmit="return confirm('Yoqtirilganlardan o\'chirilsinmi?')">
-                                        @csrf
-                                        <button type="submit" class="profile-action-btn delete-btn" title="O'chirish">
-                                            <i class="bi bi-heart-fill"></i>
-                                        </button>
-                                    </form>
-                                    <a href="{{ route('posts.show', $post) }}" class="profile-action-btn detail-btn">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
+            <div class="divide-y divide-line">
+                @forelse($likedPosts as $post)
+                    <div class="flex items-start justify-between gap-3.5 py-3.5 sm:items-center">
+                        <div class="flex min-w-0 flex-1 items-center gap-3">
+                            @if($post->image)
+                                <img src="{{ $post->imageUrl() }}" alt="{{ $post->title }}" class="size-[62px] shrink-0 rounded-xl border border-line object-cover">
+                            @else
+                                <div class="grid size-[62px] shrink-0 place-items-center rounded-xl border border-line bg-brand/8 text-xl text-muted"><i class="bi bi-image"></i></div>
+                            @endif
+                            <div class="min-w-0 flex-1">
+                                <h6 class="mb-1 truncate text-base leading-snug font-bold">
+                                    <a href="{{ route('posts.show', $post) }}" class="text-ink hover:text-brand">{{ $post->title }}</a>
+                                </h6>
+                                <div class="text-sm text-muted">
+                                    <i class="bi bi-person mr-1"></i> {{ $post->user->name }}
+                                    <span class="mx-2 text-line">•</span>
+                                    <i class="bi bi-calendar3 mr-1"></i> {{ optional($post->pivot->created_at)->format('d M') }}
                                 </div>
                             </div>
-                        @empty
-                            <div class="empty-state">
-                                <div class="empty-icon"><i class="bi bi-heart-break"></i></div>
-                                <h3 class="empty-title">Hozircha yo'q</h3>
-                                <p class="empty-text">Sizga yoqqan e'lonlarni saqlash uchun "Like" tugmasini bosing.</p>
-                                <a href="{{ route('posts.index') }}" class="btn-filter-apply d-inline-flex mt-3 text-decoration-none px-4">
-                                    <i class="bi bi-compass me-1"></i> E'lonlarni ko'rish
-                                </a>
-                            </div>
-                        @endforelse
+                        </div>
+
+                        <div class="flex shrink-0 items-center gap-2">
+                            <form action="{{ route('posts.like', $post) }}" method="POST" onsubmit="return confirm('Yoqtirilganlardan o\'chirilsinmi?')">
+                                @csrf
+                                <button type="submit" title="O'chirish" class="inline-flex size-9 cursor-pointer items-center justify-center rounded-[10px] border border-line text-muted transition hover:border-accent/50 hover:bg-brand/8 hover:text-accent"><i class="bi bi-heart-fill"></i></button>
+                            </form>
+                            <a href="{{ route('posts.show', $post) }}" title="Ko'rish" class="inline-flex size-9 items-center justify-center rounded-[10px] border border-line text-muted transition hover:border-brand hover:bg-brand/8 hover:text-brand"><i class="bi bi-eye"></i></a>
+                        </div>
                     </div>
-                </div>
+                @empty
+                    <x-empty-state icon="bi-heart-break" title="Hozircha yo'q" text="Sizga yoqqan e'lonlarni saqlash uchun “Like” tugmasini bosing.">
+                        <a href="{{ route('posts.index') }}" class="btn btn-primary"><i class="bi bi-compass"></i> E'lonlarni ko'rish</a>
+                    </x-empty-state>
+                @endforelse
             </div>
+        </x-panel>
 
-            <div class="col-12 col-xl-5">
-                <div class="panel-box mb-4">
-                    <div class="panel-header compact-header">
-                        <div>
-                            <h3 class="panel-title">Profil ma'lumotlari</h3>
-                            <p class="panel-subtitle">Ism, telefon, telegram va avatar</p>
-                        </div>
-                    </div>
-
-                    <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data" class="row g-3 mt-0">
-                        @csrf
-                        <div class="col-12">
-                            <label for="name" class="form-label fw-semibold small text-cream">Ism</label>
-                            <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}" class="form-control profile-input" required>
-                        </div>
-
-                        <div class="col-12">
-                            <label for="phone" class="form-label fw-semibold small text-cream">Telefon</label>
-                            <input type="text" name="phone" id="phone" value="{{ old('phone', $user->phone) }}" class="form-control profile-input" placeholder="+998 90 123 45 67">
-                        </div>
-
-                        <div class="col-12">
-                            <label for="telegram_username" class="form-label fw-semibold small text-cream">Telegram username</label>
-                            <input type="text" name="telegram_username" id="telegram_username" value="{{ old('telegram_username', $user->telegram_username) }}" class="form-control profile-input" placeholder="username">
-                        </div>
-
-                        <div class="col-12">
-                            <label for="avatar" class="form-label fw-semibold small text-cream">Profil rasmi</label>
-                            <input type="file" name="avatar" id="avatar" class="form-control profile-input" accept="image/*">
-                        </div>
-
-                        <div class="col-12 pt-2">
-                            <button type="submit" class="btn-filter-apply w-100 text-decoration-none">
-                                <i class="bi bi-floppy2 me-1"></i> Saqlash
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="panel-box">
-                    <div class="panel-header compact-header">
-                        <div>
-                            <h3 class="panel-title">Xavfsizlik</h3>
-                            <p class="panel-subtitle">Parolni yangilash</p>
-                        </div>
-                    </div>
-
-                    <form action="{{ route('profile.password.update') }}" method="POST" class="row g-3 mt-0">
-                        @csrf
-                        <div class="col-12">
-                            <label for="current_password" class="form-label fw-semibold small text-cream">Joriy parol</label>
-                            <input type="password" name="current_password" id="current_password" class="form-control profile-input @error('current_password') is-invalid @enderror" required>
-                            @error('current_password')
-                                <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-12">
-                            <label for="password" class="form-label fw-semibold small text-cream">Yangi parol</label>
-                            <input type="password" name="password" id="password" class="form-control profile-input @error('password') is-invalid @enderror" required>
-                            @error('password')
-                                <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-12">
-                            <label for="password_confirmation" class="form-label fw-semibold small text-cream">Yangi parolni tasdiqlang</label>
-                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control profile-input" required>
-                        </div>
-
-                        <div class="col-12 pt-2">
-                            <button type="submit" class="btn-panel-link w-100 justify-content-center text-decoration-none border-danger-subtle text-danger">
-                                <i class="bi bi-shield-lock me-1"></i> Parolni yangilash
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <div class="xl:col-span-5">
+            @include('profile.partials.settings', ['updateRoute' => route('user.profile.update'), 'nameLabel' => 'Ism'])
         </div>
     </div>
 </div>
-
-<style>
-    .font-serif { font-family: var(--serif); }
-    .text-cream { color: var(--cream) !important; }
-    .text-lime { color: var(--lime) !important; }
-    .text-muted { color: var(--muted) !important; }
-    .bg-primary-soft { background: rgba(0, 142, 204, 0.12) !important; color: var(--lime) !important; }
-    .bg-panel-soft { background: rgba(0, 0, 0, 0.04) !important; color: var(--muted) !important; }
-    .hover-lime:hover { color: var(--lime) !important; }
-    .border-danger-subtle { border-color: rgba(255, 107, 43, 0.35) !important; }
-    .text-line { color: rgba(255,255,255,.22); }
-
-    .profile-shell {
-        display: block;
-    }
-
-    .profile-header {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.96));
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 24px 24px 20px;
-        margin-bottom: 20px;
-        overflow: hidden;
-    }
-
-
-    .profile-avatar-wrap {
-        position: relative;
-        z-index: 1;
-        width: 110px;
-        height: 110px;
-        border-radius: 28px;
-        border: 1px solid rgba(0, 142, 204, 0.35);
-        background: rgba(0, 142, 204, 0.08);
-        display: grid;
-        place-items: center;
-        overflow: hidden;
-        box-shadow: 0 16px 30px rgba(0, 0, 0, 0.12);
-    }
-
-    .profile-avatar-image,
-    .profile-avatar-fallback {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 28px;
-    }
-
-    .profile-avatar-fallback {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, var(--lime), #0073a8);
-        color: var(--ink);
-        font-size: 2.4rem;
-        font-weight: 800;
-    }
-
-    .metric-card {
-        min-height: 146px;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 18px 16px 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-    }
-
-    .metric-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 12px;
-        display: grid;
-        place-items: center;
-        font-size: 1.05rem;
-    }
-
-    .icon-mail { background: rgba(0, 142, 204, 0.12); color: var(--lime); }
-    .icon-phone { background: rgba(255, 107, 43, 0.12); color: var(--orange); }
-    .icon-heart { background: rgba(255, 90, 120, 0.12); color: #d63384; }
-    .icon-telegram { background: rgba(94, 164, 255, 0.12); color: #1a6fd1; }
-
-    .metric-label {
-        color: var(--muted);
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-    }
-
-    .metric-value {
-        color: var(--cream);
-        font-weight: 700;
-        font-size: 0.98rem;
-        line-height: 1.35;
-        word-break: break-word;
-    }
-
-    .metric-small {
-        color: var(--muted);
-        font-size: 0.72rem;
-        font-weight: 600;
-    }
-
-    .panel-box {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    }
-
-    .panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 18px;
-    }
-
-    .compact-header {
-        margin-bottom: 12px;
-    }
-
-    .panel-title {
-        margin: 0;
-        color: var(--cream);
-        font-size: 1.05rem;
-        font-weight: 700;
-    }
-
-    .panel-subtitle {
-        margin: 4px 0 0;
-        color: var(--muted);
-        font-size: 0.74rem;
-    }
-
-    .small-link {
-        padding: 7px 12px;
-        font-size: 0.72rem;
-    }
-
-    .profile-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
-
-    .profile-list-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-        padding: 14px 0;
-    }
-
-    .profile-list-item.has-border {
-        border-bottom: 1px solid var(--line);
-    }
-
-    .liked-post-image {
-        width: 62px;
-        height: 62px;
-        border-radius: 12px;
-        object-fit: cover;
-        border: 1px solid var(--line);
-        flex-shrink: 0;
-    }
-
-    .liked-post-placeholder {
-        width: 62px;
-        height: 62px;
-        border-radius: 12px;
-        background: rgba(0, 142, 204, 0.08);
-        border: 1px solid var(--line);
-        display: grid;
-        place-items: center;
-        color: var(--muted);
-        font-size: 1.2rem;
-        flex-shrink: 0;
-    }
-
-    .profile-post-title {
-        font-size: 0.98rem;
-        font-weight: 700;
-        line-height: 1.3;
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .profile-action-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        border: 1px solid var(--line);
-        background: transparent;
-        color: var(--muted);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        text-decoration: none;
-    }
-
-    .profile-action-btn:hover {
-        border-color: var(--lime);
-        color: var(--lime);
-        background: rgba(0, 142, 204, 0.08);
-    }
-
-    .profile-action-btn.delete-btn:hover {
-        border-color: rgba(255, 107, 43, 0.5);
-        color: var(--orange);
-    }
-
-    .form-label {
-        margin-bottom: 7px;
-    }
-
-    .profile-input {
-        width: 100%;
-        border-radius: 10px;
-        background: #ffffff;
-        border: 1px solid var(--line);
-        color: var(--cream);
-        min-height: 42px;
-        padding: 0.7rem 0.9rem;
-        outline: none;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .profile-input:focus {
-        background: #ffffff;
-        border-color: var(--lime);
-        box-shadow: 0 0 0 3px rgba(0, 142, 204, 0.12);
-        color: var(--cream);
-    }
-
-    .profile-input::placeholder {
-        color: var(--muted);
-    }
-
-    .empty-state {
-        padding: 46px 20px 30px;
-        border: 1px dashed var(--line);
-        border-radius: 16px;
-        background: rgba(0, 0, 0, 0.02);
-        text-align: center;
-    }
-
-    .empty-icon {
-        font-size: 2.1rem;
-        color: var(--lime);
-        margin-bottom: 10px;
-    }
-
-    .empty-title {
-        margin: 0;
-        font-size: 1.2rem;
-        color: var(--cream);
-        font-weight: 700;
-    }
-
-    .empty-text {
-        margin: 8px 0 0;
-        color: var(--muted);
-        font-size: 0.85rem;
-    }
-
-    @media (max-width: 991.98px) {
-        .profile-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-    }
-
-    @media (max-width: 575.98px) {
-        .container {
-            padding-left: 14px;
-            padding-right: 14px;
-        }
-
-        .profile-header,
-        .panel-box {
-            padding-left: 16px;
-            padding-right: 16px;
-        }
-
-        .profile-list-item {
-            align-items: flex-start;
-        }
-    }
-</style>
 @endsection

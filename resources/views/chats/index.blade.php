@@ -1,20 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container page-shell" style="max-width: 860px;">
+<div class="page max-w-[860px]">
     <x-page-head title="Xabarlar" subtitle="Tasdiqlangan xaridlar bo'yicha sotuvchi va xaridor suhbatlari." />
 
     @if($chats->isEmpty())
-        <div class="empty-state py-5">
-            <div class="empty-icon"><i class="bi bi-chat-square-dots"></i></div>
-            <h3 class="empty-title">Hozircha xabarlar yo'q</h3>
-            <p class="empty-text">Xarid so'rovi tasdiqlangandan so'ng, ushbu sahifada sotuvchi va xaridor o'rtasida avtomatik chat ochiladi.</p>
-            <a href="{{ route('posts.index') }}" class="btn-filter-apply d-inline-flex mt-3 text-decoration-none px-4">
-                <i class="bi bi-compass me-1"></i> Marketplace'ga o'tish
-            </a>
-        </div>
+        <x-empty-state icon="bi-chat-square-dots" title="Hozircha xabarlar yo'q"
+            text="Xarid so'rovi tasdiqlangandan so'ng, ushbu sahifada sotuvchi va xaridor o'rtasida avtomatik chat ochiladi.">
+            <a href="{{ route('posts.index') }}" class="btn btn-primary"><i class="bi bi-compass"></i> Marketplace'ga o'tish</a>
+        </x-empty-state>
     @else
-        <div class="chat-list-wrapper">
+        <div class="flex flex-col gap-3">
             @foreach($chats as $chat)
                 @php
                     $other   = $chat->otherParticipant(auth()->id());
@@ -24,351 +20,67 @@
                     $isSeller = $other->hasRole('seller');
                     $img = $chat->post?->allImages()[0] ?? null;
                 @endphp
-                <a href="{{ route('chats.show', $chat) }}" class="chat-item-card {{ $unread > 0 ? 'has-unread' : '' }}">
-                    {{-- Post Thumbnail --}}
-                    <div class="chat-thumb-box">
+                <a href="{{ route('chats.show', $chat) }}" @class([
+                    'group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-line bg-white px-3.5 py-3 transition hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-[0_8px_24px_rgba(0,0,0,.12)] md:gap-4 md:px-5 md:py-4',
+                    'border-l-4 border-l-brand' => $unread > 0,
+                ])>
+                    {{-- Post thumbnail --}}
+                    <div class="relative flex h-[54px] w-[58px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-line bg-soft md:h-16 md:w-[72px]">
                         @if($img)
-                            <div class="chat-thumb-backdrop" style="background-image: url('{{ route('images.show', ['path' => $img]) }}');"></div>
-                            <img src="{{ route('images.show', ['path' => $img]) }}" alt="{{ $chat->post?->title ?? '' }}">
+                            <div class="pointer-events-none absolute -inset-2 bg-cover bg-center opacity-80 blur-[8px] brightness-[.35]" style="background-image: url('{{ route('images.show', ['path' => $img]) }}');"></div>
+                            <img src="{{ route('images.show', ['path' => $img]) }}" alt="{{ $chat->post?->title ?? '' }}" class="relative z-[1] size-full object-contain">
                         @else
-                            <div class="chat-thumb-placeholder"><i class="bi bi-image"></i></div>
+                            <i class="bi bi-image text-[1.4rem] text-muted"></i>
                         @endif
                     </div>
 
-                    {{-- Main Info --}}
-                    <div class="chat-content-body">
-                        <div class="chat-top-row">
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <span class="chat-post-title text-cream">
-                                    {{ $chat->post?->title ?? 'E\'lon' }}
-                                </span>
+                    {{-- Main info --}}
+                    <div class="min-w-0 flex-1">
+                        <div class="mb-2 flex items-baseline justify-between gap-2.5">
+                            <div class="flex min-w-0 flex-wrap items-center gap-2">
+                                <span class="max-w-[180px] truncate text-[15px] font-bold text-ink md:max-w-[280px]">{{ $chat->post?->title ?? 'E\'lon' }}</span>
                                 @if($chat->post?->category)
-                                    <span class="badge-cat-tag">
-                                        {{ $chat->post->category->name }}
-                                    </span>
+                                    <span class="rounded-md border border-line bg-black/5 px-[7px] py-0.5 text-[11px] font-semibold text-muted">{{ $chat->post->category->name }}</span>
                                 @endif
                                 @if($chat->post && $chat->post->price)
-                                    <span class="chat-price-pill font-serif text-lime">
-                                        {{ number_format((float) $chat->post->price, 0, '.', ' ') }} {{ $chat->post->currency }}
-                                    </span>
+                                    <span class="text-sm font-bold text-brand">{{ number_format((float) $chat->post->price, 0, '.', ' ') }} {{ $chat->post->currency }}</span>
                                 @endif
                                 @if(!empty($chat->is_closed))
-                                    <span class="badge bg-secondary bg-opacity-25 text-muted border border-secondary border-opacity-25" style="font-size: 0.68rem;">
-                                        <i class="bi bi-lock-fill me-1"></i> Yopilgan
-                                    </span>
+                                    <span class="rounded-md border border-slate-400/25 bg-slate-400/25 px-1.5 py-0.5 text-[11px] text-muted"><i class="bi bi-lock-fill mr-1"></i> Yopilgan</span>
                                 @endif
                             </div>
-                            <span class="chat-time-tag">
+                            <span class="shrink-0 text-xs whitespace-nowrap text-muted">
                                 {{ $last ? $last->created_at->diffForHumans(null, true) : $chat->updated_at->diffForHumans(null, true) }}
                             </span>
                         </div>
 
-                        <div class="chat-bottom-row">
-                            <div class="chat-participant-info">
-                                <div class="participant-avatar">
-                                    {{ mb_strtoupper(mb_substr($other->name, 0, 1)) }}
-                                </div>
-                                <div class="participant-details">
-                                    <span class="participant-name">{{ $other->name }}</span>
-                                    <span class="badge-role-pill {{ $isSeller ? 'role-seller' : 'role-buyer' }}">
-                                        {{ $isSeller ? 'Sotuvchi' : 'Xaridor' }}
-                                    </span>
-                                </div>
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex shrink-0 items-center gap-2">
+                                <div class="grid size-[26px] shrink-0 place-items-center rounded-full bg-brand-tint text-xs font-bold text-brand">{{ mb_strtoupper(mb_substr($other->name, 0, 1)) }}</div>
+                                <span class="text-[13px] font-semibold text-ink">{{ $other->name }}</span>
+                                <x-role-pill :seller="$isSeller" />
                             </div>
 
-                            <div class="chat-msg-preview-wrap">
+                            <div class="flex min-w-0 items-center gap-2">
                                 @if($last)
-                                    <span class="chat-last-msg {{ $unread > 0 ? 'unread-msg' : '' }}">
-                                        @if($isMine)
-                                            <span class="text-lime fw-bold me-1">Siz:</span>
-                                        @endif
-                                        {{ Str::limit($last->body, 55) }}
+                                    <span @class(['max-w-[180px] truncate text-[13px] md:max-w-[280px]', $unread > 0 ? 'font-semibold text-ink' : 'text-muted'])>
+                                        @if($isMine)<span class="mr-1 font-bold text-brand">Siz:</span>@endif{{ Str::limit($last->body, 55) }}
                                     </span>
                                 @else
-                                    <span class="chat-last-msg text-muted fst-italic">Hali xabarlar yo'q. Suhbatni boshlang!</span>
+                                    <span class="text-[13px] text-muted italic">Hali xabarlar yo'q. Suhbatni boshlang!</span>
                                 @endif
 
                                 @if($unread > 0)
-                                    <span class="chat-unread-badge">{{ $unread }}</span>
+                                    <span class="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-extrabold text-white shadow-[0_0_10px_rgba(0,142,204,.4)]">{{ $unread }}</span>
                                 @endif
                             </div>
                         </div>
                     </div>
 
-                    <div class="chat-arrow-indicator">
-                        <i class="bi bi-chevron-right"></i>
-                    </div>
+                    <i class="bi bi-chevron-right text-sm text-muted transition group-hover:translate-x-[3px] group-hover:text-brand"></i>
                 </a>
             @endforeach
         </div>
     @endif
 </div>
-
-<style>
-    .font-serif { font-family: var(--serif); }
-    .text-cream { color: var(--cream) !important; }
-    .text-lime { color: var(--lime) !important; }
-    .bg-lime-soft { background: rgba(0, 142, 204, 0.12) !important; }
-
-    .btn-panel-link {
-        padding: 6px 14px;
-        border: 1px solid var(--line);
-        background: var(--panel);
-        color: var(--cream);
-        border-radius: 8px;
-        text-decoration: none;
-        font-size: 0.8rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        transition: all 0.2s ease;
-    }
-    .btn-panel-link:hover {
-        border-color: var(--lime);
-        color: var(--lime);
-        background: rgba(0, 142, 204, 0.08);
-    }
-
-    /* Chat List */
-    .chat-list-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .chat-item-card {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        padding: 16px 20px;
-        text-decoration: none;
-        color: inherit;
-        position: relative;
-        overflow: hidden;
-        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .chat-item-card:hover {
-        border-color: rgba(0, 142, 204, 0.4);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        color: inherit;
-    }
-
-    .chat-item-card.has-unread {
-        border-left: 4px solid var(--lime);
-        background: rgba(255, 255, 255, 0.95);
-    }
-
-    /* Thumbnail */
-    .chat-thumb-box {
-        width: 72px;
-        height: 64px;
-        border-radius: 12px;
-        overflow: hidden;
-        background: #f5f5f5;
-        border: 1px solid var(--line);
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .chat-thumb-backdrop {
-        position: absolute;
-        inset: -8px;
-        background-size: cover;
-        background-position: center;
-        filter: blur(8px) brightness(0.35);
-        opacity: 0.8;
-        pointer-events: none;
-    }
-
-    .chat-thumb-box img {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-
-    .chat-thumb-placeholder {
-        color: var(--muted);
-        font-size: 1.4rem;
-    }
-
-    /* Content Body */
-    .chat-content-body {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .chat-top-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        margin-bottom: 8px;
-        gap: 10px;
-    }
-
-    .chat-post-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 280px;
-    }
-
-    .badge-cat-tag {
-        background: rgba(0, 0, 0, 0.05);
-        color: var(--muted);
-        border: 1px solid var(--line);
-        border-radius: 6px;
-        padding: 2px 7px;
-        font-size: 0.68rem;
-        font-weight: 600;
-    }
-
-    .chat-price-pill {
-        font-size: 0.84rem;
-        font-weight: 700;
-    }
-
-    .chat-time-tag {
-        font-size: 0.72rem;
-        color: var(--muted);
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-
-    .chat-bottom-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .chat-participant-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-    }
-
-    .participant-avatar {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        background: #e5f4fb;
-        color: var(--lime);
-        display: grid;
-        place-items: center;
-        font-size: 0.72rem;
-        font-weight: 700;
-        flex-shrink: 0;
-    }
-
-    .participant-details {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .participant-name {
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--cream);
-    }
-
-    .badge-role-pill {
-        padding: 1px 6px;
-        border-radius: 4px;
-        font-size: 0.65rem;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .role-seller {
-        background: rgba(255, 107, 43, 0.15);
-        color: var(--orange);
-        border: 1px solid rgba(255, 107, 43, 0.3);
-    }
-
-    .role-buyer {
-        background: rgba(0, 142, 204, 0.15);
-        color: var(--lime);
-        border: 1px solid rgba(0, 142, 204, 0.3);
-    }
-
-    .chat-msg-preview-wrap {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-    }
-
-    .chat-last-msg {
-        font-size: 0.8rem;
-        color: var(--muted);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 280px;
-    }
-
-    .chat-last-msg.unread-msg {
-        color: var(--cream);
-        font-weight: 600;
-    }
-
-    .chat-unread-badge {
-        background: var(--lime);
-        color: var(--ink);
-        font-size: 0.68rem;
-        font-weight: 800;
-        min-width: 20px;
-        height: 20px;
-        border-radius: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 6px;
-        flex-shrink: 0;
-        box-shadow: 0 0 10px rgba(0, 142, 204, 0.4);
-    }
-
-    .chat-arrow-indicator {
-        color: var(--muted);
-        font-size: 0.9rem;
-        transition: transform 0.2s, color 0.2s;
-    }
-
-    .chat-item-card:hover .chat-arrow-indicator {
-        color: var(--lime);
-        transform: translateX(3px);
-    }
-
-    @media (max-width: 767px) {
-        .chat-item-card {
-            padding: 12px 14px;
-            gap: 12px;
-        }
-        .chat-thumb-box {
-            width: 58px;
-            height: 54px;
-        }
-        .chat-post-title {
-            max-width: 180px;
-        }
-        .chat-last-msg {
-            max-width: 180px;
-        }
-    }
-</style>
 @endsection

@@ -13,8 +13,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Pages use Bootstrap markup; the default Tailwind pagination view renders unstyled.
-        Paginator::useBootstrapFive();
+        // Site-styled Tailwind pagination (resources/views/pagination/default.blade.php).
+        Paginator::defaultView('pagination.default');
 
         // Relative dates ("3 kun avval") in Uzbek Latin, matching the UI language.
         \Illuminate\Support\Carbon::setLocale('uz_Latn');

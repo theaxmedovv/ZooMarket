@@ -1,205 +1,159 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container page-shell">
+@php
+    $field = 'input h-12 rounded-2xl border-transparent bg-surface px-4 text-base focus:bg-white';
+    $label = 'field-label';
+    $currentImages = $post->allImages();
+@endphp
+<div class="page">
     <x-page-head title="E'lonni tahrirlash" :subtitle="$post->title" />
 
-    <div class="zm-form-card">
-                        <form action="{{ route('posts.update', $post) }}" method="POST" enctype="multipart/form-data">
-                            @csrf
-                            @method('PUT')
+    <div class="card max-w-[880px] p-5 md:p-8">
+        <form action="{{ route('posts.update', $post) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
 
-                            @if($errors->any())
-                                <div class="alert alert-danger border-0 rounded-4 mb-4">
-                                    <ul class="mb-0 ps-3">
-                                        @foreach($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
+            @if($errors->any())
+                <div class="mb-6 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-800">
+                    <ul class="list-disc pl-4">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-                            @if($post->moderation_status === 'rejected')
-                                <div class="alert alert-danger border-danger border-opacity-50 rounded-4 p-3 mb-4">
-                                    <div class="d-flex align-items-start gap-3">
-                                        <div class="rounded-circle p-2 bg-danger bg-opacity-25 text-danger flex-shrink-0">
-                                            <i class="bi bi-shield-x fs-4"></i>
-                                        </div>
-                                        <div>
-                                            <strong class="text-danger d-block">E'lon avval Groq AI tomonidan rad etilgan</strong>
-                                            <div class="small mt-1 text-muted">
-                                                <strong>Rad etilish sababi:</strong> {{ $post->moderation_reason }}
-                                            </div>
-                                            <div class="small text-muted mt-1">
-                                                E'lon ma'lumotlari yoki fotosuratlarini to'g'rilab saqlasangiz, u avtomatik ravishda qayta tekshiruvdan o'tkaziladi.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
+            @if($post->moderation_status === 'rejected')
+                <div class="mb-6 flex items-start gap-3 rounded-2xl border border-danger/50 bg-red-50 p-4">
+                    <div class="grid size-11 shrink-0 place-items-center rounded-full bg-danger/25 text-danger"><i class="bi bi-shield-x text-xl"></i></div>
+                    <div class="text-sm">
+                        <strong class="block text-base text-danger">E'lon avval Groq AI tomonidan rad etilgan</strong>
+                        <div class="mt-1 text-muted"><strong>Rad etilish sababi:</strong> {{ $post->moderation_reason }}</div>
+                        <div class="mt-1 text-muted">E'lon ma'lumotlari yoki fotosuratlarini to'g'rilab saqlasangiz, u avtomatik ravishda qayta tekshiruvdan o'tkaziladi.</div>
+                    </div>
+                </div>
+            @endif
 
-                            <div class="mb-4">
-                                <label for="title" class="form-label fw-bold text-dark">E'lon sarlavhasi</label>
-                                <input type="text" name="title" value="{{ old('title', $post->title) }}"
-                                       class="form-control form-control-lg border-0 bg-light rounded-4 px-4"
-                                       placeholder="Sarlavhani kiriting..." required>
+            <div class="mb-6">
+                <label for="title" class="{{ $label }}">E'lon sarlavhasi</label>
+                <input type="text" name="title" id="title" value="{{ old('title', $post->title) }}" class="{{ $field }}" placeholder="Sarlavhani kiriting..." required>
+            </div>
+
+            <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div class="col-span-2">
+                    <label for="category_id" class="{{ $label }}">Kategoriya</label>
+                    <select name="category_id" id="category_id" class="{{ $field }}" required>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" @selected((string) old('category_id', $post->category_id) === (string) $category->id)>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label for="breed" class="{{ $label }}">Zot</label>
+                    <input type="text" name="breed" id="breed" value="{{ old('breed', $post->breed) }}" class="{{ $field }}" required>
+                </div>
+                <div class="col-span-2">
+                    <label for="quantityEdit" class="{{ $label }}">Jami soni</label>
+                    <input type="number" name="quantity" id="quantityEdit" min="1" max="100" value="{{ old('quantity', $post->quantity) }}" class="{{ $field }}" required>
+                </div>
+                <div class="col-span-2">
+                    <label for="genderEdit" class="{{ $label }}">Jinsi</label>
+                    <select name="gender" id="genderEdit" class="{{ $field }}" required>
+                        <option value="male" @selected(old('gender', $post->gender) === 'male')>Erkak</option>
+                        <option value="female" @selected(old('gender', $post->gender) === 'female')>Urg'ochi</option>
+                        <option value="mixed" @selected(old('gender', $post->gender) === 'mixed') id="optMixedEdit">Aralash (Mixed)</option>
+                    </select>
+                </div>
+                <div class="col-span-full" id="mixedBoxEdit" @if(old('gender', $post->gender) !== 'mixed') hidden @endif>
+                    <div class="rounded-2xl border border-line bg-surface p-4">
+                        <div class="mb-2 text-sm font-semibold text-ink">Aralash jinslar soni taqsimoti:</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label for="maleQtyEdit" class="mb-1 block text-sm text-muted">Erkaklar soni</label>
+                                <input type="number" name="male_quantity" id="maleQtyEdit" value="{{ old('male_quantity', $post->male_quantity) }}" class="input" min="1" max="99">
                             </div>
-
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-6">
-                                    <label for="category_id" class="form-label fw-bold text-dark">Kategoriya</label>
-                                    <select name="category_id" id="category_id" class="form-select form-select-lg border-0 bg-light rounded-4 px-4" required>
-                                        @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" @selected((string) old('category_id', $post->category_id) === (string) $category->id)>{{ $category->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="breed" class="form-label fw-bold text-dark">Zot</label>
-                                    <input type="text" name="breed" id="breed" value="{{ old('breed', $post->breed) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="quantityEdit" class="form-label fw-bold text-dark">Jami soni</label>
-                                    <input type="number" name="quantity" id="quantityEdit" min="1" max="100" value="{{ old('quantity', $post->quantity) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="genderEdit" class="form-label fw-bold text-dark">Jinsi</label>
-                                    <select name="gender" id="genderEdit" class="form-select form-select-lg border-0 bg-light rounded-4 px-4" required>
-                                        <option value="male" @selected(old('gender', $post->gender) === 'male')>Erkak</option>
-                                        <option value="female" @selected(old('gender', $post->gender) === 'female')>Urg'ochi</option>
-                                        <option value="mixed" @selected(old('gender', $post->gender) === 'mixed') id="optMixedEdit">Aralash (Mixed)</option>
-                                    </select>
-                                </div>
-                                <div class="col-12 {{ old('gender', $post->gender) === 'mixed' ? '' : 'd-none' }}" id="mixedBoxEdit">
-                                    <div class="p-3 bg-light rounded-4 border">
-                                        <div class="fw-semibold small mb-2 text-dark">Aralash jinslar soni taqsimoti:</div>
-                                        <div class="row g-2">
-                                            <div class="col-6">
-                                                <label class="form-label small text-muted">Erkaklar soni</label>
-                                                <input type="number" name="male_quantity" id="maleQtyEdit" value="{{ old('male_quantity', $post->male_quantity) }}" class="form-control rounded-3" min="1" max="99">
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="form-label small text-muted">Urg'ochilar soni</label>
-                                                <input type="number" name="female_quantity" id="femaleQtyEdit" value="{{ old('female_quantity', $post->female_quantity) }}" class="form-control rounded-3" min="1" max="99">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="age" class="form-label fw-bold text-dark">Yoshi</label>
-                                    <input type="text" name="age" id="age" value="{{ old('age', $post->age) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="color" class="form-label fw-bold text-dark">Rangi</label>
-                                    <input type="text" name="color" id="color" value="{{ old('color', $post->color) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="price" class="form-label fw-bold text-dark">Narx</label>
-                                    <input type="number" step="0.01" min="0" name="price" id="price" value="{{ old('price', $post->price) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <label for="currency" class="form-label fw-bold text-dark">Valyuta</label>
-                                    <select name="currency" id="currency" class="form-select form-select-lg border-0 bg-light rounded-4 px-4" required>
-                                        <option value="UZS" @selected(old('currency', $post->currency) === 'UZS')>UZS</option>
-                                        <option value="USD" @selected(old('currency', $post->currency) === 'USD')>USD</option>
-                                        <option value="EUR" @selected(old('currency', $post->currency) === 'EUR')>EUR</option>
-                                        <option value="RUB" @selected(old('currency', $post->currency) === 'RUB')>RUB</option>
-                                    </select>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <label for="status" class="form-label fw-bold text-dark">Holat</label>
-                                    <select name="status" id="status" class="form-select form-select-lg border-0 bg-light rounded-4 px-4" required>
-                                        <option value="active" @selected(old('status', $post->status) === 'active')>Sotuvda</option>
-                                        <option value="reserved" @selected(old('status', $post->status) === 'reserved')>Band qilingan</option>
-                                        <option value="sold" @selected(old('status', $post->status) === 'sold')>Sotilgan</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label for="location" class="form-label fw-bold text-dark">Joylashuv</label>
-                                    <input type="text" name="location" id="location" value="{{ old('location', $post->location) }}" class="form-control form-control-lg border-0 bg-light rounded-4 px-4" required>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="1" id="is_negotiable" name="is_negotiable" @checked(old('is_negotiable', $post->is_negotiable))>
-                                        <label class="form-check-label" for="is_negotiable">Narx kelishiladi</label>
-                                    </div>
-                                </div>
+                            <div>
+                                <label for="femaleQtyEdit" class="mb-1 block text-sm text-muted">Urg'ochilar soni</label>
+                                <input type="number" name="female_quantity" id="femaleQtyEdit" value="{{ old('female_quantity', $post->female_quantity) }}" class="input" min="1" max="99">
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-span-2">
+                    <label for="age" class="{{ $label }}">Yoshi</label>
+                    <input type="text" name="age" id="age" value="{{ old('age', $post->age) }}" class="{{ $field }}" required>
+                </div>
+                <div class="col-span-2">
+                    <label for="color" class="{{ $label }}">Rangi</label>
+                    <input type="text" name="color" id="color" value="{{ old('color', $post->color) }}" class="{{ $field }}">
+                </div>
+                <div class="col-span-2">
+                    <label for="price" class="{{ $label }}">Narx</label>
+                    <input type="number" step="0.01" min="0" name="price" id="price" value="{{ old('price', $post->price) }}" class="{{ $field }}" required>
+                </div>
+                <div>
+                    <label for="currency" class="{{ $label }}">Valyuta</label>
+                    <select name="currency" id="currency" class="{{ $field }}" required>
+                        @foreach(['UZS', 'USD', 'EUR', 'RUB'] as $currency)
+                            <option value="{{ $currency }}" @selected(old('currency', $post->currency) === $currency)>{{ $currency }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="status" class="{{ $label }}">Holat</label>
+                    <select name="status" id="status" class="{{ $field }}" required>
+                        <option value="active" @selected(old('status', $post->status) === 'active')>Sotuvda</option>
+                        <option value="reserved" @selected(old('status', $post->status) === 'reserved')>Band qilingan</option>
+                        <option value="sold" @selected(old('status', $post->status) === 'sold')>Sotilgan</option>
+                    </select>
+                </div>
+                <div class="col-span-full">
+                    <label for="location" class="{{ $label }}">Joylashuv</label>
+                    <input type="text" name="location" id="location" value="{{ old('location', $post->location) }}" class="{{ $field }}" required>
+                </div>
+                <label for="is_negotiable" class="col-span-full inline-flex cursor-pointer items-center gap-2 text-sm text-ink">
+                    <input type="checkbox" value="1" id="is_negotiable" name="is_negotiable" class="size-4 accent-brand" @checked(old('is_negotiable', $post->is_negotiable))>
+                    Narx kelishiladi
+                </label>
+            </div>
 
-                            <div class="mb-4">
-                                <label for="description" class="form-label fw-bold text-dark">Tavsif</label>
-                                <textarea name="description" class="form-control border-0 bg-light rounded-4 px-4 py-3"
-                                          rows="6" placeholder="Hayvon haqida yozing..." required>{{ old('description', $post->description ?? $post->content) }}</textarea>
-                            </div>
+            <div class="mb-6">
+                <label for="description" class="{{ $label }}">Tavsif</label>
+                <textarea name="description" id="description" rows="6" class="{{ $field }} h-auto py-3 leading-normal" placeholder="Hayvon haqida yozing..." required>{{ old('description', $post->description ?? $post->content) }}</textarea>
+            </div>
 
-                            <div class="mb-5">
-                                <label class="form-label fw-bold text-dark">Rasmlar (maksimum 3 ta)</label>
-                                @php $currentImages = $post->allImages(); @endphp
-                                @if(!empty($currentImages))
-                                    <div class="d-flex gap-2 mb-3 flex-wrap">
-                                        @foreach($currentImages as $img)
-                                            <img src="{{ route('images.show', ['path' => $img]) }}" class="rounded-3 shadow-sm" style="height:80px;width:80px;object-fit:cover;">
-                                        @endforeach
-                                    </div>
-                                    <p class="small text-muted mb-3">Yangi rasmlar yuklasangiz, mavjud rasmlar almashtiriladi.</p>
-                                @endif
-                                <div class="row g-2">
-                                    <div class="col-md-4">
-                                        <label class="small text-muted mb-1 d-block">1-rasm (asosiy)</label>
-                                        <input type="file" name="images[]" class="form-control border-0 bg-light" accept="image/*">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="small text-muted mb-1 d-block">2-rasm</label>
-                                        <input type="file" name="images[]" class="form-control border-0 bg-light" accept="image/*">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="small text-muted mb-1 d-block">3-rasm</label>
-                                        <input type="file" name="images[]" class="form-control border-0 bg-light" accept="image/*">
-                                    </div>
-                                </div>
-                                <p class="text-muted mt-2" style="font-size:0.75rem;"><i class="bi bi-info-circle me-1"></i>Max: 2MB har bir rasm</p>
-                            </div>
+            <div class="mb-10">
+                <span class="{{ $label }}">Rasmlar (maksimum 3 ta)</span>
+                @if(!empty($currentImages))
+                    <div class="mb-3 flex flex-wrap gap-2">
+                        @foreach($currentImages as $img)
+                            <img src="{{ route('images.show', ['path' => $img]) }}" alt="" class="size-20 rounded-lg object-cover shadow-sm">
+                        @endforeach
+                    </div>
+                    <p class="mb-3 text-sm text-muted">Yangi rasmlar yuklasangiz, mavjud rasmlar almashtiriladi.</p>
+                @endif
+                <div class="grid gap-2 md:grid-cols-3">
+                    @foreach(['1-rasm (asosiy)', '2-rasm', '3-rasm'] as $i => $imageLabel)
+                        <div>
+                            <label for="image{{ $i }}" class="mb-1 block text-sm text-muted">{{ $imageLabel }}</label>
+                            <input type="file" name="images[]" id="image{{ $i }}" accept="image/*"
+                                   class="w-full cursor-pointer rounded-lg bg-surface text-sm text-muted file:mr-3 file:cursor-pointer file:border-0 file:bg-brand-tint file:px-3 file:py-2.5 file:font-semibold file:text-brand hover:file:bg-brand/20">
+                        </div>
+                    @endforeach
+                </div>
+                <p class="mt-2 text-xs text-muted"><i class="bi bi-info-circle mr-1"></i>Max: 2MB har bir rasm</p>
+            </div>
 
-                            <div class="zm-form-actions">
-                                <button type="submit" class="zm-btn zm-btn-primary">
-                                    <i class="bi bi-check-lg"></i> O'zgarishlarni saqlash
-                                </button>
-                                <a href="{{ route('posts.show', $post) }}" class="zm-btn zm-btn-ghost">
-                                    Bekor qilish
-                                </a>
-                            </div>
-                        </form>
+            <div class="flex flex-wrap gap-3 border-t border-line pt-6">
+                <button type="submit" class="btn btn-primary h-[46px] text-[15px] max-md:flex-1">
+                    <i class="bi bi-check-lg"></i> O'zgarishlarni saqlash
+                </button>
+                <a href="{{ route('posts.show', $post) }}" class="btn btn-outline h-[46px] text-[15px] max-md:flex-1">Bekor qilish</a>
+            </div>
+        </form>
     </div>
 </div>
-
-<style>
-    /* Maxsus dizayn elementlari */
-    .border-dashed {
-        border-style: dashed !important;
-        border-color: #dee2e6 !important;
-        transition: all 0.3s ease;
-    }
-    .border-dashed:hover {
-        border-color: #0d6efd !important;
-        background-color: #f1f4f9 !important;
-    }
-    .form-control:focus {
-        box-shadow: none;
-        background-color: #fff !important;
-        border: 1px solid #0d6efd !important;
-    }
-    .hover-primary:hover {
-        color: #0d6efd !important;
-    }
-    /* Kirish animatsiyasi */
-    .card {
-        animation: slideUp 0.6s ease-out;
-    }
-    @keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -212,28 +166,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function syncEdit() {
         const qty = parseInt(qtyInput.value) || 1;
-        if (qty === 1) {
-            optMixed.disabled = true;
-            if (genderSelect.value === 'mixed') {
-                genderSelect.value = 'male';
-            }
-        } else {
-            optMixed.disabled = false;
+        optMixed.disabled = qty === 1;
+        if (qty === 1 && genderSelect.value === 'mixed') {
+            genderSelect.value = 'male';
         }
 
-        if (genderSelect.value === 'mixed' && qty > 1) {
-            mixedBox.classList.remove('d-none');
-            maleQty.required = true;
-            femaleQty.required = true;
-        } else {
-            mixedBox.classList.add('d-none');
-            maleQty.required = false;
-            femaleQty.required = false;
-        }
+        const isMixed = genderSelect.value === 'mixed' && qty > 1;
+        mixedBox.hidden = !isMixed;
+        maleQty.required = isMixed;
+        femaleQty.required = isMixed;
     }
 
-    if (qtyInput) qtyInput.addEventListener('input', syncEdit);
-    if (genderSelect) genderSelect.addEventListener('change', syncEdit);
+    qtyInput.addEventListener('input', syncEdit);
+    genderSelect.addEventListener('change', syncEdit);
     syncEdit();
 });
 </script>

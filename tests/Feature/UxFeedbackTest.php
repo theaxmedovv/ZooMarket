@@ -89,7 +89,7 @@ class UxFeedbackTest extends TestCase
             ->followingRedirects()
             ->post(route('purchase-requests.store'), ['animal_id' => $post->id, 'gender' => 'male', 'quantity' => 3])
             ->assertOk()
-            ->assertSee('zm-toast-error', false)
+            ->assertSee('data-toast="error"', false)
             ->assertSee('Hozirda mavjud: 1 ta', false);
     }
 
@@ -105,7 +105,7 @@ class UxFeedbackTest extends TestCase
             ->getContent();
 
         $this->assertSame(1, substr_count($html, "muvaffaqiyatli yuborildi"));
-        $this->assertStringContainsString('zm-toast-success', $html);
+        $this->assertStringContainsString('data-toast="success"', $html);
     }
 
     public function test_header_shows_favorites_count_for_buyers(): void
@@ -119,7 +119,7 @@ class UxFeedbackTest extends TestCase
             ->assertSeeInOrder(['data-favorites-count', '>1<'], false);
     }
 
-    public function test_listing_pagination_uses_styled_bootstrap_markup(): void
+    public function test_listing_pagination_uses_site_markup(): void
     {
         foreach (range(1, 13) as $i) {
             $this->makePost(['title' => "Mushuk {$i}"]);
@@ -127,7 +127,7 @@ class UxFeedbackTest extends TestCase
 
         $this->get(route('posts.index'))
             ->assertOk()
-            ->assertSee('class="pagination"', false)
-            ->assertSee('page-link', false);
+            ->assertSee('aria-label="Sahifalar"', false)
+            ->assertSee('rel="next"', false);
     }
 }

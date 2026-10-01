@@ -1,206 +1,136 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container page-shell">
+@php
+    $tag = 'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold';
+    $action = 'inline-flex h-[38px] items-center justify-center gap-1.5 rounded-[10px] px-3.5 text-[13px] font-bold transition max-md:w-full';
+@endphp
+<div class="page">
     <x-page-head title="Mening buyurtmalarim" subtitle="Yuborgan xarid so'rovlaringiz va ularning holati." />
 
-
-    {{-- Filter Tabs --}}
-    <div class="admin-tabs-nav mb-4">
-        <a href="{{ route('user.purchase-requests.index') }}" class="admin-tab-item {{ empty($status) ? 'active' : '' }}">
-            <span>Barchasi</span>
-            <span class="tab-count">{{ $stats['total'] ?? 0 }}</span>
-        </a>
-        <a href="{{ route('user.purchase-requests.index', ['status' => 'pending']) }}" class="admin-tab-item {{ ($status ?? '') === 'pending' ? 'active' : '' }}">
-            <span><i class="bi bi-clock-history me-1 text-orange"></i> Kutilmoqda</span>
-            <span class="tab-count {{ ($stats['pending'] ?? 0) > 0 ? 'highlight-orange' : '' }}">{{ $stats['pending'] ?? 0 }}</span>
-        </a>
-        <a href="{{ route('user.purchase-requests.index', ['status' => 'approved']) }}" class="admin-tab-item {{ ($status ?? '') === 'approved' ? 'active' : '' }}">
-            <span><i class="bi bi-check-circle-fill me-1 text-lime"></i> Tasdiqlangan</span>
-            <span class="tab-count">{{ $stats['approved'] ?? 0 }}</span>
-        </a>
-        <a href="{{ route('user.purchase-requests.index', ['status' => 'rejected']) }}" class="admin-tab-item {{ ($status ?? '') === 'rejected' ? 'active' : '' }}">
-            <span><i class="bi bi-x-circle-fill me-1 text-muted"></i> Rad etilgan</span>
-            <span class="tab-count">{{ $stats['rejected'] ?? 0 }}</span>
-        </a>
+    {{-- Filter tabs --}}
+    <div class="mb-6 flex flex-wrap gap-2 border-b border-line pb-3">
+        <x-status-tab :href="route('user.purchase-requests.index')" :active="empty($status)" :count="$stats['total'] ?? 0">Barchasi</x-status-tab>
+        <x-status-tab :href="route('user.purchase-requests.index', ['status' => 'pending'])" :active="($status ?? '') === 'pending'" :count="$stats['pending'] ?? 0" :highlight="($stats['pending'] ?? 0) > 0"><i class="bi bi-clock-history mr-1 text-accent"></i> Kutilmoqda</x-status-tab>
+        <x-status-tab :href="route('user.purchase-requests.index', ['status' => 'approved'])" :active="($status ?? '') === 'approved'" :count="$stats['approved'] ?? 0"><i class="bi bi-check-circle-fill mr-1 text-brand"></i> Tasdiqlangan</x-status-tab>
+        <x-status-tab :href="route('user.purchase-requests.index', ['status' => 'rejected'])" :active="($status ?? '') === 'rejected'" :count="$stats['rejected'] ?? 0"><i class="bi bi-x-circle-fill mr-1 text-muted"></i> Rad etilgan</x-status-tab>
     </div>
 
-    {{-- Orders List --}}
-    <div class="orders-list-wrapper">
+    {{-- Orders --}}
+    <div class="flex flex-col gap-[18px]">
         @forelse($requests as $request)
-            <div class="order-card {{ $request->status === 'approved' ? 'order-card-approved' : ($request->status === 'pending' ? 'order-card-pending' : '') }}">
-                {{-- Order Card Header --}}
-                <div class="order-card-header">
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <span class="order-id-badge">
-                            <i class="bi bi-receipt me-1"></i> #REQ-{{ str_pad($request->id, 5, '0', STR_PAD_LEFT) }}
-                        </span>
-                        <span class="order-date-text">
-                            <i class="bi bi-calendar3 me-1"></i> {{ $request->created_at->format('d.m.Y H:i') }}
-                            <small class="order-relative-time">({{ $request->created_at->diffForHumans() }})</small>
+            <div @class([
+                'overflow-hidden rounded-[20px] border border-black/6 bg-white shadow-[0_18px_40px_rgba(0,0,0,.12)] transition hover:-translate-y-0.5 hover:border-brand/40',
+                'border-l-4 border-l-brand' => $request->status === 'approved',
+                'border-l-4 border-l-accent' => $request->status === 'pending',
+            ])>
+                {{-- Header --}}
+                <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-black/5 bg-white/85 p-3.5 md:px-[18px]">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="rounded-lg bg-black/5 px-[9px] py-[5px] font-mono text-[13px] font-bold tracking-wide text-ink"><i class="bi bi-receipt mr-1"></i> #REQ-{{ str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</span>
+                        <span class="inline-flex items-center gap-1 text-[13px] text-muted">
+                            <i class="bi bi-calendar3"></i> {{ $request->created_at->format('d.m.Y H:i') }}
+                            <small class="ml-0.5 text-ink/70">({{ $request->created_at->diffForHumans() }})</small>
                         </span>
                     </div>
-
-                    {{-- Status Badge --}}
-                    <div>
-                        @if($request->status === 'approved')
-                            <span class="badge-status badge-approved">
-                                <i class="bi bi-check-circle-fill me-1"></i> Tasdiqlangan
-                            </span>
-                        @elseif($request->status === 'sold')
-                            <span class="badge-status badge-sold">
-                                <i class="bi bi-bag-check-fill me-1"></i> Sotilgan
-                            </span>
-                        @elseif($request->status === 'rejected')
-                            <span class="badge-status badge-rejected">
-                                <i class="bi bi-x-circle-fill me-1"></i> Rad etilgan
-                            </span>
-                        @else
-                            <span class="badge-status badge-pending">
-                                <span class="pulse-dot me-1"></span> Kutilmoqda
-                            </span>
-                        @endif
-                    </div>
+                    <x-request-status :status="$request->status" />
                 </div>
 
-                {{-- Order Card Body --}}
-                <div class="order-card-body">
-                    <div class="row align-items-center g-3">
-                        {{-- Animal Image --}}
-                        <div class="col-12 col-md-auto">
-                            <div class="order-img-box">
-                                @if($request->animal && $request->animal->image)
-                                    <div class="order-img-backdrop" style="background-image: url('{{ $request->animal->imageUrl() }}');"></div>
-                                    <img src="{{ $request->animal->imageUrl() }}" alt="{{ $request->animal->title }}">
-                                @else
-                                    <div class="order-img-placeholder">
-                                        <i class="bi bi-image"></i>
-                                    </div>
+                {{-- Body --}}
+                <div class="flex flex-col gap-4 p-3.5 md:flex-row md:items-center md:p-[18px]">
+                    <div class="relative flex h-40 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-black/5 bg-surface md:h-24 md:w-[120px]">
+                        @if($request->animal && $request->animal->image)
+                            <div class="pointer-events-none absolute -inset-2 bg-cover bg-center opacity-80 blur-[10px] brightness-[.35]" style="background-image: url('{{ $request->animal->imageUrl() }}');"></div>
+                            <img src="{{ $request->animal->imageUrl() }}" alt="{{ $request->animal->title }}" class="relative z-[1] size-full object-cover">
+                        @else
+                            <i class="bi bi-image relative z-[1] text-2xl text-muted"></i>
+                        @endif
+                    </div>
+
+                    <div class="min-w-0 flex-1">
+                        @if($request->animal)
+                            <div class="mb-2 flex flex-wrap items-center gap-2">
+                                <span class="{{ $tag }} border-brand/20 bg-brand/10 font-extrabold text-brand">{{ $request->animal->category?->name ?? 'Hayvon' }}</span>
+                                <span class="{{ $tag }} border-line bg-black/4 text-muted"><i class="bi bi-box-seam text-brand"></i>Miqdor: <strong>{{ $request->quantity ?? 1 }}</strong> ta</span>
+                                @if($request->gender)
+                                    <span class="{{ $tag }} border-line bg-black/4 text-muted">{{ $request->gender === 'male' ? 'Erkak ♂' : 'Urg\'ochi ♀' }}</span>
+                                @endif
+                                @if($request->animal->location)
+                                    <span class="{{ $tag }} border-line bg-black/4 text-muted"><i class="bi bi-geo-alt text-brand"></i>{{ $request->animal->location }}</span>
+                                @endif
+                                @if($request->animal->trashed())
+                                    <span class="{{ $tag }} border-danger/25 bg-danger/10 text-danger"><i class="bi bi-trash"></i>E'lon sotuvchi tomonidan olib tashlangan</span>
                                 @endif
                             </div>
-                        </div>
+                            <h4 class="mb-2 text-lg leading-snug font-bold">
+                                <a href="{{ route('posts.show', $request->animal) }}" class="text-ink hover:text-brand">{{ $request->animal->title }}</a>
+                            </h4>
 
-                        {{-- Details --}}
-                        <div class="col-12 col-md">
-                            @if($request->animal)
-                                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-                                    <span class="badge-cat-tag">
-                                        {{ $request->animal->category?->name ?? 'Hayvon' }}
-                                    </span>
-                                    <span class="badge-sub-tag">
-                                        <i class="bi bi-box-seam me-1 text-lime"></i>Miqdor: <strong>{{ $request->quantity ?? 1 }}</strong> ta
-                                    </span>
-                                    @if($request->gender)
-                                        <span class="badge-sub-tag">
-                                            {{ $request->gender === 'male' ? 'Erkak ♂' : 'Urg\'ochi ♀' }}
-                                        </span>
-                                    @endif
-                                    @if($request->animal->location)
-                                        <span class="badge-sub-tag">
-                                            <i class="bi bi-geo-alt me-1 text-lime"></i>{{ $request->animal->location }}
-                                        </span>
-                                    @endif
-                                    @if($request->animal->trashed())
-                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" style="font-size: 0.68rem;">
-                                            <i class="bi bi-trash me-1"></i>E'lon sotuvchi tomonidan olib tashlangan
-                                        </span>
-                                    @endif
-                                </div>
-                                <h4 class="order-title mb-2">
-                                    <a href="{{ route('posts.show', $request->animal) }}" class="text-cream text-decoration-none hover-lime">
-                                        {{ $request->animal->title }}
-                                    </a>
-                                </h4>
-
-                                {{-- Seller Info --}}
-                                @if($request->animal->user)
-                                    <div class="order-seller-info">
-                                        <div class="seller-avatar-mini">
-                                            {{ mb_strtoupper(mb_substr($request->animal->user->name, 0, 1)) }}
-                                        </div>
-                                        <div class="order-seller-text">
-                                            <span class="text-muted small">Sotuvchi:</span>
-                                            <span class="fw-semibold text-cream small ms-1">{{ $request->animal->user->name }}</span>
-                                            @if($request->animal->user->phone)
-                                                <span class="text-muted small ms-2 d-none d-sm-inline">
-                                                    <i class="bi bi-telephone me-1 text-lime"></i>{{ $request->animal->user->phone }}
-                                                </span>
-                                            @endif
-                                        </div>
+                            @if($request->animal->user)
+                                <div class="mt-2 flex items-center gap-2 text-sm">
+                                    <div class="grid size-7 shrink-0 place-items-center rounded-full border border-brand/30 bg-linear-135 from-brand/22 to-black/4 text-xs font-extrabold text-brand">{{ mb_strtoupper(mb_substr($request->animal->user->name, 0, 1)) }}</div>
+                                    <div class="flex flex-wrap items-center">
+                                        <span class="text-muted">Sotuvchi:</span>
+                                        <span class="ml-1 font-semibold text-ink">{{ $request->animal->user->name }}</span>
+                                        @if($request->animal->user->phone)
+                                            <span class="ml-2 hidden text-muted sm:inline"><i class="bi bi-telephone mr-1 text-brand"></i>{{ $request->animal->user->phone }}</span>
+                                        @endif
                                     </div>
-                                @endif
-                            @else
-                                <div class="text-muted py-2 fst-italic">
-                                    <i class="bi bi-exclamation-circle me-1"></i> Ushbu e'lon sotuvchi tomonidan olib tashlangan.
                                 </div>
                             @endif
-                        </div>
-
-                        {{-- Price Block --}}
-                        <div class="col-12 col-md-auto text-md-end">
-                            <div class="order-price-panel">
-                                <div class="order-price-label">Jami to'lov</div>
-                                @if($request->animal)
-                                    @php
-                                        $reqQty = $request->quantity ?? 1;
-                                        $totalSum = (float) $request->animal->price * $reqQty;
-                                    @endphp
-                                    <div class="order-price-val font-serif text-lime">
-                                        {{ number_format($totalSum, 0, '.', ' ') }}
-                                        <small class="text-cream opacity-75">{{ $request->animal->currency }}</small>
-                                    </div>
-                                    @if($reqQty > 1)
-                                        <div class="small text-muted">
-                                            {{ $reqQty }} ta &times; {{ number_format((float) $request->animal->price, 0, '.', ' ') }}
-                                        </div>
-                                    @endif
-                                @else
-                                    <div class="text-muted">—</div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Order Card Footer --}}
-                <div class="order-card-footer">
-                    <div class="order-status-hint">
-                        @if($request->status === 'approved')
-                            <div class="text-lime small d-flex align-items-center gap-1">
-                                <i class="bi bi-check-circle-fill"></i>
-                                <span>Sotuvchi so'rovingizni tasdiqladi! Chat orqali to'g'ridan-to'g'ri bog'lanishingiz mumkin.</span>
-                            </div>
-                        @elseif($request->status === 'sold')
-                            <div class="text-lime small d-flex align-items-center gap-1">
-                                <i class="bi bi-bag-check-fill"></i>
-                                <span>Ushbu e'lon sotildi. So'rov "Sold" holatiga o'tdi.</span>
-                            </div>
-                        @elseif($request->status === 'rejected')
-                            <div class="text-muted small d-flex align-items-center gap-1">
-                                <i class="bi bi-info-circle"></i>
-                                <span>Ushbu so'rov rad etilgan. Boshqa mavjud e'lonlarni ko'rib chiqishingiz mumkin.</span>
-                            </div>
                         @else
-                            <div class="text-orange small d-flex align-items-center gap-1">
-                                <i class="bi bi-hourglass-split"></i>
-                                <span>Sotuvchi so'rovingizni ko'rib chiqmoqda. Tez orada javob olasiz.</span>
-                            </div>
+                            <div class="py-2 text-muted italic"><i class="bi bi-exclamation-circle mr-1"></i> Ushbu e'lon sotuvchi tomonidan olib tashlangan.</div>
                         @endif
                     </div>
 
-                    <div class="order-actions-group">
+                    <div class="w-full rounded-[14px] border border-black/4 bg-black/2 px-3 py-2.5 md:w-auto md:min-w-[122px] md:text-right">
+                        <div class="mb-1 text-[11px] font-bold tracking-wide text-muted uppercase">Jami to'lov</div>
                         @if($request->animal)
-                            <a href="{{ route('posts.show', $request->animal) }}" class="btn-order-action btn-view-post">
+                            @php
+                                $reqQty = $request->quantity ?? 1;
+                                $totalSum = (float) $request->animal->price * $reqQty;
+                            @endphp
+                            <div class="text-[1.4rem] font-bold whitespace-nowrap text-brand">
+                                {{ number_format($totalSum, 0, '.', ' ') }}
+                                <small class="text-ink/75">{{ $request->animal->currency }}</small>
+                            </div>
+                            @if($reqQty > 1)
+                                <div class="text-sm text-muted">{{ $reqQty }} ta &times; {{ number_format((float) $request->animal->price, 0, '.', ' ') }}</div>
+                            @endif
+                        @else
+                            <div class="text-muted">—</div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="flex flex-wrap items-center justify-between gap-3 border-t border-black/5 bg-white/90 p-3.5 md:px-[18px]">
+                    @php
+                        [$hintTone, $hintIcon, $hintText] = match ($request->status) {
+                            'approved' => ['text-brand', 'bi-check-circle-fill', "Sotuvchi so'rovingizni tasdiqladi! Chat orqali to'g'ridan-to'g'ri bog'lanishingiz mumkin."],
+                            'sold' => ['text-brand', 'bi-bag-check-fill', "Ushbu e'lon sotildi. So'rov \"Sold\" holatiga o'tdi."],
+                            'rejected' => ['text-muted', 'bi-info-circle', "Ushbu so'rov rad etilgan. Boshqa mavjud e'lonlarni ko'rib chiqishingiz mumkin."],
+                            default => ['text-accent', 'bi-hourglass-split', "Sotuvchi so'rovingizni ko'rib chiqmoqda. Tez orada javob olasiz."],
+                        };
+                    @endphp
+                    <div class="flex min-w-0 flex-1 items-center gap-1 text-sm {{ $hintTone }}">
+                        <i class="bi {{ $hintIcon }}"></i>
+                        <span>{{ $hintText }}</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 max-md:w-full">
+                        @if($request->animal)
+                            <a href="{{ route('posts.show', $request->animal) }}" class="{{ $action }} border border-line text-ink hover:border-brand/45 hover:bg-brand/6 hover:text-brand">
                                 <i class="bi bi-eye"></i> E'lonni ko'rish
                             </a>
                         @endif
 
                         @if(($request->status === 'approved' || $request->status === 'sold') && $request->chat)
                             @php $unread = $request->chat->unreadCountFor(auth()->id()); @endphp
-                            <a href="{{ route('chats.show', $request->chat) }}" class="btn-order-action btn-open-chat">
+                            <a href="{{ route('chats.show', $request->chat) }}" class="{{ $action }} bg-brand text-white shadow-[0_4px_12px_rgba(0,142,204,.25)] hover:-translate-y-px hover:bg-brand-dark">
                                 <i class="bi bi-chat-dots-fill"></i> Sotuvchi bilan chat
                                 @if($unread > 0)
-                                    <span class="badge-unread-pill">{{ $unread }}</span>
+                                    <span class="rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-extrabold text-white">{{ $unread }}</span>
                                 @endif
                             </a>
                         @endif
@@ -208,434 +138,14 @@
                 </div>
             </div>
         @empty
-            <div class="empty-state py-5">
-                <div class="empty-icon"><i class="bi bi-bag-x"></i></div>
-                <h3 class="empty-title">Buyurtmalar topilmadi</h3>
-                <p class="empty-text">Hozircha siz tomonidan yuborilgan xarid so'rovlari mavjud emas.</p>
-                <a href="{{ route('posts.index') }}" class="btn-filter-apply d-inline-flex mt-3 text-decoration-none px-4">
-                    <i class="bi bi-compass me-1"></i> E'lonlarni ko'rish va xarid qilish
-                </a>
-            </div>
+            <x-empty-state icon="bi-bag-x" title="Buyurtmalar topilmadi" text="Hozircha siz tomonidan yuborilgan xarid so'rovlari mavjud emas.">
+                <a href="{{ route('posts.index') }}" class="btn btn-primary"><i class="bi bi-compass"></i> E'lonlarni ko'rish va xarid qilish</a>
+            </x-empty-state>
         @endforelse
     </div>
 
     @if($requests->hasPages())
-        <div class="d-flex justify-content-center mt-4">
-            {{ $requests->links() }}
-        </div>
+        <div class="mt-6">{{ $requests->links() }}</div>
     @endif
 </div>
-
-<style>
-    .font-serif { font-family: var(--serif); }
-    .text-cream { color: var(--cream) !important; }
-    .text-lime { color: var(--lime) !important; }
-    .text-orange { color: var(--orange) !important; }
-    .bg-primary-soft { background: rgba(0, 142, 204, 0.15) !important; color: var(--lime) !important; }
-    .hover-lime:hover { color: var(--lime) !important; }
-
-    .btn-panel-link {
-        padding: 6px 14px;
-        border: 1px solid var(--line);
-        background: var(--panel);
-        color: var(--cream);
-        border-radius: 8px;
-        text-decoration: none;
-        font-size: 0.8rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        transition: all 0.2s ease;
-    }
-    .btn-panel-link:hover {
-        border-color: var(--lime);
-        color: var(--lime);
-        background: rgba(0, 142, 204, 0.08);
-    }
-
-    /* Tabs */
-    .admin-tabs-nav {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        border-bottom: 1px solid var(--line);
-        padding-bottom: 12px;
-    }
-
-    .admin-tab-item {
-        padding: 8px 14px;
-        background: rgba(0, 0, 0, 0.02);
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        color: var(--muted);
-        text-decoration: none;
-        font-size: 0.82rem;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.2s ease;
-    }
-
-    .admin-tab-item:hover {
-        border-color: rgba(0, 142, 204, 0.45);
-        color: var(--cream);
-        background: rgba(0, 142, 204, 0.04);
-    }
-
-    .admin-tab-item.active {
-        background: rgba(0, 142, 204, 0.12);
-        border-color: rgba(0, 142, 204, 0.5);
-        color: var(--lime);
-        box-shadow: inset 0 0 0 1px rgba(0, 142, 204, 0.12);
-    }
-
-    .tab-count {
-        background: rgba(0, 0, 0, 0.08);
-        color: var(--cream);
-        padding: 1px 7px;
-        border-radius: 100px;
-        font-size: 0.72rem;
-        min-width: 20px;
-        text-align: center;
-    }
-
-    .tab-count.highlight-orange {
-        background: var(--orange);
-        color: #fff;
-    }
-
-    /* Orders List & Cards */
-    .orders-list-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-    }
-
-    .order-card {
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.98) 100%);
-        border: 1px solid rgba(0, 0, 0, 0.06);
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-        transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    .order-card:hover {
-        border-color: rgba(0, 142, 204, 0.4);
-        transform: translateY(-2px);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-    }
-
-    .order-card-approved {
-        border-left: 4px solid var(--lime);
-    }
-
-    .order-card-pending {
-        border-left: 4px solid var(--orange);
-    }
-
-    .order-card-header {
-        padding: 14px 18px;
-        background: rgba(255, 255, 255, 0.85);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .order-id-badge {
-        font-family: monospace;
-        font-weight: 700;
-        color: var(--cream);
-        background: rgba(0, 0, 0, 0.05);
-        padding: 5px 9px;
-        border-radius: 8px;
-        font-size: 0.78rem;
-        letter-spacing: 0.02em;
-    }
-
-    .order-date-text {
-        font-size: 0.78rem;
-        color: var(--muted);
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .order-relative-time {
-        color: rgba(34, 34, 34, 0.72);
-        margin-left: 3px;
-    }
-
-    .order-card-body {
-        padding: 18px;
-    }
-
-    /* Image Box */
-    .order-img-box {
-        width: 120px;
-        height: 96px;
-        border-radius: 16px;
-        overflow: hidden;
-        background: #f5f7f9;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .order-img-backdrop {
-        position: absolute;
-        inset: -8px;
-        background-size: cover;
-        background-position: center;
-        filter: blur(10px) brightness(0.35);
-        opacity: 0.8;
-        pointer-events: none;
-    }
-
-    .order-img-box img {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .order-img-placeholder {
-        color: var(--muted);
-        font-size: 1.5rem;
-        position: relative;
-        z-index: 1;
-    }
-
-    .badge-cat-tag {
-        background: rgba(0, 142, 204, 0.1);
-        color: var(--lime);
-        border: 1px solid rgba(0, 142, 204, 0.2);
-        padding: 4px 9px;
-        border-radius: 999px;
-        font-size: 0.7rem;
-        font-weight: 800;
-    }
-
-    .badge-sub-tag {
-        background: rgba(0, 0, 0, 0.04);
-        color: var(--muted);
-        border: 1px solid var(--line);
-        padding: 4px 8px;
-        border-radius: 999px;
-        font-size: 0.68rem;
-        font-weight: 600;
-    }
-
-    .order-title {
-        font-size: 1.15rem;
-        font-weight: 700;
-        font-family: var(--serif);
-        line-height: 1.35;
-        margin: 0;
-    }
-
-    .order-seller-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 8px;
-    }
-
-    .order-seller-text {
-        display: flex;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .seller-avatar-mini {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, rgba(0, 142, 204, 0.22), rgba(0, 0, 0, 0.04));
-        color: var(--lime);
-        display: grid;
-        place-items: center;
-        font-size: 0.72rem;
-        font-weight: 800;
-        flex-shrink: 0;
-        border: 1px solid rgba(0, 142, 204, 0.3);
-    }
-
-    .order-price-panel {
-        background: rgba(0, 0, 0, 0.02);
-        border: 1px solid rgba(0, 0, 0, 0.04);
-        border-radius: 14px;
-        padding: 10px 12px;
-        min-width: 122px;
-        text-align: right;
-    }
-
-    .order-price-label {
-        font-size: 0.7rem;
-        color: var(--muted);
-        text-transform: uppercase;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        margin-bottom: 4px;
-    }
-
-    .order-price-val {
-        font-size: 1.4rem;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    /* Badges */
-    .badge-status {
-        padding: 5px 12px;
-        border-radius: 999px;
-        font-size: 0.74rem;
-        font-weight: 800;
-        display: inline-flex;
-        align-items: center;
-        letter-spacing: 0.01em;
-    }
-
-    .badge-pending {
-        background: rgba(255, 107, 43, 0.15);
-        color: var(--orange);
-        border: 1px solid rgba(255, 107, 43, 0.35);
-    }
-
-    .badge-approved {
-        background: rgba(0, 142, 204, 0.14);
-        color: var(--lime);
-        border: 1px solid rgba(0, 142, 204, 0.35);
-    }
-
-    .badge-sold {
-        background: rgba(110, 142, 255, 0.12);
-        color: #1a6fd1;
-        border: 1px solid rgba(110, 142, 255, 0.35);
-    }
-
-    .badge-rejected {
-        background: rgba(0, 0, 0, 0.05);
-        color: var(--muted);
-        border: 1px solid var(--line);
-    }
-
-    .pulse-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--orange);
-        display: inline-block;
-        animation: pulse 1.5s infinite ease-in-out;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.4; transform: scale(1.3); }
-    }
-
-    /* Order Card Footer */
-    .order-card-footer {
-        padding: 14px 18px;
-        background: rgba(255, 255, 255, 0.9);
-        border-top: 1px solid rgba(0, 0, 0, 0.05);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    .order-status-hint {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-        flex: 1;
-    }
-
-    .order-actions-group {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .btn-order-action {
-        height: 38px;
-        padding: 0 14px;
-        border-radius: 10px;
-        font-size: 0.82rem;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .btn-view-post {
-        background: transparent;
-        border: 1px solid var(--line);
-        color: var(--cream);
-    }
-    .btn-view-post:hover {
-        border-color: rgba(0, 142, 204, 0.45);
-        color: var(--lime);
-        background: rgba(0, 142, 204, 0.06);
-    }
-
-    .btn-open-chat {
-        background: var(--lime);
-        color: var(--ink);
-        border: 0;
-        box-shadow: 0 4px 12px rgba(0, 142, 204, 0.25);
-    }
-    .btn-open-chat:hover {
-        background: #0073a8;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(0, 142, 204, 0.35);
-    }
-
-    .badge-unread-pill {
-        background: var(--orange);
-        color: #fff;
-        font-size: 0.65rem;
-        padding: 2px 6px;
-        border-radius: 999px;
-        font-weight: 800;
-    }
-
-    @media (max-width: 767px) {
-        .order-card-header, .order-card-body, .order-card-footer {
-            padding: 14px;
-        }
-        .order-img-box {
-            width: 100%;
-            height: 160px;
-        }
-        .order-price-panel {
-            min-width: 0;
-            width: 100%;
-            text-align: left;
-        }
-        .order-actions-group {
-            width: 100%;
-            justify-content: flex-start;
-        }
-        .btn-order-action {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-</style>
 @endsection

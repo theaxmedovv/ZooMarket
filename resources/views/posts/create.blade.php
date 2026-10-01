@@ -1,216 +1,175 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container page-shell">
+@php
+    $label = 'mb-[7px] block text-[13px] font-bold tracking-wide text-ink';
+    $hint = 'text-xs text-muted';
+    $required = '<span class="text-brand">*</span>';
+    // Input with a leading icon: <div class="$iconWrap"><i class="bi … $icon"></i><input class="$field"></div>
+    $iconWrap = 'group relative flex items-center';
+    $icon = 'pointer-events-none absolute left-3.5 text-[15px] text-muted transition-colors group-focus-within:text-brand';
+    $field = 'input border-line bg-surface pl-[42px]';
+@endphp
+<div class="page">
     <x-page-head title="Yangi e'lon" subtitle="Hayvoningiz haqida aniq ma'lumot va sifatli rasmlar qo'shing — o'ng tomonda e'lon xaridorlarga qanday ko'rinishini kuzatib borasiz." />
 
-    {{-- Error Banner --}}
+    {{-- Error banner --}}
     @if($errors->any())
-        <div class="alert-error-box mb-4">
-            <div class="d-flex align-items-start gap-2">
-                <i class="bi bi-exclamation-triangle-fill text-orange fs-5 mt-1"></i>
-                <div>
-                    <h6 class="fw-bold mb-1 text-cream">Iltimos, quyidagi xatoliklarni to'g'rilang:</h6>
-                    <ul class="mb-0 ps-3 small text-cream-50">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
+        <div class="mb-6 flex items-start gap-2 rounded-[14px] border border-accent/35 bg-accent/10 px-5 py-4">
+            <i class="bi bi-exclamation-triangle-fill mt-0.5 text-xl text-accent"></i>
+            <div>
+                <h6 class="mb-1 font-bold text-ink">Iltimos, quyidagi xatoliklarni to'g'rilang:</h6>
+                <ul class="list-disc pl-4 text-sm text-ink/70">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         </div>
     @endif
 
-    {{-- AI Moderation Notice --}}
-    <div class="alert border border-lime border-opacity-25 rounded-4 p-3 mb-4" style="background: rgba(0, 142, 204, 0.05);">
-        <div class="d-flex align-items-center gap-3">
-            <div class="rounded-circle p-2 bg-lime-soft text-lime flex-shrink-0">
-                <i class="bi bi-robot fs-4"></i>
-            </div>
-            <div>
-                <strong class="text-lime d-block small">Sun'iy Intellekt (Groq AI) Moderatsiyasi</strong>
-                <span class="text-cream-50 small">
-                    Har bir e'lonning matni va fotosuratlari xavfsizlik, soxta e'lonlar va taqiqlangan turlarga qarshi Groq AI orqali avtomatik tekshiriladi. Faqat mezonlarga javob beradigan e'lonlar ommaga e'lon qilinadi.
-                </span>
-            </div>
+    {{-- AI moderation notice --}}
+    <div class="mb-6 flex items-center gap-3 rounded-2xl border border-brand/25 bg-brand/5 p-4">
+        <div class="grid size-11 shrink-0 place-items-center rounded-full bg-brand/12 text-xl text-brand"><i class="bi bi-robot"></i></div>
+        <div class="text-sm">
+            <strong class="block text-brand">Sun'iy Intellekt (Groq AI) Moderatsiyasi</strong>
+            <span class="text-ink/70">
+                Har bir e'lonning matni va fotosuratlari xavfsizlik, soxta e'lonlar va taqiqlangan turlarga qarshi Groq AI orqali avtomatik tekshiriladi. Faqat mezonlarga javob beradigan e'lonlar ommaga e'lon qilinadi.
+            </span>
         </div>
     </div>
 
     <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data" id="createPostForm">
         @csrf
 
-        <div class="row g-4">
-            {{-- ── LEFT MAIN COLUMN: FORM SECTIONS ── --}}
-            <div class="col-lg-8">
-                
-                {{-- SECTION 1: Asosiy ma'lumotlar --}}
-                <div class="form-section-card mb-4">
-                    <div class="section-card-header">
-                        <div class="section-icon-box"><i class="bi bi-info-circle-fill"></i></div>
-                        <div>
-                            <h5 class="section-title">Asosiy ma'lumotlar</h5>
-                            <p class="section-desc">E'lonning nomi, kategoriyasi va zotini belgilang</p>
-                        </div>
-                    </div>
+        <div class="grid items-start gap-6 lg:grid-cols-3">
+            {{-- Main column: form sections --}}
+            <div class="flex flex-col gap-6 lg:col-span-2">
 
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label for="title" class="form-label-custom">E'lon sarlavhasi <span class="text-lime">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-card-heading input-icon"></i>
-                                <input type="text" name="title" id="title" value="{{ old('title') }}"
-                                       class="custom-form-input"
+                {{-- Section 1: basics --}}
+                <x-form-section icon="bi-info-circle-fill" title="Asosiy ma'lumotlar" desc="E'lonning nomi, kategoriyasi va zotini belgilang">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="md:col-span-2">
+                            <label for="title" class="{{ $label }}">E'lon sarlavhasi {!! $required !!}</label>
+                            <div class="{{ $iconWrap }}">
+                                <i class="bi bi-card-heading {{ $icon }}"></i>
+                                <input type="text" name="title" id="title" value="{{ old('title') }}" class="{{ $field }}"
                                        placeholder="Masalan: Shotland osmaxo'r mushukchasi, 2 oylik" required maxlength="255">
                             </div>
-                            <div class="d-flex justify-content-between mt-1">
-                                <span class="form-field-hint">Qisqa va xaridorni jalb qiluvchi sarlavha tanlang</span>
-                                <span class="form-field-hint" id="titleCount">0/255</span>
+                            <div class="mt-1 flex justify-between">
+                                <span class="{{ $hint }}">Qisqa va xaridorni jalb qiluvchi sarlavha tanlang</span>
+                                <span class="{{ $hint }}" id="titleCount">0/255</span>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="category_id" class="form-label-custom">Kategoriya <span class="text-lime">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-grid-fill input-icon"></i>
-                                <select name="category_id" id="category_id" class="custom-form-select" required>
+                        <div>
+                            <label for="category_id" class="{{ $label }}">Kategoriya {!! $required !!}</label>
+                            <div class="{{ $iconWrap }}">
+                                <i class="bi bi-grid-fill {{ $icon }}"></i>
+                                <select name="category_id" id="category_id" class="{{ $field }} cursor-pointer" required>
                                     <option value="">Kategoriyani tanlang</option>
                                     @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
-                                            {{ $category->name }}
-                                        </option>
+                                        <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>{{ $category->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="breed" class="form-label-custom">Zot (Breed) <span class="text-lime">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-tag-fill input-icon"></i>
-                                <input type="text" name="breed" id="breed" value="{{ old('breed') }}"
-                                       class="custom-form-input"
+                        <div>
+                            <label for="breed" class="{{ $label }}">Zot (Breed) {!! $required !!}</label>
+                            <div class="{{ $iconWrap }}">
+                                <i class="bi bi-tag-fill {{ $icon }}"></i>
+                                <input type="text" name="breed" id="breed" value="{{ old('breed') }}" class="{{ $field }}"
                                        placeholder="Masalan: Shotland, Nemis ovcharkasi, Kane-korso" required>
                             </div>
                         </div>
                     </div>
-                </div>
+                </x-form-section>
 
-                {{-- SECTION 2: Parametrlar va xususiyatlar --}}
-                <div class="form-section-card mb-4">
-                    <div class="section-card-header">
-                        <div class="section-icon-box"><i class="bi bi-sliders"></i></div>
-                        <div>
-                            <h5 class="section-title">Parametrlar va holat</h5>
-                            <p class="section-desc">Hayvonning jinsi, yoshi, rangi va e'lon statusi</p>
-                        </div>
-                    </div>
-
-                    <div class="row g-3">
-                        {{-- Total Quantity --}}
-                        <div class="col-md-5">
-                            <label for="quantity" class="form-label-custom">Jami hayvonlar soni <span class="text-lime">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-hash input-icon"></i>
-                                <input type="number" name="quantity" id="quantity"
-                                       value="{{ old('quantity', 1) }}" min="1" max="100"
-                                       class="custom-form-input" placeholder="Masalan: 1, 5, 10, 50" required>
+                {{-- Section 2: parameters --}}
+                <x-form-section icon="bi-sliders" title="Parametrlar va holat" desc="Hayvonning jinsi, yoshi, rangi va e'lon statusi">
+                    <div class="grid gap-4 md:grid-cols-12">
+                        {{-- Total quantity --}}
+                        <div class="md:col-span-5">
+                            <label for="quantity" class="{{ $label }}">Jami hayvonlar soni {!! $required !!}</label>
+                            <div class="{{ $iconWrap }}">
+                                <i class="bi bi-hash {{ $icon }}"></i>
+                                <input type="number" name="quantity" id="quantity" value="{{ old('quantity', 1) }}" min="1" max="100"
+                                       class="{{ $field }}" placeholder="Masalan: 1, 5, 10, 50" required>
                             </div>
-                            <span class="form-field-hint">Maksimal 100 tagacha (1–100)</span>
+                            <span class="{{ $hint }}">Maksimal 100 tagacha (1–100)</span>
                         </div>
 
-                        {{-- Gender Selector --}}
-                        <div class="col-md-7">
-                            <label class="form-label-custom d-block">Jinsi <span class="text-lime">*</span></label>
-                            <div class="gender-segmented-control" id="genderSegmentedWrap">
-                                <label class="gender-segment-option" id="genderOptMale">
-                                    <input type="radio" name="gender" id="genderMale" value="male" @checked(old('gender', 'male') === 'male') required>
-                                    <span class="gender-segment-btn">
-                                        <i class="bi bi-gender-male"></i> Erkak
-                                    </span>
-                                </label>
-                                <label class="gender-segment-option" id="genderOptFemale">
-                                    <input type="radio" name="gender" id="genderFemale" value="female" @checked(old('gender') === 'female') required>
-                                    <span class="gender-segment-btn">
-                                        <i class="bi bi-gender-female"></i> Urg'ochi
-                                    </span>
-                                </label>
-                                <label class="gender-segment-option {{ (int)old('quantity', 1) <= 1 ? 'd-none' : '' }}" id="genderOptMixed">
-                                    <input type="radio" name="gender" id="genderMixed" value="mixed" @checked(old('gender') === 'mixed')>
-                                    <span class="gender-segment-btn">
-                                        <i class="bi bi-shuffle"></i> Aralash (Mixed)
-                                    </span>
-                                </label>
+                        {{-- Gender selector --}}
+                        <div class="md:col-span-7">
+                            <span class="{{ $label }}">Jinsi {!! $required !!}</span>
+                            <div class="flex h-11 gap-[3px] rounded-[10px] border border-line bg-surface p-[3px]">
+                                @foreach([
+                                    ['genderOptMale', 'genderMale', 'male', 'bi-gender-male', 'Erkak', old('gender', 'male') === 'male', true],
+                                    ['genderOptFemale', 'genderFemale', 'female', 'bi-gender-female', "Urg'ochi", old('gender') === 'female', true],
+                                    ['genderOptMixed', 'genderMixed', 'mixed', 'bi-shuffle', 'Aralash (Mixed)', old('gender') === 'mixed', false],
+                                ] as [$optId, $inputId, $value, $genderIcon, $genderLabel, $checked, $isRequired])
+                                    <label class="flex-1 cursor-pointer" id="{{ $optId }}" @if($value === 'mixed' && (int) old('quantity', 1) <= 1) hidden @endif>
+                                        <input type="radio" name="gender" id="{{ $inputId }}" value="{{ $value }}" class="peer sr-only" @checked($checked) @required($isRequired)>
+                                        <span class="inline-flex size-full items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-muted transition peer-checked:bg-brand peer-checked:font-bold peer-checked:text-white peer-checked:shadow-[0_2px_8px_rgba(0,142,204,.25)] peer-focus-visible:outline-2 peer-focus-visible:outline-brand">
+                                            <i class="bi {{ $genderIcon }}"></i> {{ $genderLabel }}
+                                        </span>
+                                    </label>
+                                @endforeach
                             </div>
-                            <span class="form-field-hint" id="genderHelpHint">Yakka hayvon uchun faqat Erkak yoki Urg'ochi</span>
+                            <span class="{{ $hint }}" id="genderHelpHint">Yakka hayvon uchun faqat Erkak yoki Urg'ochi</span>
                         </div>
 
-                        {{-- Mixed Gender Split (shown only when gender === 'mixed') --}}
-                        <div class="col-12 {{ old('gender') === 'mixed' ? '' : 'd-none' }}" id="mixedBreakdownWrap">
-                            <div class="mixed-split-box">
-                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="bi bi-pie-chart-fill text-lime"></i>
-                                        <span class="fw-bold small text-cream">Aralash jinslar soni taqsimoti:</span>
+                        {{-- Mixed gender split (only when gender === 'mixed') --}}
+                        <div class="md:col-span-12" id="mixedBreakdownWrap" @if(old('gender') !== 'mixed') hidden @endif>
+                            <div class="mt-1 rounded-xl border border-dashed border-brand/35 bg-surface p-4">
+                                <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <i class="bi bi-pie-chart-fill text-brand"></i>
+                                        <span class="text-sm font-bold text-ink">Aralash jinslar soni taqsimoti:</span>
                                     </div>
-                                    <div class="mixed-sum-status" id="mixedSumStatusBadge">
+                                    <div id="mixedSumStatusBadge" class="rounded-full border border-line bg-black/5 px-3 py-1 text-xs font-bold text-muted transition data-[state=invalid]:border-accent/40 data-[state=invalid]:bg-accent/15 data-[state=invalid]:text-accent data-[state=valid]:border-brand/40 data-[state=valid]:bg-brand/15 data-[state=valid]:text-brand">
                                         0 / 0 ta
                                     </div>
                                 </div>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label for="male_quantity" class="form-label-custom small text-muted">
-                                            <i class="bi bi-gender-male text-info me-1"></i> Erkaklar soni:
-                                        </label>
-                                        <div class="input-with-icon">
-                                            <i class="bi bi-gender-male input-icon text-info"></i>
-                                            <input type="number" name="male_quantity" id="male_quantity"
-                                                   value="{{ old('male_quantity', '') }}" min="1" max="99"
-                                                   class="custom-form-input" placeholder="Masalan: 4">
+                                <div class="grid gap-4 md:grid-cols-2">
+                                    @foreach([['male_quantity', 'bi-gender-male text-male', 'Erkaklar soni:', 'Masalan: 4'], ['female_quantity', 'bi-gender-female text-danger', "Urg'ochilar soni:", 'Masalan: 6']] as [$name, $qtyIcon, $qtyLabel, $placeholder])
+                                        <div>
+                                            <label for="{{ $name }}" class="{{ $label }} font-semibold text-muted"><i class="bi {{ $qtyIcon }} mr-1"></i> {{ $qtyLabel }}</label>
+                                            <div class="{{ $iconWrap }}">
+                                                <i class="bi {{ $qtyIcon }} {{ $icon }}"></i>
+                                                <input type="number" name="{{ $name }}" id="{{ $name }}" value="{{ old($name, '') }}" min="1" max="99" class="{{ $field }}" placeholder="{{ $placeholder }}">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="female_quantity" class="form-label-custom small text-muted">
-                                            <i class="bi bi-gender-female text-danger me-1"></i> Urg'ochilar soni:
-                                        </label>
-                                        <div class="input-with-icon">
-                                            <i class="bi bi-gender-female input-icon text-danger"></i>
-                                            <input type="number" name="female_quantity" id="female_quantity"
-                                                   value="{{ old('female_quantity', '') }}" min="1" max="99"
-                                                   class="custom-form-input" placeholder="Masalan: 6">
-                                        </div>
-                                    </div>
+                                    @endforeach
                                 </div>
-                                <div class="mt-2 small text-muted" id="mixedSplitMessage">
-                                    <i class="bi bi-info-circle me-1"></i> Erkaklar va urg'ochilar soni yig'indisi jami miqdorga teng bo'lishi shart.
+                                <div id="mixedSplitMessage" class="mt-2 text-sm text-muted data-[state=invalid]:text-accent data-[state=valid]:text-brand">
+                                    <i class="bi bi-info-circle mr-1"></i> Erkaklar va urg'ochilar soni yig'indisi jami miqdorga teng bo'lishi shart.
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="age" class="form-label-custom">Yoshi <span class="text-lime">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-calendar3 input-icon"></i>
-                                <input type="text" name="age" id="age" value="{{ old('age') }}"
-                                       class="custom-form-input"
-                                       placeholder="Masalan: 3 oy, 1.5 yosh, 6 haftalik" required>
+                        <div class="md:col-span-6">
+                            <label for="age" class="{{ $label }}">Yoshi {!! $required !!}</label>
+                            <div class="{{ $iconWrap }}">
+                                <i class="bi bi-calendar3 {{ $icon }}"></i>
+                                <input type="text" name="age" id="age" value="{{ old('age') }}" class="{{ $field }}" placeholder="Masalan: 3 oy, 1.5 yosh, 6 haftalik" required>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="color" class="form-label-custom">Rangi</label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-palette-fill input-icon"></i>
-                                <input type="text" name="color" id="color" value="{{ old('color') }}"
-                                       class="custom-form-input"
-                                       placeholder="Masalan: Qora, Oq, Zangori, Dog'dor">
+                        <div class="md:col-span-6">
+                            <label for="color" class="{{ $label }}">Rangi</label>
+                            <div class="{{ $iconWrap }}">
+                                <i class="bi bi-palette-fill {{ $icon }}"></i>
+                                <input type="text" name="color" id="color" value="{{ old('color') }}" class="{{ $field }}" placeholder="Masalan: Qora, Oq, Zangori, Dog'dor">
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label for="status" class="form-label-custom">E'lon holati <span class="text-lime">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-activity input-icon"></i>
-                                <select name="status" id="status" class="custom-form-select" required>
+                        <div class="md:col-span-6">
+                            <label for="status" class="{{ $label }}">E'lon holati {!! $required !!}</label>
+                            <div class="{{ $iconWrap }}">
+                                <i class="bi bi-activity {{ $icon }}"></i>
+                                <select name="status" id="status" class="{{ $field }} cursor-pointer" required>
                                     <option value="active" @selected(old('status', 'active') === 'active')>🟢 Aktiv (Sotuvda)</option>
                                     <option value="reserved" @selected(old('status') === 'reserved')>🟡 Rezerv (Band qilingan)</option>
                                     <option value="sold" @selected(old('status') === 'sold')>🔴 Sotilgan</option>
@@ -218,936 +177,192 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </x-form-section>
 
-                {{-- SECTION 3: Narx va Joylashuv --}}
-                <div class="form-section-card mb-4">
-                    <div class="section-card-header">
-                        <div class="section-icon-box"><i class="bi bi-cash-stack"></i></div>
-                        <div>
-                            <h5 class="section-title">Narx va joylashuv</h5>
-                            <p class="section-desc">To'lov qiymati, kelishuv sharti va joylashgan hudud</p>
-                        </div>
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <label for="price" class="form-label-custom">Narx <span class="text-lime">*</span></label>
-                            <div class="price-input-group">
-                                <div class="price-input-wrap">
-                                    <i class="bi bi-currency-exchange input-icon"></i>
-                                    <input type="number" step="0.01" min="0" name="price" id="price"
-                                           value="{{ old('price') }}"
-                                           class="custom-form-input price-field"
-                                           placeholder="Masalan: 1500000" required>
+                {{-- Section 3: price & location --}}
+                <x-form-section icon="bi-cash-stack" title="Narx va joylashuv" desc="To'lov qiymati, kelishuv sharti va joylashgan hudud">
+                    <div class="grid gap-4 md:grid-cols-3">
+                        <div class="md:col-span-2">
+                            <label for="price" class="{{ $label }}">Narx {!! $required !!}</label>
+                            <div class="flex items-center overflow-hidden rounded-[10px] border border-line bg-surface transition focus-within:border-brand focus-within:ring-3 focus-within:ring-brand/15">
+                                <div class="{{ $iconWrap }} flex-1">
+                                    <i class="bi bi-currency-exchange {{ $icon }}"></i>
+                                    <input type="number" step="0.01" min="0" name="price" id="price" value="{{ old('price') }}"
+                                           class="h-11 w-full min-w-0 bg-transparent pr-3.5 pl-[42px] text-sm text-ink outline-none placeholder:text-faint" placeholder="Masalan: 1500000" required>
                                 </div>
-                                <select name="currency" id="currency" class="currency-select" required>
-                                    <option value="UZS" @selected(old('currency', 'UZS') === 'UZS')>UZS</option>
-                                    <option value="USD" @selected(old('currency') === 'USD')>USD</option>
-                                    <option value="EUR" @selected(old('currency') === 'EUR')>EUR</option>
-                                    <option value="RUB" @selected(old('currency') === 'RUB')>RUB</option>
+                                <select name="currency" id="currency" class="h-11 cursor-pointer border-l border-line bg-white px-3.5 text-sm font-bold text-brand outline-none" required>
+                                    @foreach(['UZS', 'USD', 'EUR', 'RUB'] as $currency)
+                                        <option value="{{ $currency }}" @selected(old('currency', 'UZS') === $currency)>{{ $currency }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
 
-                        <div class="col-md-4 d-flex align-items-end">
-                            <label class="negotiable-toggle-box w-100" for="is_negotiable">
-                                <input type="checkbox" name="is_negotiable" id="is_negotiable" value="1"
-                                       class="negotiable-checkbox" @checked(old('is_negotiable'))>
-                                <div class="toggle-track">
-                                    <div class="toggle-thumb"></div>
-                                </div>
-                                <div class="toggle-label-group">
-                                    <span class="toggle-title">Narx kelishiladi</span>
-                                    <span class="toggle-desc">Savdolashish mumkin</span>
-                                </div>
+                        <div class="flex items-end">
+                            <label for="is_negotiable" class="flex h-11 w-full cursor-pointer items-center gap-3 rounded-[10px] border border-line bg-surface px-3.5 transition select-none hover:border-brand/30">
+                                <input type="checkbox" name="is_negotiable" id="is_negotiable" value="1" class="peer sr-only" @checked(old('is_negotiable'))>
+                                <span class="relative h-[22px] w-[38px] shrink-0 rounded-full bg-brand-tint transition peer-checked:bg-brand peer-focus-visible:outline-2 peer-focus-visible:outline-brand after:absolute after:top-[3px] after:left-[3px] after:size-4 after:rounded-full after:bg-muted after:transition after:content-[''] peer-checked:after:translate-x-4 peer-checked:after:bg-white"></span>
+                                <span class="flex flex-col leading-tight">
+                                    <span class="text-[13px] font-bold text-ink">Narx kelishiladi</span>
+                                    <span class="text-[11px] text-muted">Savdolashish mumkin</span>
+                                </span>
                             </label>
                         </div>
 
-                        <div class="col-12">
-                            <label for="location" class="form-label-custom">Manzil / Joylashuv <span class="text-lime">*</span></label>
-                            <div class="input-with-icon">
-                                <i class="bi bi-geo-alt-fill input-icon"></i>
-                                <input type="text" name="location" id="location" value="{{ old('location') }}"
-                                       class="custom-form-input"
-                                       placeholder="Masalan: Toshkent shahar, Yunusobod tumani" required>
+                        <div class="md:col-span-3">
+                            <label for="location" class="{{ $label }}">Manzil / Joylashuv {!! $required !!}</label>
+                            <div class="{{ $iconWrap }}">
+                                <i class="bi bi-geo-alt-fill {{ $icon }}"></i>
+                                <input type="text" name="location" id="location" value="{{ old('location') }}" class="{{ $field }}" placeholder="Masalan: Toshkent shahar, Yunusobod tumani" required>
                             </div>
                         </div>
                     </div>
-                </div>
+                </x-form-section>
 
-                {{-- SECTION 4: Fotosuratlar (3 ta gacha) --}}
-                <div class="form-section-card mb-4">
-                    <div class="section-card-header">
-                        <div class="section-icon-box"><i class="bi bi-images"></i></div>
-                        <div>
-                            <h5 class="section-title">Fotosuratlar <span class="text-muted fw-normal fs-6">(Maksimum 3 ta)</span></h5>
-                            <p class="section-desc">Birinchi fotosurat asosiy muqova bo'ladi. Har biri 2MB dan oshmasin.</p>
-                        </div>
-                    </div>
+                {{-- Section 4: photos (up to 3) --}}
+                <x-form-section icon="bi-images" desc="Birinchi fotosurat asosiy muqova bo'ladi. Har biri 2MB dan oshmasin.">
+                    <x-slot:title>Fotosuratlar <span class="text-base font-normal text-muted">(Maksimum 3 ta)</span></x-slot:title>
+                    <div class="grid gap-4 md:grid-cols-3">
+                        @foreach([
+                            ['bi-cloud-arrow-up-fill', '1-rasmni yuklash', 'JPG, PNG, GIF (max 2MB)', 'Muqova rasm'],
+                            ['bi-image', '2-rasm (ixtiyoriy)', 'Boshqa burchakdan', '2-rasm'],
+                            ['bi-image', '3-rasm (ixtiyoriy)', "Qo'shimcha tafsilot", '3-rasm'],
+                        ] as $i => [$slotIcon, $slotText, $slotHint, $alt])
+                            <div id="slotWrap{{ $i }}" @class(['relative flex h-[150px] flex-col items-center justify-center overflow-hidden rounded-[14px] border-[1.5px] border-dashed bg-surface transition hover:border-brand hover:bg-brand/3', $i === 0 ? 'border-brand/35' : 'border-line'])>
+                                <input type="file" name="images[]" id="imageInput{{ $i }}" hidden accept="image/jpeg,image/png,image/jpg,image/gif" data-slot="{{ $i }}">
+                                @if($i === 0)
+                                    <div class="pointer-events-none absolute top-2 left-2 z-[2] rounded-full border border-brand/30 bg-brand/15 px-2 py-0.5 text-[11px] font-bold text-brand">Asosiy muqova</div>
+                                @endif
 
-                    <div class="row g-3">
-                        {{-- Slot 1: Asosiy --}}
-                        <div class="col-md-4">
-                            <div class="image-upload-slot slot-main" id="slotWrap0">
-                                <input type="file" name="images[]" id="imageInput0" class="d-none image-file-input" accept="image/jpeg,image/png,image/jpg,image/gif" data-slot="0">
-                                <div class="upload-badge">Asosiy muqova</div>
-                                
-                                <div class="slot-empty-state" onclick="document.getElementById('imageInput0').click()">
-                                    <div class="slot-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
-                                    <div class="slot-text">1-rasmni yuklash</div>
-                                    <div class="slot-hint">JPG, PNG, GIF (max 2MB)</div>
-                                </div>
+                                <label for="imageInput{{ $i }}" data-slot-empty class="flex size-full cursor-pointer flex-col items-center justify-center p-4 text-center">
+                                    <span class="mb-1.5 text-2xl text-brand opacity-90"><i class="bi {{ $slotIcon }}"></i></span>
+                                    <span class="mb-0.5 text-[13px] font-bold text-ink">{{ $slotText }}</span>
+                                    <span class="text-[11px] text-muted">{{ $slotHint }}</span>
+                                </label>
 
-                                <div class="slot-preview-state d-none" id="previewState0">
-                                    <img src="" alt="Muqova rasm" id="previewImg0" class="slot-preview-image">
-                                    <button type="button" class="btn-slot-remove" onclick="removeImage(0)" title="O'chirish">
+                                <div class="absolute inset-0" id="previewState{{ $i }}" hidden>
+                                    <img src="" alt="{{ $alt }}" id="previewImg{{ $i }}" class="size-full object-cover">
+                                    <button type="button" class="absolute top-2 right-2 z-[3] grid size-7 cursor-pointer place-items-center rounded-full border border-white/20 bg-black/75 text-[13px] text-danger transition hover:scale-110 hover:bg-[#ff3333] hover:text-white" onclick="removeImage({{ $i }})" title="O'chirish">
                                         <i class="bi bi-x-lg"></i>
                                     </button>
                                 </div>
                             </div>
-                        </div>
-
-                        {{-- Slot 2: Qo'shimcha --}}
-                        <div class="col-md-4">
-                            <div class="image-upload-slot" id="slotWrap1">
-                                <input type="file" name="images[]" id="imageInput1" class="d-none image-file-input" accept="image/jpeg,image/png,image/jpg,image/gif" data-slot="1">
-                                
-                                <div class="slot-empty-state" onclick="document.getElementById('imageInput1').click()">
-                                    <div class="slot-icon"><i class="bi bi-image"></i></div>
-                                    <div class="slot-text">2-rasm (ixtiyoriy)</div>
-                                    <div class="slot-hint">Boshqa burchakdan</div>
-                                </div>
-
-                                <div class="slot-preview-state d-none" id="previewState1">
-                                    <img src="" alt="2-rasm" id="previewImg1" class="slot-preview-image">
-                                    <button type="button" class="btn-slot-remove" onclick="removeImage(1)" title="O'chirish">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Slot 3: Qo'shimcha --}}
-                        <div class="col-md-4">
-                            <div class="image-upload-slot" id="slotWrap2">
-                                <input type="file" name="images[]" id="imageInput2" class="d-none image-file-input" accept="image/jpeg,image/png,image/jpg,image/gif" data-slot="2">
-                                
-                                <div class="slot-empty-state" onclick="document.getElementById('imageInput2').click()">
-                                    <div class="slot-icon"><i class="bi bi-image"></i></div>
-                                    <div class="slot-text">3-rasm (ixtiyoriy)</div>
-                                    <div class="slot-hint">Qo'shimcha tafsilot</div>
-                                </div>
-
-                                <div class="slot-preview-state d-none" id="previewState2">
-                                    <img src="" alt="3-rasm" id="previewImg2" class="slot-preview-image">
-                                    <button type="button" class="btn-slot-remove" onclick="removeImage(2)" title="O'chirish">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
-                </div>
+                </x-form-section>
 
-                {{-- SECTION 5: Batafsil tavsif --}}
-                <div class="form-section-card mb-4">
-                    <div class="section-card-header">
-                        <div class="section-icon-box"><i class="bi bi-text-paragraph"></i></div>
-                        <div>
-                            <h5 class="section-title">Batafsil tavsif <span class="text-lime">*</span></h5>
-                            <p class="section-desc">Salomatligi, xarakteri, emlashlari va boshqa afzalliklari</p>
-                        </div>
+                {{-- Section 5: description --}}
+                <x-form-section icon="bi-text-paragraph" desc="Salomatligi, xarakteri, emlashlari va boshqa afzalliklari">
+                    <x-slot:title>Batafsil tavsif {!! $required !!}</x-slot:title>
+                    <textarea name="description" id="description" rows="5" aria-label="Batafsil tavsif"
+                              class="input mb-4 h-auto min-h-[120px] resize-y border-line bg-surface py-3 leading-normal"
+                              placeholder="Hayvonning o'ziga xosligi, ovqatlanishi, emlash holati, bolalari yoki yoshi to'g'risida to'liq yozing..." required>{{ old('description') }}</textarea>
+
+                    {{-- Quick description pills --}}
+                    <span class="{{ $hint }} mb-2 block">Tezkor qo'shimchalar (bosish orqali matnga qo'shing):</span>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach([
+                            "💉 Barcha vaksina va emlashlari o'z vaqtida qilingan." => '+ Emlangan',
+                            '📋 Xalqaro veterinariya pasporti mavjud.' => '+ Pasporti bor',
+                            "🧼 O'ta toza, sog'lom va faol hayvon." => "+ Sog'lom va toza",
+                            "🧸 Bolalar bilan o'ynashni yaxshi ko'radi, fe'l-atvori yuvosh." => "+ Yuvosh va o'ynoqi",
+                            '🚗 Boshqa viloyatlarga kelishilgan holda yetkazib berish mumkin.' => '+ Yetkazib berish',
+                        ] as $snippet => $pillLabel)
+                            <button type="button" data-append="{{ $snippet }}" class="cursor-pointer rounded-full border border-line bg-black/4 px-2.5 py-1 text-xs font-semibold text-muted transition hover:-translate-y-px hover:border-brand hover:bg-brand/9 hover:text-brand">{{ $pillLabel }}</button>
+                        @endforeach
                     </div>
+                </x-form-section>
 
-                    <div class="mb-3">
-                        <textarea name="description" id="description" rows="5"
-                                  class="custom-form-textarea"
-                                  placeholder="Hayvonning o'ziga xosligi, ovqatlanishi, emlash holati, bolalari yoki yoshi to'g'risida to'liq yozing..." required>{{ old('description') }}</textarea>
-                    </div>
-
-                    {{-- Quick Description Pills --}}
-                    <div>
-                        <span class="d-block form-field-hint mb-2">Tezkor qo'shimchalar (bosish orqali matnga qo'shing):</span>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button type="button" class="quick-pill-btn" onclick="appendDescription('💉 Barcha vaksina va emlashlari o\'z vaqtida qilingan.')">
-                                + Emlangan
-                            </button>
-                            <button type="button" class="quick-pill-btn" onclick="appendDescription('📋 Xalqaro veterinariya pasporti mavjud.')">
-                                + Pasporti bor
-                            </button>
-                            <button type="button" class="quick-pill-btn" onclick="appendDescription('🧼 O\'ta toza, sog\'lom va faol hayvon.')">
-                                + Sog'lom va toza
-                            </button>
-                            <button type="button" class="quick-pill-btn" onclick="appendDescription('🧸 Bolalar bilan o\'ynashni yaxshi ko\'radi, fe\'l-atvori yuvosh.')">
-                                + Yuvosh va o'ynoqi
-                            </button>
-                            <button type="button" class="quick-pill-btn" onclick="appendDescription('🚗 Boshqa viloyatlarga kelishilgan holda yetkazib berish mumkin.')">
-                                + Yetkazib berish
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Submit and Action Bar --}}
-                <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <button type="submit" class="btn-submit-post" id="submitBtn">
-                        <i class="bi bi-cloud-arrow-up-fill me-1"></i> E'lonni chop etish
+                {{-- Submit bar --}}
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="submit" class="btn btn-primary h-12 rounded-xl px-7 text-[15px] shadow-[0_4px_18px_rgba(0,142,204,.25)] hover:-translate-y-0.5" id="submitBtn">
+                        <i class="bi bi-cloud-arrow-up-fill"></i> E'lonni chop etish
                     </button>
-                    <a href="{{ route('posts.index') }}" class="btn-cancel-post">
-                        Bekor qilish
-                    </a>
+                    <a href="{{ route('posts.index') }}" class="btn h-12 rounded-xl border-line font-semibold text-muted hover:border-ink hover:text-ink">Bekor qilish</a>
                 </div>
-
             </div>
 
-            {{-- ── RIGHT SIDEBAR: LIVE PREVIEW & SELLING TIPS ── --}}
-            <div class="col-lg-4">
-                <div class="sticky-create-sidebar">
-                    
-                    {{-- Live Preview Card --}}
-                    <div class="preview-box-shell mb-4">
-                        <div class="preview-header-bar">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="live-dot"></span>
-                                <span class="preview-title">Jonli ko'rinish</span>
+            {{-- Sidebar: live preview & selling tips --}}
+            <div class="lg:sticky lg:top-[92px]">
+                {{-- Live preview --}}
+                <div class="mb-6 rounded-[18px] border border-line bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,.12)]">
+                    <div class="mb-3.5 flex items-center justify-between border-b border-line pb-2.5">
+                        <div class="flex items-center gap-2">
+                            <span class="size-2 animate-pulse-dot rounded-full bg-brand shadow-[0_0_10px_var(--color-brand)]"></span>
+                            <span class="text-[15px] font-bold text-ink">Jonli ko'rinish</span>
+                        </div>
+                        <span class="rounded-full bg-black/4 px-2 text-[11px] text-muted">Katalogda</span>
+                    </div>
+
+                    <div class="overflow-hidden rounded-[18px] border border-line">
+                        <div class="relative h-[200px] overflow-hidden border-b border-line bg-soft">
+                            <div id="liveBackdrop" class="pointer-events-none absolute -inset-3.5 scale-115 bg-cover bg-center opacity-85 blur-[18px] brightness-[.28]"></div>
+                            <img src="" alt="Muqova" id="liveImg" hidden class="relative z-[1] size-full object-cover">
+                            <div id="liveImgPlaceholder" class="flex size-full flex-col items-center justify-center gap-1 text-muted">
+                                <i class="bi bi-camera text-2xl"></i>
+                                <span class="text-sm">Rasm yuklanmagan</span>
                             </div>
-                            <span class="badge bg-panel-soft text-muted rounded-pill px-2 py-0-5" style="font-size:0.68rem;">Katalogda</span>
+                            <span id="liveCategoryBadge" class="absolute top-2.5 left-2.5 z-[2] rounded-full border border-black/12 bg-white/85 px-2.5 py-[3px] text-[11px] font-bold text-ink">Kategoriya</span>
                         </div>
 
-                        <div class="preview-card-wrap">
-                            <div class="post-card" id="liveCard">
-                                <div class="card-img-wrap">
-                                    <div class="card-img-backdrop" id="liveBackdrop" style="background-image: none;"></div>
-                                    <img src="" alt="Muqova" class="card-img d-none" id="liveImg">
-                                    <div class="card-img-placeholder" id="liveImgPlaceholder">
-                                        <i class="bi bi-camera fs-3"></i>
-                                        <span class="small">Rasm yuklanmagan</span>
-                                    </div>
-                                    <span class="card-badge" id="liveCategoryBadge">Kategoriya</span>
+                        <div class="flex flex-col gap-2 px-4 pt-3.5 pb-4">
+                            <div class="flex items-center gap-2">
+                                <div class="grid size-[26px] shrink-0 place-items-center rounded-full border border-brand/30 bg-brand-tint text-xs font-bold text-brand">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</div>
+                                <div class="leading-tight">
+                                    <span class="block text-sm font-semibold text-ink">{{ auth()->user()->name ?? 'Siz' }}</span>
+                                    <span class="text-[11px] text-faint">Hozirgina</span>
                                 </div>
+                            </div>
 
-                                <div class="card-body-inner">
-                                    <div class="card-author">
-                                        <div class="author-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}</div>
-                                        <div>
-                                            <span class="d-block fw-semibold text-cream">{{ auth()->user()->name ?? 'Siz' }}</span>
-                                            <span class="author-time">Hozirgina</span>
-                                        </div>
-                                    </div>
+                            <h5 class="line-clamp-2 text-[17px] font-bold text-ink" id="liveTitle">E'lon sarlavhasi bu yerda ko'rinadi</h5>
+                            <p class="line-clamp-2 text-sm text-muted" id="liveDesc">Hayvon haqidagi qisqacha tavsif bu yerda aks ettiriladi...</p>
 
-                                    <h5 class="card-title" id="liveTitle">E'lon sarlavhasi bu yerda ko'rinadi</h5>
+                            <div class="flex items-center justify-between text-sm text-muted">
+                                <span class="inline-flex items-center gap-1"><i class="bi bi-tag text-brand"></i> <span id="liveBreed">Zot ko'rsatilmagan</span></span>
+                                <span class="inline-flex items-center gap-1"><i class="bi bi-geo-alt text-accent"></i> <span id="liveLocation">Manzil</span></span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm text-muted">
+                                <span class="inline-flex items-center gap-1"><i class="bi bi-box-seam text-brand"></i> <span id="liveQuantity">1 ta mavjud</span></span>
+                                <span class="inline-flex items-center gap-1"><i class="bi bi-gender-ambiguous text-male"></i> <span id="liveGender">Erkak ♂</span></span>
+                            </div>
 
-                                    <p class="card-desc" id="liveDesc">Hayvon haqidagi qisqacha tavsif bu yerda aks ettiriladi...</p>
+                            <div class="text-xl font-extrabold text-brand" id="livePrice">0 <small class="text-xs text-ink/70">UZS</small></div>
 
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <span class="small text-muted d-inline-flex align-items-center gap-1">
-                                            <i class="bi bi-tag text-lime"></i> <span id="liveBreed">Zot ko'rsatilmagan</span>
-                                        </span>
-                                        <span class="small text-muted d-inline-flex align-items-center gap-1">
-                                            <i class="bi bi-geo-alt text-orange"></i> <span id="liveLocation">Manzil</span>
-                                        </span>
-                                    </div>
-
-                                    <div class="d-flex align-items-center justify-content-between mb-2 small text-muted">
-                                        <span class="d-inline-flex align-items-center gap-1">
-                                            <i class="bi bi-box-seam text-lime"></i> <span id="liveQuantity">1 ta mavjud</span>
-                                        </span>
-                                        <span class="d-inline-flex align-items-center gap-1">
-                                            <i class="bi bi-gender-ambiguous text-info"></i> <span id="liveGender">Erkak ♂</span>
-                                        </span>
-                                    </div>
-
-                                    <div class="card-price" id="livePrice">
-                                        0 <small id="liveCurrency">UZS</small>
-                                    </div>
-
-                                    <div class="card-footer-inner">
-                                        <span class="action-tag tag-negotiable d-none" id="liveNegotiableBadge">
-                                            <i class="bi bi-check2-circle"></i> Kelishiladi
-                                        </span>
-                                        <span class="badge bg-panel-soft text-muted ms-auto" id="liveStatusBadge">
-                                            Aktiv
-                                        </span>
-                                    </div>
-                                </div>
+                            <div class="flex items-center gap-2 border-t border-black/5 pt-2.5">
+                                <span id="liveNegotiableBadge" hidden class="rounded-full border border-brand/30 bg-brand/12 px-2 py-0.5 text-[11px] font-semibold text-brand"><i class="bi bi-check2-circle"></i> Kelishiladi</span>
+                                <span id="liveStatusBadge" data-status="active" class="ml-auto rounded-md bg-black/4 px-2 py-0.5 text-xs font-bold text-muted data-[status=active]:text-brand data-[status=reserved]:text-accent">Aktiv</span>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {{-- Tips Card --}}
-                    <div class="tips-card">
-                        <div class="tips-header">
-                            <i class="bi bi-lightbulb-fill text-lime fs-5"></i>
-                            <h6 class="tips-title">Tezroq sotish uchun tavsiyalar</h6>
-                        </div>
-                        <ul class="tips-list">
-                            <li>
-                                <i class="bi bi-check-circle-fill text-lime"></i>
-                                <span><strong>Yorug' va sifatli fotosuratlar:</strong> Xaridorlar aniq ko'ringan fotosuratlarga 3 barobar ko'proq murojaat qilishadi.</span>
-                            </li>
-                            <li>
-                                <i class="bi bi-check-circle-fill text-lime"></i>
-                                <span><strong>Emlash va tibbiy holat:</strong> Vaksina va pasport ma'lumotlarini kiritish xaridor ishonchini oshiradi.</span>
-                            </li>
-                            <li>
-                                <i class="bi bi-check-circle-fill text-lime"></i>
-                                <span><strong>Aniq manzil:</strong> Shahar va tumaningizni yozsangiz, yaqin atrofdagi qiziquvchilar tezroq bog'lanadi.</span>
-                            </li>
-                        </ul>
+                {{-- Tips --}}
+                <div class="rounded-[18px] border border-line bg-white/85 p-[18px]">
+                    <div class="mb-3 flex items-center gap-2">
+                        <i class="bi bi-lightbulb-fill text-xl text-brand"></i>
+                        <h6 class="text-sm font-bold text-ink">Tezroq sotish uchun tavsiyalar</h6>
                     </div>
-
+                    <ul class="flex flex-col gap-2.5">
+                        @foreach([
+                            ["Yorug' va sifatli fotosuratlar:", "Xaridorlar aniq ko'ringan fotosuratlarga 3 barobar ko'proq murojaat qilishadi."],
+                            ['Emlash va tibbiy holat:', 'Vaksina va pasport ma\'lumotlarini kiritish xaridor ishonchini oshiradi.'],
+                            ['Aniq manzil:', "Shahar va tumaningizni yozsangiz, yaqin atrofdagi qiziquvchilar tezroq bog'lanadi."],
+                        ] as [$tipTitle, $tipText])
+                            <li class="flex items-start gap-2 text-xs leading-snug text-muted">
+                                <i class="bi bi-check-circle-fill mt-0.5 shrink-0 text-brand"></i>
+                                <span><strong class="text-ink">{{ $tipTitle }}</strong> {{ $tipText }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
         </div>
     </form>
 </div>
 
-<style>
-    :root {
-        --ink: #ffffff;
-        --panel: #ffffff;
-        --line: #ededed;
-        --lime: #008ecc;
-        --orange: #ff6b2b;
-        --cream: #222222;
-        --muted: #666666;
-        --serif: 'Space Grotesk', sans-serif;
-        --sans: 'DM Sans', sans-serif;
-    }
-
-    .font-serif { font-family: var(--serif); }
-    .text-cream { color: var(--cream) !important; }
-    .text-cream-50 { color: rgba(34, 34, 34, 0.7) !important; }
-    .text-lime { color: var(--lime) !important; }
-    .text-orange { color: var(--orange) !important; }
-    .text-muted { color: var(--muted) !important; }
-    .bg-lime-soft { background: rgba(0, 142, 204, 0.12) !important; }
-    .bg-panel-soft { background: rgba(0, 0, 0, 0.04) !important; }
-    .py-1-5 { padding-top: 0.38rem; padding-bottom: 0.38rem; }
-
-    /* Navigation */
-    .btn-back-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 13px;
-        border-radius: 9999px;
-        background: rgba(0, 0, 0, 0.04);
-        border: 1px solid var(--line);
-        color: var(--muted);
-        text-decoration: none;
-        font-size: 0.78rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-    .btn-back-link:hover {
-        border-color: var(--lime);
-        color: var(--lime);
-        background: rgba(0, 142, 204, 0.08);
-        transform: translateX(-2px);
-    }
-
-    /* Hero Banner */
-    .create-hero-banner {
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95));
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 24px 28px;
-        position: relative;
-        overflow: hidden;
-    }
-    .create-hero-banner::before {
-        content: "";
-        position: absolute;
-        inset: -50% auto auto 70%;
-        width: 260px;
-        height: 260px;
-        border-radius: 50%;
-        background: rgba(0, 142, 204, 0.08);
-        filter: blur(14px);
-    }
-    .create-hero-title {
-        font-family: var(--serif);
-        font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-        font-weight: 700;
-        letter-spacing: -0.03em;
-        margin: 0 0 6px;
-        color: var(--cream);
-    }
-    .create-hero-subtitle {
-        color: var(--muted);
-        font-size: 0.86rem;
-        margin: 0;
-        max-width: 620px;
-        line-height: 1.5;
-    }
-
-    /* Alert Error */
-    .alert-error-box {
-        background: rgba(255, 107, 43, 0.1);
-        border: 1px solid rgba(255, 107, 43, 0.35);
-        border-radius: 14px;
-        padding: 16px 20px;
-    }
-
-    /* Section Cards */
-    .form-section-card {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 22px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        transition: border-color 0.2s ease;
-    }
-    .form-section-card:hover {
-        border-color: rgba(0, 142, 204, 0.25);
-    }
-    .section-card-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
-        padding-bottom: 14px;
-        border-bottom: 1px solid var(--line);
-    }
-    .section-icon-box {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        background: rgba(0, 142, 204, 0.1);
-        color: var(--lime);
-        display: grid;
-        place-items: center;
-        font-size: 1.15rem;
-        flex-shrink: 0;
-    }
-    .section-title {
-        font-family: var(--serif);
-        font-size: 1.05rem;
-        font-weight: 700;
-        margin: 0 0 2px;
-        color: var(--cream);
-    }
-    .section-desc {
-        font-size: 0.75rem;
-        color: var(--muted);
-        margin: 0;
-    }
-
-    /* Form Fields */
-    .form-label-custom {
-        display: block;
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        color: var(--cream);
-        margin-bottom: 7px;
-    }
-    .form-field-hint {
-        font-size: 0.72rem;
-        color: var(--muted);
-    }
-
-    .input-with-icon {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-    .input-icon {
-        position: absolute;
-        left: 14px;
-        color: var(--muted);
-        font-size: 0.95rem;
-        pointer-events: none;
-        transition: color 0.2s;
-    }
-    .input-with-icon:focus-within .input-icon {
-        color: var(--lime);
-    }
-
-    .custom-form-input,
-    .custom-form-select,
-    .custom-form-textarea {
-        width: 100%;
-        background: #f5f7f9;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        color: var(--cream);
-        font-size: 0.86rem;
-        padding: 0 14px 0 42px;
-        height: 44px;
-        outline: none;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .custom-form-input:focus,
-    .custom-form-select:focus,
-    .custom-form-textarea:focus {
-        border-color: var(--lime);
-        box-shadow: 0 0 0 3px rgba(0, 142, 204, 0.14);
-    }
-    .custom-form-input::placeholder,
-    .custom-form-textarea::placeholder {
-        color: #9a9a9a;
-    }
-    .custom-form-select {
-        cursor: pointer;
-        padding-right: 30px;
-    }
-    .custom-form-select option {
-        background: #ffffff;
-        color: var(--cream);
-    }
-
-    .custom-form-textarea {
-        height: auto;
-        padding: 12px 14px;
-        min-height: 120px;
-        resize: vertical;
-        line-height: 1.5;
-    }
-
-    /* Gender Segmented Control */
-    .gender-segmented-control {
-        display: flex;
-        background: #f5f7f9;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 3px;
-        gap: 3px;
-        height: 44px;
-    }
-    .gender-segment-option {
-        flex: 1;
-        margin: 0;
-        cursor: pointer;
-        position: relative;
-    }
-    .gender-segment-option input {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-    }
-    .gender-segment-btn {
-        width: 100%;
-        height: 100%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        border-radius: 8px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        color: var(--muted);
-        transition: all 0.2s ease;
-    }
-    .gender-segment-option input:checked + .gender-segment-btn {
-        background: var(--lime);
-        color: var(--ink);
-        font-weight: 700;
-        box-shadow: 0 2px 8px rgba(0, 142, 204, 0.25);
-    }
-
-    /* Mixed Gender Breakdown Box */
-    .mixed-split-box {
-        background: #f5f7f9;
-        border: 1px dashed rgba(0, 142, 204, 0.35);
-        border-radius: 12px;
-        padding: 16px;
-        margin-top: 4px;
-    }
-    .mixed-sum-status {
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 0.74rem;
-        font-weight: 700;
-        background: rgba(0, 0, 0, 0.05);
-        color: var(--muted);
-        border: 1px solid var(--line);
-        transition: all 0.2s ease;
-    }
-    .mixed-sum-status.valid {
-        background: rgba(0, 142, 204, 0.15);
-        color: var(--lime);
-        border-color: rgba(0, 142, 204, 0.4);
-    }
-    .mixed-sum-status.invalid {
-        background: rgba(255, 107, 43, 0.15);
-        color: var(--orange);
-        border-color: rgba(255, 107, 43, 0.4);
-    }
-
-    /* Price and Currency Group */
-    .price-input-group {
-        display: flex;
-        align-items: center;
-        background: #f5f7f9;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        overflow: hidden;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    .price-input-group:focus-within {
-        border-color: var(--lime);
-        box-shadow: 0 0 0 3px rgba(0, 142, 204, 0.14);
-    }
-    .price-input-wrap {
-        position: relative;
-        flex: 1;
-        display: flex;
-        align-items: center;
-    }
-    .custom-form-input.price-field {
-        border: none;
-        box-shadow: none;
-        border-radius: 0;
-        height: 44px;
-        background: transparent;
-    }
-    .currency-select {
-        height: 44px;
-        background: #ffffff;
-        border: none;
-        border-left: 1px solid var(--line);
-        color: var(--lime);
-        font-weight: 700;
-        font-size: 0.84rem;
-        padding: 0 14px;
-        outline: none;
-        cursor: pointer;
-    }
-    .currency-select option {
-        background: #ffffff;
-        color: var(--cream);
-    }
-
-    /* Negotiable Box Toggle */
-    .negotiable-toggle-box {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        height: 44px;
-        padding: 0 14px;
-        background: #f5f7f9;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        cursor: pointer;
-        user-select: none;
-        margin: 0;
-        transition: border-color 0.2s ease;
-    }
-    .negotiable-toggle-box:hover {
-        border-color: rgba(0, 142, 204, 0.3);
-    }
-    .negotiable-checkbox {
-        display: none;
-    }
-    .toggle-track {
-        width: 38px;
-        height: 22px;
-        background: #e5f4fb;
-        border-radius: 999px;
-        position: relative;
-        transition: background 0.2s ease;
-        flex-shrink: 0;
-    }
-    .toggle-thumb {
-        width: 16px;
-        height: 16px;
-        background: var(--muted);
-        border-radius: 50%;
-        position: absolute;
-        top: 3px;
-        left: 3px;
-        transition: transform 0.2s ease, background 0.2s ease;
-    }
-    .negotiable-checkbox:checked + .toggle-track {
-        background: var(--lime);
-    }
-    .negotiable-checkbox:checked + .toggle-track .toggle-thumb {
-        transform: translateX(16px);
-        background: var(--ink);
-    }
-    .toggle-label-group {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.2;
-    }
-    .toggle-title {
-        font-size: 0.78rem;
-        font-weight: 700;
-        color: var(--cream);
-    }
-    .toggle-desc {
-        font-size: 0.68rem;
-        color: var(--muted);
-    }
-
-    /* Image Upload Slots */
-    .image-upload-slot {
-        position: relative;
-        height: 150px;
-        border-radius: 14px;
-        border: 1.5px dashed var(--line);
-        background: #f5f7f9;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    .image-upload-slot:hover {
-        border-color: var(--lime);
-        background: rgba(0, 142, 204, 0.03);
-    }
-    .image-upload-slot.slot-main {
-        border-color: rgba(0, 142, 204, 0.35);
-    }
-    .upload-badge {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        background: rgba(0, 142, 204, 0.15);
-        color: var(--lime);
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 999px;
-        border: 1px solid rgba(0, 142, 204, 0.3);
-        z-index: 2;
-        pointer-events: none;
-    }
-    .slot-empty-state {
-        text-align: center;
-        padding: 16px;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    .slot-icon {
-        font-size: 1.5rem;
-        color: var(--lime);
-        margin-bottom: 6px;
-        opacity: 0.9;
-    }
-    .slot-text {
-        font-size: 0.78rem;
-        font-weight: 700;
-        color: var(--cream);
-        margin-bottom: 2px;
-    }
-    .slot-hint {
-        font-size: 0.68rem;
-        color: var(--muted);
-    }
-    .slot-preview-state {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-    }
-    .slot-preview-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .btn-slot-remove {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.75);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #dc3545;
-        display: grid;
-        place-items: center;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        z-index: 3;
-    }
-    .btn-slot-remove:hover {
-        background: #ff3333;
-        color: #fff;
-        transform: scale(1.1);
-    }
-
-    /* Quick Description Pills */
-    .quick-pill-btn {
-        background: rgba(0, 0, 0, 0.04);
-        border: 1px solid var(--line);
-        border-radius: 9999px;
-        color: var(--muted);
-        font-size: 0.73rem;
-        font-weight: 600;
-        padding: 4px 10px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    .quick-pill-btn:hover {
-        background: rgba(0, 142, 204, 0.09);
-        border-color: var(--lime);
-        color: var(--lime);
-        transform: translateY(-1px);
-    }
-
-    /* Submit Actions */
-    .btn-submit-post {
-        height: 48px;
-        padding: 0 28px;
-        background: var(--lime);
-        color: var(--ink);
-        border: none;
-        border-radius: 12px;
-        font-family: var(--serif);
-        font-size: 0.94rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        display: inline-flex;
-        align-items: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 18px rgba(0, 142, 204, 0.25);
-    }
-    .btn-submit-post:hover {
-        background: #0073a8;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 22px rgba(0, 142, 204, 0.35);
-    }
-    .btn-cancel-post {
-        height: 48px;
-        padding: 0 22px;
-        background: transparent;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        color: var(--muted);
-        font-size: 0.88rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-    .btn-cancel-post:hover {
-        border-color: var(--cream);
-        color: var(--cream);
-    }
-
-    /* Sticky Sidebar */
-    .sticky-create-sidebar {
-        position: sticky;
-        top: 76px;
-    }
-
-    /* Live Preview Box */
-    .preview-box-shell {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 16px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    }
-    .preview-header-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 14px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--line);
-    }
-    .live-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--lime);
-        box-shadow: 0 0 10px var(--lime);
-        animation: pulseDot 1.8s infinite;
-    }
-    @keyframes pulseDot {
-        0% { opacity: 0.4; transform: scale(0.9); }
-        50% { opacity: 1; transform: scale(1.2); }
-        100% { opacity: 0.4; transform: scale(0.9); }
-    }
-    .preview-title {
-        font-family: var(--serif);
-        font-size: 0.92rem;
-        font-weight: 700;
-        color: var(--cream);
-    }
-
-    .tag-negotiable {
-        background: rgba(0, 142, 204, 0.12);
-        color: var(--lime);
-        border: 1px solid rgba(0, 142, 204, 0.3);
-        border-radius: 9999px;
-        padding: 2px 8px;
-        font-size: 0.68rem;
-        font-weight: 600;
-    }
-
-    /* Tips Card */
-    .tips-card {
-        background: rgba(255, 255, 255, 0.85);
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 18px;
-    }
-    .tips-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
-    }
-    .tips-title {
-        font-family: var(--serif);
-        font-size: 0.88rem;
-        font-weight: 700;
-        color: var(--cream);
-        margin: 0;
-    }
-    .tips-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .tips-list li {
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        font-size: 0.76rem;
-        color: var(--muted);
-        line-height: 1.45;
-    }
-    .tips-list li i {
-        font-size: 0.85rem;
-        margin-top: 2px;
-        flex-shrink: 0;
-    }
-    .tips-list strong {
-        color: var(--cream);
-    }
-
-    @media (max-width: 991.98px) {
-        .sticky-create-sidebar {
-            position: static;
-            margin-top: 20px;
-        }
-    }
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Elements for Live Preview and Quantity/Gender
+    // Elements for live preview and quantity/gender
     const titleInput = document.getElementById('title');
     const categorySelect = document.getElementById('category_id');
     const breedInput = document.getElementById('breed');
@@ -1175,7 +390,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const liveCategoryBadge = document.getElementById('liveCategoryBadge');
     const liveBreed = document.getElementById('liveBreed');
     const livePrice = document.getElementById('livePrice');
-    const liveCurrency = document.getElementById('liveCurrency');
     const liveLocation = document.getElementById('liveLocation');
     const liveDesc = document.getElementById('liveDesc');
     const liveNegotiableBadge = document.getElementById('liveNegotiableBadge');
@@ -1190,48 +404,35 @@ document.addEventListener('DOMContentLoaded', function () {
         if (total > 100) total = 100;
         qtyInput.value = total;
 
-        if (total === 1) {
-            // Quantity = 1: Show only Male and Female. Do NOT show Mixed.
-            genderOptMixed.classList.add('d-none');
-            if (genderMixed && genderMixed.checked) {
-                genderMale.checked = true;
-            }
-            if (genderHelpHint) {
-                genderHelpHint.textContent = "Yakka hayvon uchun faqat Erkak yoki Urg'ochi tanlanadi";
-            }
-        } else {
-            // Quantity > 1: Show Male, Female, and Mixed.
-            genderOptMixed.classList.remove('d-none');
-            if (genderHelpHint) {
-                genderHelpHint.textContent = "1 dan ortiq hayvonlar uchun Erkak, Urg'ochi yoki Aralash tanlashingiz mumkin";
-            }
+        // A single animal is either male or female; "mixed" only makes sense for 2+.
+        genderOptMixed.hidden = total === 1;
+        if (total === 1 && genderMixed && genderMixed.checked) {
+            genderMale.checked = true;
+        }
+        if (genderHelpHint) {
+            genderHelpHint.textContent = total === 1
+                ? "Yakka hayvon uchun faqat Erkak yoki Urg'ochi tanlanadi"
+                : "1 dan ortiq hayvonlar uchun Erkak, Urg'ochi yoki Aralash tanlashingiz mumkin";
         }
 
         const isMixed = genderMixed && genderMixed.checked && total > 1;
+        mixedBreakdownWrap.hidden = !isMixed;
+        maleQtyInput.required = isMixed;
+        femaleQtyInput.required = isMixed;
         if (isMixed) {
-            mixedBreakdownWrap.classList.remove('d-none');
-            maleQtyInput.required = true;
-            femaleQtyInput.required = true;
-
             const mVal = parseInt(maleQtyInput.value) || 0;
             const fVal = parseInt(femaleQtyInput.value) || 0;
             const sum = mVal + fVal;
+            const valid = mVal > 0 && fVal > 0 && sum === total;
 
-            if (mVal > 0 && fVal > 0 && sum === total) {
-                mixedSumStatusBadge.className = 'mixed-sum-status valid';
-                mixedSumStatusBadge.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> ${mVal} erkak + ${fVal} urg'ochi = ${total} ta (To'g'ri)`;
-                mixedSplitMessage.className = 'mt-2 small text-lime';
-                mixedSplitMessage.innerHTML = `<i class="bi bi-check2 me-1"></i> Miqdorlar to'liq mos keldi!`;
+            mixedSumStatusBadge.dataset.state = mixedSplitMessage.dataset.state = valid ? 'valid' : 'invalid';
+            if (valid) {
+                mixedSumStatusBadge.innerHTML = `<i class="bi bi-check-circle-fill mr-1"></i> ${mVal} erkak + ${fVal} urg'ochi = ${total} ta (To'g'ri)`;
+                mixedSplitMessage.innerHTML = `<i class="bi bi-check2 mr-1"></i> Miqdorlar to'liq mos keldi!`;
             } else {
-                mixedSumStatusBadge.className = 'mixed-sum-status invalid';
-                mixedSumStatusBadge.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i> ${mVal} + ${fVal} = ${sum} / Jami: ${total} ta`;
-                mixedSplitMessage.className = 'mt-2 small text-orange';
-                mixedSplitMessage.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i> Erkak va urg'ochi yig'indisi (${sum}) umumiy son (${total}) ga teng bo'lishi shart.`;
+                mixedSumStatusBadge.innerHTML = `<i class="bi bi-exclamation-triangle-fill mr-1"></i> ${mVal} + ${fVal} = ${sum} / Jami: ${total} ta`;
+                mixedSplitMessage.innerHTML = `<i class="bi bi-exclamation-circle mr-1"></i> Erkak va urg'ochi yig'indisi (${sum}) umumiy son (${total}) ga teng bo'lishi shart.`;
             }
-        } else {
-            mixedBreakdownWrap.classList.add('d-none');
-            maleQtyInput.required = false;
-            femaleQtyInput.required = false;
         }
 
         updatePreview();
@@ -1252,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Breed
         liveBreed.textContent = breedInput.value.trim() || "Zot ko'rsatilmagan";
 
-        // Quantity & Gender
+        // Quantity & gender
         const total = parseInt(qtyInput ? qtyInput.value : 1) || 1;
         let genderLabel = "Erkak ♂";
         if (genderMixed && genderMixed.checked && total > 1) {
@@ -1261,48 +462,24 @@ document.addEventListener('DOMContentLoaded', function () {
             genderLabel = `Aralash (${m} ♂ / ${f} ♀)`;
         } else if (genderFemale && genderFemale.checked) {
             genderLabel = "Urg'ochi ♀";
-        } else {
-            genderLabel = "Erkak ♂";
         }
         if (liveQuantity) liveQuantity.textContent = `${total} ta mavjud`;
         if (liveGender) liveGender.textContent = genderLabel;
 
-        // Price & Currency
+        // Price & currency
         const priceVal = priceInput.value.trim();
-        const currVal = currencySelect.value;
-        if (priceVal) {
-            const formatted = Number(priceVal).toLocaleString('ru-RU');
-            livePrice.innerHTML = `${formatted} <small id="liveCurrency">${currVal}</small>`;
-        } else {
-            livePrice.innerHTML = `0 <small id="liveCurrency">${currVal}</small>`;
-        }
+        const formatted = priceVal ? Number(priceVal).toLocaleString('ru-RU') : '0';
+        livePrice.innerHTML = `${formatted} <small class="text-xs text-ink/70"></small>`;
+        livePrice.querySelector('small').textContent = currencySelect.value;
 
-        // Location
+        // Location & description
         liveLocation.textContent = locationInput.value.trim() || "Manzil";
+        liveDesc.textContent = descTextarea.value.trim() || "Hayvon haqidagi qisqacha tavsif bu yerda aks ettiriladi...";
 
-        // Description
-        const descVal = descTextarea.value.trim();
-        liveDesc.textContent = descVal || "Hayvon haqidagi qisqacha tavsif bu yerda aks ettiriladi...";
-
-        // Negotiable
-        if (negotiableCheckbox.checked) {
-            liveNegotiableBadge.classList.remove('d-none');
-        } else {
-            liveNegotiableBadge.classList.add('d-none');
-        }
-
-        // Status
-        const stVal = statusSelect.value;
-        if (stVal === 'active') {
-            liveStatusBadge.textContent = 'Aktiv';
-            liveStatusBadge.className = 'badge bg-panel-soft text-lime ms-auto';
-        } else if (stVal === 'reserved') {
-            liveStatusBadge.textContent = 'Rezerv';
-            liveStatusBadge.className = 'badge bg-panel-soft text-orange ms-auto';
-        } else {
-            liveStatusBadge.textContent = 'Sotilgan';
-            liveStatusBadge.className = 'badge bg-panel-soft text-muted ms-auto';
-        }
+        // Negotiable & status
+        liveNegotiableBadge.hidden = !negotiableCheckbox.checked;
+        liveStatusBadge.dataset.status = statusSelect.value;
+        liveStatusBadge.textContent = { active: 'Aktiv', reserved: 'Rezerv' }[statusSelect.value] || 'Sotilgan';
     }
 
     [titleInput, categorySelect, breedInput, priceInput, currencySelect, locationInput, descTextarea, statusSelect].forEach(el => {
@@ -1336,39 +513,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
     syncGenderAndQuantity();
 
-    // Image Upload Handlers
-    window.fileInputs = [
-        document.getElementById('imageInput0'),
-        document.getElementById('imageInput1'),
-        document.getElementById('imageInput2')
-    ];
-
-    window.fileInputs.forEach((input, index) => {
-        if (!input) return;
+    // Image upload slots: pick or drop a file, preview it, mirror slot 0 into the live card.
+    [0, 1, 2].forEach(index => {
+        const input = document.getElementById(`imageInput${index}`);
+        const slotWrap = document.getElementById(`slotWrap${index}`);
         input.addEventListener('change', function () {
             handleFileSelect(this.files[0], index);
         });
-
-        const slotWrap = document.getElementById(`slotWrap${index}`);
-        if (slotWrap) {
-            slotWrap.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                slotWrap.style.borderColor = 'var(--lime)';
-            });
-            slotWrap.addEventListener('dragleave', function (e) {
-                e.preventDefault();
-                slotWrap.style.borderColor = '';
-            });
-            slotWrap.addEventListener('drop', function (e) {
-                e.preventDefault();
-                slotWrap.style.borderColor = '';
-                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                    input.files = e.dataTransfer.files;
-                    handleFileSelect(e.dataTransfer.files[0], index);
-                }
-            });
-        }
+        slotWrap.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            slotWrap.style.borderColor = 'var(--color-brand)';
+        });
+        slotWrap.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            slotWrap.style.borderColor = '';
+        });
+        slotWrap.addEventListener('drop', function (e) {
+            e.preventDefault();
+            slotWrap.style.borderColor = '';
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                input.files = e.dataTransfer.files;
+                handleFileSelect(e.dataTransfer.files[0], index);
+            }
+        });
     });
+
+    function setSlotPreview(slotIndex, src) {
+        document.getElementById(`previewImg${slotIndex}`).src = src || '';
+        document.getElementById(`previewState${slotIndex}`).hidden = !src;
+        document.querySelector(`#slotWrap${slotIndex} [data-slot-empty]`).hidden = !!src;
+
+        if (slotIndex === 0) {
+            const liveImg = document.getElementById('liveImg');
+            liveImg.src = src || '';
+            liveImg.hidden = !src;
+            document.getElementById('liveBackdrop').style.backgroundImage = src ? `url('${src}')` : 'none';
+            document.getElementById('liveImgPlaceholder').hidden = !!src;
+        }
+    }
 
     function handleFileSelect(file, slotIndex) {
         if (!file) return;
@@ -1380,92 +562,38 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const reader = new FileReader();
-        reader.onload = function (e) {
-            const previewState = document.getElementById(`previewState${slotIndex}`);
-            const previewImg = document.getElementById(`previewImg${slotIndex}`);
-            const emptyState = document.querySelector(`#slotWrap${slotIndex} .slot-empty-state`);
-
-            previewImg.src = e.target.result;
-            previewState.classList.remove('d-none');
-            if (emptyState) emptyState.classList.add('d-none');
-
-            // If main image (slot 0), update live card
-            if (slotIndex === 0) {
-                const liveImg = document.getElementById('liveImg');
-                const liveBackdrop = document.getElementById('liveBackdrop');
-                const liveImgPlaceholder = document.getElementById('liveImgPlaceholder');
-
-                liveImg.src = e.target.result;
-                liveImg.classList.remove('d-none');
-                liveBackdrop.style.backgroundImage = `url('${e.target.result}')`;
-                if (liveImgPlaceholder) liveImgPlaceholder.classList.add('d-none');
-            }
-        };
+        reader.onload = e => setSlotPreview(slotIndex, e.target.result);
         reader.readAsDataURL(file);
     }
 
     window.removeImage = function (slotIndex) {
-        const input = document.getElementById(`imageInput${slotIndex}`);
-        if (input) input.value = '';
-
-        const previewState = document.getElementById(`previewState${slotIndex}`);
-        const previewImg = document.getElementById(`previewImg${slotIndex}`);
-        const emptyState = document.querySelector(`#slotWrap${slotIndex} .slot-empty-state`);
-
-        if (previewImg) previewImg.src = '';
-        if (previewState) previewState.classList.add('d-none');
-        if (emptyState) emptyState.classList.remove('d-none');
-
-        if (slotIndex === 0) {
-            const liveImg = document.getElementById('liveImg');
-            const liveBackdrop = document.getElementById('liveBackdrop');
-            const liveImgPlaceholder = document.getElementById('liveImgPlaceholder');
-
-            if (liveImg) {
-                liveImg.src = '';
-                liveImg.classList.add('d-none');
-            }
-            if (liveBackdrop) {
-                liveBackdrop.style.backgroundImage = 'none';
-            }
-            if (liveImgPlaceholder) {
-                liveImgPlaceholder.classList.remove('d-none');
-            }
-        }
+        document.getElementById(`imageInput${slotIndex}`).value = '';
+        setSlotPreview(slotIndex, null);
     };
 
-    window.appendDescription = function (text) {
-        const textarea = document.getElementById('description');
-        if (!textarea) return;
-        if (textarea.value.trim()) {
-            textarea.value = textarea.value.trim() + '\n' + text;
-        } else {
-            textarea.value = text;
-        }
+    document.querySelectorAll('[data-append]').forEach(btn => btn.addEventListener('click', () => {
+        const text = btn.dataset.append;
+        descTextarea.value = descTextarea.value.trim() ? descTextarea.value.trim() + '\n' + text : text;
         updatePreview();
-    };
+    }));
 
-    // Form submit loading and mixed validation
+    // Mixed-gender split must add up before submitting.
     const createForm = document.getElementById('createPostForm');
     const submitBtn = document.getElementById('submitBtn');
-    if (createForm && submitBtn) {
-        createForm.addEventListener('submit', function (e) {
-            const total = parseInt(qtyInput.value) || 1;
-            if (genderMixed && genderMixed.checked && total > 1) {
-                const mVal = parseInt(maleQtyInput.value) || 0;
-                const fVal = parseInt(femaleQtyInput.value) || 0;
-                if ((mVal + fVal) !== total || mVal < 1 || fVal < 1) {
-                    e.preventDefault();
-                    alert(`Xatolik: Erkak (${mVal}) va urg'ochi (${fVal}) hayvonlar soni yig'indisi umumiy miqdorga (${total}) teng bo'lishi shart!`);
-                    mixedBreakdownWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    return false;
-                }
+    createForm.addEventListener('submit', function (e) {
+        const total = parseInt(qtyInput.value) || 1;
+        if (genderMixed && genderMixed.checked && total > 1) {
+            const mVal = parseInt(maleQtyInput.value) || 0;
+            const fVal = parseInt(femaleQtyInput.value) || 0;
+            if ((mVal + fVal) !== total || mVal < 1 || fVal < 1) {
+                e.preventDefault();
+                alert(`Xatolik: Erkak (${mVal}) va urg'ochi (${fVal}) hayvonlar soni yig'indisi umumiy miqdorga (${total}) teng bo'lishi shart!`);
+                mixedBreakdownWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
             }
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Joylanmoqda...';
-        });
-    }
+        }
+        submitBtn.lastChild.textContent = ' Joylanmoqda...';
+    });
 });
 </script>
 @endsection

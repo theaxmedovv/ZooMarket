@@ -6,411 +6,311 @@
     $maleAvail = $post->availableMaleCount();
     $femaleAvail = $post->availableFemaleCount();
     $defaultGender = $maleAvail > 0 ? 'male' : ($femaleAvail > 0 ? 'female' : 'male');
+    $canModerate = auth()->check() && ((int) auth()->id() === (int) $post->user_id || auth()->user()->hasRole('admin'));
+    $isBuyer = auth()->check() && auth()->user()->hasRole('user');
+
+    $panel = 'rounded-[20px] border border-line bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,.12)]';
+    $sectionTitle = 'mb-4 flex items-center gap-2 text-[17px] font-bold text-ink [&_.bi]:text-brand';
+    $glassPill = 'inline-flex items-center gap-1 rounded-full border px-3 py-[5px] text-xs font-bold shadow-[0_4px_14px_rgba(0,0,0,.12)] backdrop-blur-md';
+    $chip = 'inline-flex items-center gap-1 rounded-lg border border-black/7 bg-black/4 px-[9px] py-[3px] text-xs text-muted';
+    $stockCard = 'flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3 py-2.5 transition data-[depleted]:border-[#fff1f0] data-[depleted]:bg-[#fff5f4] data-[depleted]:opacity-45';
+    $stockIcon = 'grid size-8 shrink-0 place-items-center rounded-lg text-base';
+    $subBtn = 'inline-flex h-[42px] cursor-pointer items-center justify-center gap-1.5 rounded-xl border text-[13px] font-semibold transition';
 @endphp
 
-<div class="container page-shell post-detail-container">
+<div class="page">
 
     {{-- Breadcrumb is the only "back" navigation; posting time is the only meta worth showing here. --}}
-    <div class="zm-crumbs">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('posts.index') }}">{{ auth()->user()?->hasRole('seller') ? "E'lonlarim" : "E'lonlar" }}</a></li>
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3 text-sm">
+        <nav aria-label="breadcrumb" class="min-w-0">
+            <ol class="flex min-w-0 items-center [&>li+li]:before:px-1.5 [&>li+li]:before:text-muted [&>li+li]:before:content-['›']">
+                <li class="whitespace-nowrap"><a href="{{ route('posts.index') }}" class="font-semibold text-brand">{{ auth()->user()?->hasRole('seller') ? "E'lonlarim" : "E'lonlar" }}</a></li>
                 @if($post->category)
-                    <li class="breadcrumb-item"><a href="{{ route('posts.index', ['category_id' => $post->category_id]) }}">{{ $post->category->name }}</a></li>
+                    <li class="whitespace-nowrap"><a href="{{ route('posts.index', ['category_id' => $post->category_id]) }}" class="font-semibold text-brand">{{ $post->category->name }}</a></li>
                 @endif
-                <li class="breadcrumb-item active" aria-current="page">{{ Str::limit($post->title, 40) }}</li>
+                <li class="min-w-0 truncate font-semibold text-ink" aria-current="page">{{ Str::limit($post->title, 40) }}</li>
             </ol>
         </nav>
-        <span class="zm-crumbs-meta"><i class="bi bi-clock"></i> {{ $post->created_at->diffForHumans() }}</span>
+        <span class="text-[13px] whitespace-nowrap text-muted"><i class="bi bi-clock mr-1"></i>{{ $post->created_at->diffForHumans() }}</span>
     </div>
 
-    {{-- ── AI MODERATION STATUS BANNER FOR SELLER ── --}}
-    @if(auth()->check() && ((int) auth()->id() === (int) $post->user_id || auth()->user()->hasRole('admin')))
+    {{-- AI moderation status banner for the seller --}}
+    @if($canModerate)
         @if($post->moderation_status === 'rejected')
-            <div class="alert alert-danger border-danger border-opacity-50 rounded-4 p-4 mb-4 shadow-sm" style="background: rgba(220, 53, 69, 0.08);">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="rounded-circle p-2 bg-danger bg-opacity-25 text-danger flex-shrink-0">
-                        <i class="bi bi-shield-x fs-3"></i>
+            <div class="mb-6 flex items-start gap-3 rounded-2xl border border-danger/50 bg-danger/8 p-6 shadow-sm">
+                <div class="grid size-12 shrink-0 place-items-center rounded-full bg-danger/25 text-danger"><i class="bi bi-shield-x text-2xl"></i></div>
+                <div class="flex-1">
+                    <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
+                        <h5 class="text-lg font-bold text-danger"><i class="bi bi-robot mr-1"></i> E'lon Groq AI moderatsiyasidan o'tmadi</h5>
+                        <span class="rounded-md bg-danger px-2 py-1 text-xs font-bold text-white">Ommaga ko'rsatilmaydi</span>
                     </div>
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
-                            <h5 class="text-danger fw-bold mb-0">
-                                <i class="bi bi-robot me-1"></i> E'lon Groq AI moderatsiyasidan o'tmadi
-                            </h5>
-                            <span class="badge bg-danger text-white px-2 py-1">Ommaga ko'rsatilmaydi</span>
-                        </div>
-                        <p class="text-cream mb-2 small">
-                            Ushbu e'lon yoki yuklangan fotosuratlar hayvonlar xavfsizligi, taqiqlangan turlar yoki sifat qoidalariga mos kelmadi.
-                        </p>
-                        <div class="p-3 rounded-3 mb-3" style="background: rgba(0, 0, 0, 0.35); border-left: 3px solid #dc3545;">
-                            <strong class="text-danger d-block small mb-1">
-                                <i class="bi bi-info-circle-fill me-1"></i> Rad etilish sababi:
-                            </strong>
-                            <span class="text-cream">{{ $post->moderation_reason ?? 'Tavsif yoki rasm xavfsizlik talablariga mos kelmadi.' }}</span>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <a href="{{ route('posts.edit', $post) }}" class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-pencil-square me-1"></i> E'lonni tahrirlash va qayta topshirish
-                            </a>
-                        </div>
+                    <p class="mb-2 text-sm text-ink">
+                        Ushbu e'lon yoki yuklangan fotosuratlar hayvonlar xavfsizligi, taqiqlangan turlar yoki sifat qoidalariga mos kelmadi.
+                    </p>
+                    <div class="mb-3 rounded-lg border-l-[3px] border-danger bg-black/5 p-3">
+                        <strong class="mb-1 block text-sm text-danger"><i class="bi bi-info-circle-fill mr-1"></i> Rad etilish sababi:</strong>
+                        <span class="text-ink">{{ $post->moderation_reason ?? 'Tavsif yoki rasm xavfsizlik talablariga mos kelmadi.' }}</span>
                     </div>
+                    <a href="{{ route('posts.edit', $post) }}" class="inline-flex items-center gap-1 rounded-md border border-danger px-2.5 py-1 text-sm font-semibold text-danger hover:bg-danger hover:text-white">
+                        <i class="bi bi-pencil-square"></i> E'lonni tahrirlash va qayta topshirish
+                    </a>
                 </div>
             </div>
         @elseif($post->moderation_status === 'pending')
-            <div class="alert alert-warning border-warning border-opacity-50 rounded-4 p-3 mb-4 shadow-sm" style="background: rgba(255, 193, 7, 0.08);">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle p-2 bg-warning bg-opacity-25 text-warning flex-shrink-0">
-                        <i class="bi bi-robot fs-4"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h6 class="text-warning fw-bold mb-0">
-                            <i class="bi bi-shield-check me-1"></i> E'lon AI moderatsiyasida
-                        </h6>
-                        <small class="text-cream-50">
-                            Groq AI tomonidan xavfsizlik tekshiruvi amalga oshirilmoqda.
-                        </small>
-                    </div>
-                    <span class="badge bg-warning text-dark px-2 py-1">Tekshirilmoqda</span>
+            <div class="mb-6 flex items-center gap-3 rounded-2xl border border-amber-400/50 bg-amber-400/8 p-4 shadow-sm">
+                <div class="grid size-11 shrink-0 place-items-center rounded-full bg-amber-400/25 text-amber-500"><i class="bi bi-robot text-xl"></i></div>
+                <div class="flex-1">
+                    <h6 class="font-bold text-amber-600"><i class="bi bi-shield-check mr-1"></i> E'lon AI moderatsiyasida</h6>
+                    <small class="text-ink/70">Groq AI tomonidan xavfsizlik tekshiruvi amalga oshirilmoqda.</small>
                 </div>
+                <span class="rounded-md bg-amber-400 px-2 py-1 text-xs font-bold text-ink">Tekshirilmoqda</span>
             </div>
         @endif
     @endif
 
-    {{-- ── MAIN DETAIL LAYOUT (2 COLUMNS) ── --}}
-    <div class="row g-4">
+    <div class="grid items-start gap-6 lg:grid-cols-12">
 
-        {{-- ── LEFT COLUMN: GALLERY, DESCRIPTION & TRUST ── --}}
-        <div class="col-lg-7 col-xl-7">
+        {{-- Left column: gallery, description, trust --}}
+        <div class="flex flex-col gap-6 lg:col-span-7">
 
-            {{-- Gallery Card --}}
-            <div class="gallery-card-shell mb-4">
-                <div class="gallery-main-view" id="galleryMainView">
+            {{-- Gallery --}}
+            <div class="overflow-hidden rounded-[20px] border border-line bg-white p-3.5 shadow-[0_10px_30px_rgba(0,0,0,.12)]">
+                <div class="relative flex h-[280px] items-center justify-center overflow-hidden rounded-2xl bg-soft sm:h-[360px] lg:h-[460px]">
                     @if(!empty($allImages))
-                        <div class="gallery-ambient-backdrop" id="ambientBackdrop" style="background-image: url('{{ route('images.show', ['path' => $allImages[0]]) }}');"></div>
-                        <img src="{{ route('images.show', ['path' => $allImages[0]]) }}"
-                             alt="{{ $post->title }}"
-                             class="gallery-main-img" id="mainImg">
+                        <div id="ambientBackdrop" class="pointer-events-none absolute -inset-3.5 scale-115 bg-cover bg-center opacity-90 blur-[24px] brightness-[.24] saturate-[1.4]" style="background-image: url('{{ route('images.show', ['path' => $allImages[0]]) }}');"></div>
+                        <img id="mainImg" src="{{ route('images.show', ['path' => $allImages[0]]) }}" alt="{{ $post->title }}"
+                             class="relative z-[2] max-h-full max-w-full object-contain transition-opacity duration-200">
                     @else
-                        <div class="gallery-placeholder">
-                            <i class="bi bi-image"></i>
+                        <div class="flex flex-col items-center justify-center gap-2 text-sm text-muted">
+                            <i class="bi bi-image text-[2.8rem] text-line"></i>
                             <span>Rasm yuklanmagan</span>
                         </div>
                     @endif
 
-                    {{-- Floating Status & Category Badges on Image --}}
-                    <div class="gallery-overlay-top">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="gallery-glass-pill pill-cat">
-                                <i class="bi bi-tag-fill text-lime me-1"></i> {{ $post->category?->name ?? 'Hayvon' }}
-                            </span>
-                            @if(auth()->check() && ((int) auth()->id() === (int) $post->user_id || auth()->user()->hasRole('admin')))
+                    {{-- Status & category badges on the image --}}
+                    <div class="pointer-events-none absolute top-3.5 right-3.5 left-3.5 z-[3] flex items-center justify-between gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="{{ $glassPill }} border-black/15 bg-white/85 text-ink"><i class="bi bi-tag-fill text-brand"></i> {{ $post->category?->name ?? 'Hayvon' }}</span>
+                            @if($canModerate)
                                 @if($post->moderation_status === 'approved')
-                                    <span class="gallery-glass-pill text-success border border-success border-opacity-50">
-                                        <i class="bi bi-shield-check me-1"></i> Tasdiqlangan
-                                    </span>
+                                    <span class="{{ $glassPill }} border-green-600/50 bg-white/85 text-green-700"><i class="bi bi-shield-check"></i> Tasdiqlangan</span>
                                 @elseif($post->moderation_status === 'rejected')
-                                    <span class="gallery-glass-pill text-danger border border-danger border-opacity-50">
-                                        <i class="bi bi-shield-x me-1"></i> Rad etilgan
-                                    </span>
+                                    <span class="{{ $glassPill }} border-danger/50 bg-white/85 text-danger"><i class="bi bi-shield-x"></i> Rad etilgan</span>
                                 @else
-                                    <span class="gallery-glass-pill text-warning border border-warning border-opacity-50">
-                                        <i class="bi bi-clock me-1"></i> AI tekshiruvida
-                                    </span>
+                                    <span class="{{ $glassPill }} border-amber-400/50 bg-white/85 text-amber-600"><i class="bi bi-clock"></i> AI tekshiruvida</span>
                                 @endif
                             @endif
                             @if($post->isSoldOut())
-                                <span class="gallery-glass-pill pill-sold">
-                                    <i class="bi bi-x-circle-fill me-1"></i> Sotilgan
-                                </span>
+                                <span class="{{ $glassPill }} border-red-500/60 bg-red-500/25 text-danger"><i class="bi bi-x-circle-fill"></i> Sotilgan</span>
                             @elseif($post->status === 'reserved')
-                                <span class="gallery-glass-pill pill-reserved">
-                                    <i class="bi bi-hourglass-split me-1"></i> Rezerv qilingan
-                                </span>
+                                <span class="{{ $glassPill }} border-accent/50 bg-accent/20 text-accent"><i class="bi bi-hourglass-split"></i> Rezerv qilingan</span>
                             @else
-                                <span class="gallery-glass-pill pill-active">
-                                    <i class="bi bi-check-circle-fill text-lime me-1"></i> Sotuvda faol
-                                </span>
+                                <span class="{{ $glassPill }} border-brand/50 bg-brand/18 text-brand"><i class="bi bi-check-circle-fill"></i> Sotuvda faol</span>
                             @endif
                         </div>
 
                         @if(!empty($allImages))
-                            <span class="gallery-glass-pill pill-counter">
-                                <i class="bi bi-camera-fill text-lime me-1"></i>
+                            <span class="{{ $glassPill }} shrink-0 border-black/15 bg-white/85 text-ink">
+                                <i class="bi bi-camera-fill text-brand"></i>
                                 <span id="galleryCounter">1 / {{ count($allImages) }}</span>
                             </span>
                         @endif
                     </div>
                 </div>
 
-                {{-- Thumbnails strip --}}
+                {{-- Thumbnails --}}
                 @if(count($allImages) > 1)
-                    <div class="gallery-thumbnails-strip">
+                    <div class="mt-3 flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:thin]">
                         @foreach($allImages as $i => $img)
-                            <button type="button" class="gallery-thumb-btn {{ $i === 0 ? 'active' : '' }}"
-                                    onclick="switchImage('{{ route('images.show', ['path' => $img]) }}', this, {{ $i + 1 }})">
-                                <img src="{{ route('images.show', ['path' => $img]) }}" alt="Rasm {{ $i + 1 }}">
+                            <button type="button" data-gallery-thumb="{{ $i + 1 }}" data-src="{{ route('images.show', ['path' => $img]) }}" @if($i === 0) aria-current="true" @endif
+                                    class="size-16 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 border-line bg-surface transition hover:-translate-y-0.5 hover:border-brand/50 current:border-brand current:shadow-[0_0_14px_rgba(0,142,204,.35)] sm:size-[76px]">
+                                <img src="{{ route('images.show', ['path' => $img]) }}" alt="Rasm {{ $i + 1 }}" class="block size-full object-cover">
                             </button>
                         @endforeach
                     </div>
                 @endif
             </div>
 
-            {{-- Description Section Card --}}
-            <div class="detail-section-card mb-4">
-                <div class="section-card-title">
-                    <i class="bi bi-card-text text-lime me-2"></i> E'lon tavsifi
-                </div>
-                <div class="section-desc-body">
-                    @if($post->description ?? $post->content)
-                        <div class="ad-full-text">
-                            {!! nl2br(e($post->description ?? $post->content)) !!}
-                        </div>
-                    @else
-                        <p class="text-muted fst-italic mb-0">Sotuvchi ushbu e'lon uchun alohida tavsif qoldirmagan.</p>
-                    @endif
-                </div>
+            {{-- Description --}}
+            <div class="{{ $panel }} p-[22px]">
+                <div class="{{ $sectionTitle }}"><i class="bi bi-card-text"></i> E'lon tavsifi</div>
+                @if($post->description ?? $post->content)
+                    <div class="text-[15px] leading-relaxed text-ink/88">
+                        {!! nl2br(e($post->description ?? $post->content)) !!}
+                    </div>
+                @else
+                    <p class="text-muted italic">Sotuvchi ushbu e'lon uchun alohida tavsif qoldirmagan.</p>
+                @endif
             </div>
 
-            {{-- Trust & Safe Marketplace Notice --}}
-            <div class="detail-section-card mb-4">
-                <div class="section-card-title">
-                    <i class="bi bi-shield-check text-lime me-2"></i> Xavfsiz xarid qoidalari
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="trust-mini-feature">
-                            <div class="trust-icon-box"><i class="bi bi-camera-video"></i></div>
-                            <h6>Jonli ko'rik</h6>
-                            <p>Xarid qilishdan avval videochat orqali hayvonning sog'lig'i va holatini ko'ring.</p>
+            {{-- Safe marketplace notice --}}
+            <div class="{{ $panel }} p-[22px]">
+                <div class="{{ $sectionTitle }}"><i class="bi bi-shield-check"></i> Xavfsiz xarid qoidalari</div>
+                <div class="grid gap-3 md:grid-cols-3">
+                    @foreach([
+                        ['bi-camera-video', "Jonli ko'rik", "Xarid qilishdan avval videochat orqali hayvonning sog'lig'i va holatini ko'ring."],
+                        ['bi-chat-heart', "To'g'ridan-to'g'ri aloqa", "Vositachilarsiz bevosita sotuvchi bilan chat yoki telefon orqali bog'laning."],
+                        ['bi-patch-check', "Xavfsiz to'lov", "To'lovni hayvonni o'z ko'zingiz bilan ko'rib, qabul qilganingizdan so'ng to'lang."],
+                    ] as [$icon, $heading, $text])
+                        <div class="h-full rounded-[14px] border border-black/5 bg-black/[.03] p-4">
+                            <div class="mb-2.5 grid size-9 place-items-center rounded-[10px] bg-brand/12 text-lg text-brand"><i class="bi {{ $icon }}"></i></div>
+                            <h6 class="mb-1.5 text-sm font-bold text-ink">{{ $heading }}</h6>
+                            <p class="text-xs leading-snug text-muted">{{ $text }}</p>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="trust-mini-feature">
-                            <div class="trust-icon-box"><i class="bi bi-chat-heart"></i></div>
-                            <h6>To'g'ridan-to'g'ri aloqa</h6>
-                            <p>Vositachilarsiz bevosita sotuvchi bilan chat yoki telefon orqali bog'laning.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="trust-mini-feature">
-                            <div class="trust-icon-box"><i class="bi bi-patch-check"></i></div>
-                            <h6>Xavfsiz to'lov</h6>
-                            <p>To'lovni hayvonni o'z ko'zingiz bilan ko'rib, qabul qilganingizdan so'ng to'lang.</p>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
-
         </div>
 
-        {{-- ── RIGHT COLUMN: STICKY PURCHASE & SELLER PANEL ── --}}
-        <div class="col-lg-5 col-xl-5">
-            <div class="sticky-detail-sidebar">
+        {{-- Right column: sticky purchase & seller panel --}}
+        <div class="lg:sticky lg:top-[92px] lg:col-span-5">
+            <div class="flex flex-col gap-3">
 
-                {{-- Price & Title Box --}}
-                <div class="detail-panel-box mb-3">
-                    <div class="panel-price-header">
-                        <div class="price-val-wrap">
-                            <div class="ad-price-display">
+                {{-- Price & title --}}
+                <div class="{{ $panel }}">
+                    <div class="mb-3.5 border-b border-line pb-3.5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="text-[1.65rem] leading-tight font-extrabold tracking-tight text-brand lg:text-[1.95rem]">
                                 {{ number_format((float) $post->price, 0, '.', ' ') }}
-                                <small class="ad-price-unit">{{ $post->currency }}</small>
+                                <small class="text-[0.95rem] font-semibold text-ink/75">{{ $post->currency }}</small>
                             </div>
                             @if($post->is_negotiable)
-                                <span class="badge-negotiable-glow">
-                                    <i class="bi bi-check2-circle me-1"></i> Kelishiladi
-                                </span>
+                                <span class="rounded-full border border-brand/35 bg-brand/12 px-2.5 py-[3px] text-xs font-bold text-brand"><i class="bi bi-check2-circle mr-1"></i> Kelishiladi</span>
                             @endif
                         </div>
-                        <div class="price-sub-hint text-muted small">
-                            Bir dona hayvon uchun ko'rsatilgan narx
-                        </div>
+                        <div class="text-sm text-muted">Bir dona hayvon uchun ko'rsatilgan narx</div>
                     </div>
 
-                    <h1 class="ad-main-title">{{ $post->title }}</h1>
+                    <h1 class="text-[1.35rem] leading-snug font-bold text-ink">{{ $post->title }}</h1>
 
-                    <div class="d-flex align-items-center gap-2 flex-wrap mt-2">
+                    <div class="mt-2 flex flex-wrap items-center gap-2">
                         @if($post->breed)
-                            <span class="detail-chip">
-                                <i class="bi bi-award text-lime me-1"></i> {{ $post->breed }}
-                            </span>
+                            <span class="{{ $chip }}"><i class="bi bi-award text-brand"></i> {{ $post->breed }}</span>
                         @endif
                         @if($post->location)
-                            <span class="detail-chip">
-                                <i class="bi bi-geo-alt text-orange me-1"></i> {{ $post->location }}
-                            </span>
+                            <span class="{{ $chip }}"><i class="bi bi-geo-alt text-accent"></i> {{ $post->location }}</span>
                         @endif
                     </div>
                 </div>
 
-                {{-- Live Stock & Gender Breakdown Card --}}
-                <div class="detail-panel-box mb-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="panel-section-label">
-                            <i class="bi bi-boxes text-lime me-1"></i> Zaxira va jins taqsimoti:
-                        </span>
-                        <span class="stock-total-badge {{ $post->isSoldOut() ? 'sold-badge' : '' }}">
+                {{-- Stock & gender breakdown --}}
+                <div class="{{ $panel }}">
+                    <div class="mb-2 flex items-center justify-between gap-2">
+                        <span class="text-[13px] font-bold text-ink"><i class="bi bi-boxes mr-1 text-brand"></i> Zaxira va jins taqsimoti:</span>
+                        <span @class(['rounded-full border px-2.5 py-[3px] text-xs font-bold', $post->isSoldOut() ? 'border-red-500/40 bg-red-500/15 text-danger' : 'border-brand/30 bg-brand/14 text-brand'])>
                             {{ $post->isSoldOut() ? 'Tugagan (Sold out)' : 'Jami: ' . $post->totalAvailableCount() . ' ta mavjud' }}
                         </span>
                     </div>
 
-                    <div class="row g-2">
-                        @if($post->gender === 'mixed' || ($post->male_quantity > 0 && $post->female_quantity > 0))
-                            <div class="col-6">
-                                <div class="stock-breakdown-card {{ $maleAvail > 0 ? '' : 'depleted' }}">
-                                    <div class="stock-card-icon male-icon"><i class="bi bi-gender-male"></i></div>
+                    @php
+                        $maleCard = ['bi-gender-male', 'bg-male/12 text-male', $maleAvail];
+                        $femaleCard = ['bi-gender-female', 'bg-danger/12 text-danger', $femaleAvail];
+                    @endphp
+                    @if($post->gender === 'mixed' || ($post->male_quantity > 0 && $post->female_quantity > 0))
+                        <div class="grid grid-cols-2 gap-2">
+                            @foreach([[$maleCard, 'Erkak ♂'], [$femaleCard, "Urg'ochi ♀"]] as [[$icon, $iconColors, $avail], $label])
+                                <div class="{{ $stockCard }}" @if($avail <= 0) data-depleted @endif>
+                                    <div class="{{ $stockIcon }} {{ $iconColors }}"><i class="bi {{ $icon }}"></i></div>
                                     <div>
-                                        <div class="stock-card-title">Erkak ♂</div>
-                                        <div class="stock-card-status {{ $maleAvail > 0 ? 'text-lime' : 'text-danger' }}">
-                                            {{ $maleAvail > 0 ? $maleAvail . ' ta mavjud' : 'Tugagan' }}
-                                        </div>
+                                        <div class="text-[13px] font-bold text-ink">{{ $label }}</div>
+                                        <div @class(['text-xs font-semibold', $avail > 0 ? 'text-brand' : 'text-danger'])>{{ $avail > 0 ? $avail . ' ta mavjud' : 'Tugagan' }}</div>
                                     </div>
                                 </div>
+                            @endforeach
+                        </div>
+                    @else
+                        @php [$icon, $iconColors, $avail] = ($maleAvail > 0 || $post->gender === 'male') ? $maleCard : $femaleCard; @endphp
+                        <div class="{{ $stockCard }}" @if($avail <= 0) data-depleted @endif>
+                            <div class="{{ $stockIcon }} {{ $iconColors }}"><i class="bi {{ $icon }}"></i></div>
+                            <div class="flex flex-1 items-center justify-between">
+                                <div class="text-[13px] font-bold text-ink">Jinsi: {{ $icon === 'bi-gender-male' ? 'Erkak ♂' : "Urg'ochi ♀" }}</div>
+                                <div @class(['text-xs font-semibold', $avail > 0 ? 'text-brand' : 'text-danger'])>Mavjud: {{ $avail }} ta</div>
                             </div>
-                            <div class="col-6">
-                                <div class="stock-breakdown-card {{ $femaleAvail > 0 ? '' : 'depleted' }}">
-                                    <div class="stock-card-icon female-icon"><i class="bi bi-gender-female"></i></div>
-                                    <div>
-                                        <div class="stock-card-title">Urg'ochi ♀</div>
-                                        <div class="stock-card-status {{ $femaleAvail > 0 ? 'text-lime' : 'text-danger' }}">
-                                            {{ $femaleAvail > 0 ? $femaleAvail . ' ta mavjud' : 'Tugagan' }}
-                                        </div>
-                                    </div>
-                                </div>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Key specifications --}}
+                <div class="{{ $panel }}">
+                    <span class="mb-2 block text-[13px] font-bold text-ink"><i class="bi bi-ui-checks-grid mr-1 text-brand"></i> Asosiy xususiyatlar:</span>
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        @foreach([
+                            ['bi-tag', 'Kategoriya', $post->category?->name ?? '—'],
+                            ['bi-award', 'Zot', $post->breed ?: '—'],
+                            ['bi-gender-ambiguous', 'Jinsi', match ($post->gender) { 'mixed' => 'Aralash (Mixed)', 'female' => "Urg'ochi ♀", default => 'Erkak ♂' }],
+                            ['bi-calendar3', 'Yoshi', $post->age ?: '—'],
+                            ['bi-palette', 'Rangi', $post->color ?: '—'],
+                            ['bi-geo-alt', 'Manzil', $post->location ?: '—'],
+                        ] as [$icon, $label, $value])
+                            <div class="flex flex-col gap-0.5 rounded-[10px] border border-line bg-surface px-3 py-[9px]">
+                                <span class="text-[11px] font-semibold tracking-wide text-muted uppercase"><i class="bi {{ $icon }} mr-1"></i> {{ $label }}</span>
+                                <span class="text-sm font-bold text-ink">{{ $value }}</span>
                             </div>
-                        @elseif($maleAvail > 0 || $post->gender === 'male')
-                            <div class="col-12">
-                                <div class="stock-breakdown-card {{ $maleAvail > 0 ? '' : 'depleted' }}">
-                                    <div class="stock-card-icon male-icon"><i class="bi bi-gender-male"></i></div>
-                                    <div class="d-flex align-items-center justify-content-between flex-grow-1">
-                                        <div class="stock-card-title">Jinsi: Erkak ♂</div>
-                                        <div class="stock-card-status {{ $maleAvail > 0 ? 'text-lime' : 'text-danger' }}">
-                                            Mavjud: {{ $maleAvail }} ta
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @else
-                            <div class="col-12">
-                                <div class="stock-breakdown-card {{ $femaleAvail > 0 ? '' : 'depleted' }}">
-                                    <div class="stock-card-icon female-icon"><i class="bi bi-gender-female"></i></div>
-                                    <div class="d-flex align-items-center justify-content-between flex-grow-1">
-                                        <div class="stock-card-title">Jinsi: Urg'ochi ♀</div>
-                                        <div class="stock-card-status {{ $femaleAvail > 0 ? 'text-lime' : 'text-danger' }}">
-                                            Mavjud: {{ $femaleAvail }} ta
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
+                        @endforeach
                     </div>
                 </div>
 
-                {{-- Key Specifications Grid --}}
-                <div class="detail-panel-box mb-3">
-                    <span class="panel-section-label mb-2 d-block">
-                        <i class="bi bi-ui-checks-grid text-lime me-1"></i> Asosiy xususiyatlar:
-                    </span>
-                    <div class="specs-grid">
-                        <div class="spec-cell">
-                            <span class="spec-label"><i class="bi bi-tag text-muted me-1"></i> Kategoriya</span>
-                            <span class="spec-val">{{ $post->category?->name ?? '—' }}</span>
-                        </div>
-                        <div class="spec-cell">
-                            <span class="spec-label"><i class="bi bi-award text-muted me-1"></i> Zot</span>
-                            <span class="spec-val">{{ $post->breed ?: '—' }}</span>
-                        </div>
-                        <div class="spec-cell">
-                            <span class="spec-label"><i class="bi bi-gender-ambiguous text-muted me-1"></i> Jinsi</span>
-                            <span class="spec-val">
-                                @if($post->gender === 'mixed')
-                                    Aralash (Mixed)
-                                @elseif($post->gender === 'female')
-                                    Urg'ochi ♀
-                                @else
-                                    Erkak ♂
-                                @endif
-                            </span>
-                        </div>
-                        <div class="spec-cell">
-                            <span class="spec-label"><i class="bi bi-calendar3 text-muted me-1"></i> Yoshi</span>
-                            <span class="spec-val">{{ $post->age ?: '—' }}</span>
-                        </div>
-                        <div class="spec-cell">
-                            <span class="spec-label"><i class="bi bi-palette text-muted me-1"></i> Rangi</span>
-                            <span class="spec-val">{{ $post->color ?: '—' }}</span>
-                        </div>
-                        <div class="spec-cell">
-                            <span class="spec-label"><i class="bi bi-geo-alt text-muted me-1"></i> Manzil</span>
-                            <span class="spec-val">{{ $post->location ?: '—' }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Seller Profile Trust Card --}}
-                <div class="detail-panel-box mb-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="seller-avatar-box">
+                {{-- Seller --}}
+                <div class="{{ $panel }}">
+                    <div class="flex items-center gap-3">
+                        <div class="grid size-11 shrink-0 place-items-center rounded-full border-[1.5px] border-brand/40 bg-brand-tint text-lg font-bold text-brand">
                             {{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center gap-2">
-                                <h6 class="seller-name-title mb-0">{{ $post->user->name }}</h6>
-                                <span class="badge-seller-tag">Sotuvchi</span>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2">
+                                <h6 class="text-[15px] font-bold text-ink">{{ $post->user->name }}</h6>
+                                <span class="rounded-full border border-brand/30 bg-brand/12 px-1.5 py-px text-[11px] font-bold text-brand">Sotuvchi</span>
                             </div>
-                            <div class="seller-meta-text">
-                                Ro'yxatdan o'tgan: {{ $post->user->created_at->format('d.m.Y') }}
-                            </div>
+                            <div class="text-xs text-muted">Ro'yxatdan o'tgan: {{ $post->user->created_at->format('d.m.Y') }}</div>
                         </div>
                     </div>
 
                     @if($post->user->phone || $post->user->telegram_username)
-                        <div class="seller-contact-links mt-3 pt-3 border-top border-line">
+                        <div class="mt-3 flex gap-2 border-t border-line pt-3">
                             @if($post->user->phone)
-                                <a href="tel:{{ $post->user->phone }}" class="seller-contact-btn btn-call">
-                                    <i class="bi bi-telephone-fill"></i>
-                                    <span>{{ $post->user->phone }}</span>
+                                <a href="tel:{{ $post->user->phone }}" class="inline-flex h-[38px] flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-brand/35 bg-brand/12 text-[13px] font-semibold text-brand transition hover:bg-brand hover:font-bold hover:text-white">
+                                    <i class="bi bi-telephone-fill"></i><span>{{ $post->user->phone }}</span>
                                 </a>
                             @endif
                             @if($post->user->telegram_username)
-                                <a href="https://t.me/{{ ltrim($post->user->telegram_username, '@') }}" target="_blank" class="seller-contact-btn btn-tg">
-                                    <i class="bi bi-telegram"></i>
-                                    <span>Telegram</span>
+                                <a href="https://t.me/{{ ltrim($post->user->telegram_username, '@') }}" target="_blank" class="inline-flex h-[38px] flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-male/35 bg-male/12 text-[13px] font-semibold text-male transition hover:bg-male hover:font-bold hover:text-white">
+                                    <i class="bi bi-telegram"></i><span>Telegram</span>
                                 </a>
                             @endif
                         </div>
                     @endif
                 </div>
 
-                {{-- Action Buttons --}}
-                <div class="detail-actions-box">
-                    @if(auth()->check() && auth()->user()->hasRole('user'))
+                {{-- Actions --}}
+                <div class="mt-1 flex flex-col gap-2">
+                    @if($isBuyer)
                         @if($post->isSoldOut() || $post->status === 'sold')
-                            <button class="btn-action-main btn-main-sold" disabled>
-                                <i class="bi bi-x-circle-fill me-2"></i> E'lon sotilgan (Mavjud emas)
+                            <button class="inline-flex h-[50px] w-full cursor-not-allowed items-center justify-center gap-2 rounded-[14px] border border-[#ffd6d1] bg-[#fff1f0] text-[15px] font-extrabold text-danger" disabled>
+                                <i class="bi bi-x-circle-fill"></i> E'lon sotilgan (Mavjud emas)
                             </button>
                         @else
-                            <button class="btn-action-main btn-main-buy" data-bs-toggle="modal" data-bs-target="#buyModalDetail">
-                                <i class="bi bi-cart-check-fill me-2"></i> Sotib olish so'rovini yuborish
+                            <button type="button" data-dialog-open="buyModalDetail" class="inline-flex h-[50px] w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] bg-brand text-[15px] font-extrabold text-white shadow-[0_6px_20px_rgba(0,142,204,.28)] transition hover:-translate-y-0.5 hover:bg-brand-dark hover:shadow-[0_8px_26px_rgba(0,142,204,.4)]">
+                                <i class="bi bi-cart-check-fill"></i> Sotib olish so'rovini yuborish
                             </button>
                         @endif
 
-                        <div class="action-secondary-row mt-2">
-                            <form action="{{ route('posts.like', $post) }}" method="POST" class="flex-grow-1" data-like-form>
+                        <div class="flex gap-2">
+                            <form action="{{ route('posts.like', $post) }}" method="POST" class="flex-1" data-like-form>
                                 @csrf
-                                <button type="submit" class="btn-action-sub btn-sub-like {{ $isLiked ? 'liked' : '' }}">
-                                    <i class="bi {{ $isLiked ? 'bi-heart-fill' : 'bi-heart' }} me-1"></i>
+                                <button type="submit" aria-pressed="{{ $isLiked ? 'true' : 'false' }}" class="{{ $subBtn }} w-full border-line bg-white text-ink hover:border-accent hover:bg-accent/12 hover:text-accent aria-pressed:border-accent aria-pressed:bg-accent/12 aria-pressed:text-accent">
+                                    <i class="bi {{ $isLiked ? 'bi-heart-fill' : 'bi-heart' }}"></i>
                                     <span data-like-label data-on="Yoqtirilgan" data-off="Yoqtirish">{{ $isLiked ? 'Yoqtirilgan' : 'Yoqtirish' }}</span>
-                                    <span class="like-counter">(<span data-like-count>{{ $post->liked_by_users_count }}</span>)</span>
+                                    <span class="text-xs opacity-75">(<span data-like-count>{{ $post->liked_by_users_count }}</span>)</span>
                                 </button>
                             </form>
 
                             @if($chat)
                                 @php $unread = $chat->unreadCountFor(auth()->id()); @endphp
-                                <a href="{{ route('chats.show', $chat) }}" class="btn-action-sub btn-sub-chat">
-                                    <i class="bi bi-chat-dots-fill me-1"></i>
+                                <a href="{{ route('chats.show', $chat) }}" class="{{ $subBtn }} border-brand/30 bg-brand/8 px-4 text-brand hover:bg-brand/18">
+                                    <i class="bi bi-chat-dots-fill"></i>
                                     <span>Chat</span>
                                     @if($unread > 0)
-                                        <span class="badge bg-lime text-ink ms-1">{{ $unread }}</span>
+                                        <span class="rounded-full bg-brand px-1.5 text-[11px] font-bold text-white">{{ $unread }}</span>
                                     @endif
                                 </a>
                             @endif
@@ -419,885 +319,125 @@
 
                     @if(auth()->check() && (auth()->user()->can('edit posts') || auth()->id() === $post->user_id))
                         @if(! $post->isArchived())
-                            <div class="mt-2">
-                                <a href="{{ route('posts.edit', $post) }}" class="btn-action-sub btn-sub-edit w-100">
-                                    <i class="bi bi-pencil-square me-1"></i> E'lonni tahrirlash
-                                </a>
-                            </div>
+                            <a href="{{ route('posts.edit', $post) }}" class="{{ $subBtn }} w-full border-line bg-black/4 text-muted hover:border-ink hover:text-ink">
+                                <i class="bi bi-pencil-square"></i> E'lonni tahrirlash
+                            </a>
                         @else
-                            <div class="mt-2 text-center p-2 rounded-3 bg-panel-soft border border-line">
-                                <span class="text-muted small">
-                                    <i class="bi bi-lock-fill me-1"></i> Ushbu e'lon arxivlangan / sotilgan (Read-only)
-                                </span>
+                            <div class="rounded-lg border border-line bg-black/4 p-2 text-center text-sm text-muted">
+                                <i class="bi bi-lock-fill mr-1"></i> Ushbu e'lon arxivlangan / sotilgan (Read-only)
                             </div>
                         @endif
                     @endif
 
                     @guest
-                        <div class="guest-action-card text-center p-3 rounded-3 mt-2">
-                            <div class="small text-muted mb-2">Hayvonni sotib olish yoki sotuvchi bilan bog'lanish uchun tizimga kiring:</div>
-                            <div class="d-flex gap-2 justify-content-center">
-                                <a href="{{ route('login') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">Kirish</a>
-                                <a href="{{ route('register') }}" class="btn btn-sm btn-success rounded-pill px-3">Ro'yxatdan o'tish</a>
+                        <div class="rounded-lg border border-dashed border-line bg-white/75 p-4 text-center">
+                            <div class="mb-2 text-sm text-muted">Hayvonni sotib olish yoki sotuvchi bilan bog'lanish uchun tizimga kiring:</div>
+                            <div class="flex justify-center gap-2">
+                                <a href="{{ route('login') }}" class="rounded-full border border-brand px-3 py-1 text-sm font-semibold text-brand hover:bg-brand hover:text-white">Kirish</a>
+                                <a href="{{ route('register') }}" class="rounded-full bg-ok px-3 py-1 text-sm font-semibold text-white hover:brightness-95">Ro'yxatdan o'tish</a>
                             </div>
                         </div>
                     @endguest
                 </div>
-
             </div>
         </div>
-
     </div>
 </div>
 
-{{-- ── BUY MODAL WITH DYNAMIC GENDER & QUANTITY SELECTION ── --}}
-@if(auth()->check() && auth()->user()->hasRole('user') && ! $post->isSoldOut())
-    <div class="modal fade" id="buyModalDetail" tabindex="-1" aria-labelledby="buyModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow-lg modal-buy-custom">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold text-cream" id="buyModalLabel">
-                        <i class="bi bi-cart-check-fill text-lime me-2"></i> Sotib olish so'rovi
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Yopish"></button>
-                </div>
-                <form action="{{ route('purchase-requests.store') }}" method="POST" id="buyerPurchaseForm">
-                    @csrf
-                    <input type="hidden" name="animal_id" value="{{ $post->id }}">
-                    <div class="modal-body p-4">
-
-                        {{-- Post Summary Card --}}
-                        <div class="post-summary-card mb-3">
-                            <div class="fw-bold text-cream">{{ $post->title }}</div>
-                            <div class="small text-muted">{{ $post->breed }} &bull; {{ $post->location }}</div>
-                            <div class="text-lime fw-bold mt-1">
-                                {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
-                                <span class="small text-muted fw-normal">/ 1 ta uchun</span>
-                            </div>
-                        </div>
-
-                        {{-- Step 1: Gender Selection --}}
-                        <div class="mb-3">
-                            <label class="form-label-custom small fw-bold text-cream d-block mb-2">
-                                1. Hayvon jinsini tanlang:
-                            </label>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <label class="buyer-gender-card {{ $maleAvail <= 0 ? 'disabled' : '' }}" for="buyerGenderMale">
-                                        <input type="radio" name="gender" value="male" class="d-none"
-                                               id="buyerGenderMale"
-                                               data-available="{{ $maleAvail }}"
-                                               @checked($defaultGender === 'male')
-                                               @disabled($maleAvail <= 0) required>
-                                        <div class="gender-card-inner">
-                                            <i class="bi bi-gender-male text-info fs-5"></i>
-                                            <span class="gender-name">Erkak</span>
-                                            <span class="gender-stock {{ $maleAvail > 0 ? 'text-lime' : 'text-danger' }}">
-                                                {{ $maleAvail > 0 ? $maleAvail . ' ta mavjud' : 'Tugagan' }}
-                                            </span>
-                                        </div>
-                                    </label>
-                                </div>
-                                <div class="col-6">
-                                    <label class="buyer-gender-card {{ $femaleAvail <= 0 ? 'disabled' : '' }}" for="buyerGenderFemale">
-                                        <input type="radio" name="gender" value="female" class="d-none"
-                                               id="buyerGenderFemale"
-                                               data-available="{{ $femaleAvail }}"
-                                               @checked($defaultGender === 'female')
-                                               @disabled($femaleAvail <= 0) required>
-                                        <div class="gender-card-inner">
-                                            <i class="bi bi-gender-female text-danger fs-5"></i>
-                                            <span class="gender-name">Urg'ochi</span>
-                                            <span class="gender-stock {{ $femaleAvail > 0 ? 'text-lime' : 'text-danger' }}">
-                                                {{ $femaleAvail > 0 ? $femaleAvail . ' ta mavjud' : 'Tugagan' }}
-                                            </span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Step 2: Quantity Selection --}}
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <label for="buyerQuantityInput" class="form-label-custom small fw-bold text-cream mb-0">
-                                    2. Miqdorni tanlang:
-                                </label>
-                                <span class="small text-muted" id="buyerAvailHint">
-                                    Mavjud: <strong class="text-lime" id="buyerMaxCount">{{ $defaultGender === 'male' ? $maleAvail : $femaleAvail }}</strong> ta
-                                </span>
-                            </div>
-                            <div class="buyer-quantity-stepper">
-                                <button type="button" class="btn-stepper" id="btnBuyerMinus"><i class="bi bi-dash-lg"></i></button>
-                                <input type="number" name="quantity" id="buyerQuantityInput"
-                                       class="form-control text-center buyer-qty-input"
-                                       value="1" min="1" max="{{ $defaultGender === 'male' ? $maleAvail : $femaleAvail }}" required>
-                                <button type="button" class="btn-stepper" id="btnBuyerPlus"><i class="bi bi-plus-lg"></i></button>
-                            </div>
-                        </div>
-
-                        {{-- Calculation Summary Panel --}}
-                        <div class="buyer-total-panel p-3 rounded-3 mb-2">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="small text-muted">Jami to'lov:</span>
-                                <span class="fw-bold text-lime fs-5" id="buyerTotalPrice">
-                                    {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
-                                </span>
-                            </div>
-                            <div class="small text-muted" id="buyerSummaryText">
-                                1 ta &times; {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
-                            </div>
-                        </div>
-
-                    </div>
-                    <div class="modal-footer border-0 pt-0 d-flex gap-2">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 flex-grow-1" data-bs-dismiss="modal">Bekor qilish</button>
-                        <button type="submit" class="btn btn-buy-confirm rounded-pill px-4 flex-grow-1" id="btnSubmitOrder">
-                            <i class="bi bi-send-check me-1"></i> So'rov yuborish
-                        </button>
-                    </div>
-                </form>
-            </div>
+{{-- Buy dialog with gender & quantity selection --}}
+@if($isBuyer && ! $post->isSoldOut())
+    <dialog id="buyModalDetail" aria-labelledby="buyModalLabel"
+            class="m-auto w-[min(500px,calc(100vw-32px))] rounded-2xl border border-line bg-white p-0 text-ink shadow-[0_20px_60px_rgba(0,0,0,.12)] backdrop:bg-black/50">
+        <div class="flex items-center justify-between px-6 pt-5">
+            <h5 class="text-lg font-bold text-ink" id="buyModalLabel"><i class="bi bi-cart-check-fill mr-2 text-brand"></i> Sotib olish so'rovi</h5>
+            <button type="button" data-dialog-close aria-label="Yopish" class="grid size-8 cursor-pointer place-items-center rounded-lg text-muted hover:bg-soft hover:text-ink"><i class="bi bi-x-lg"></i></button>
         </div>
-    </div>
+        <form action="{{ route('purchase-requests.store') }}" method="POST" id="buyerPurchaseForm">
+            @csrf
+            <input type="hidden" name="animal_id" value="{{ $post->id }}">
+            <div class="flex flex-col gap-4 p-6">
+
+                {{-- Post summary --}}
+                <div class="rounded-xl border border-line bg-surface px-3.5 py-3">
+                    <div class="font-bold text-ink">{{ $post->title }}</div>
+                    <div class="text-sm text-muted">{{ $post->breed }} &bull; {{ $post->location }}</div>
+                    <div class="mt-1 font-bold text-brand">
+                        {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
+                        <span class="text-sm font-normal text-muted">/ 1 ta uchun</span>
+                    </div>
+                </div>
+
+                {{-- Step 1: gender --}}
+                <div>
+                    <span class="mb-2 block text-sm font-bold text-ink">1. Hayvon jinsini tanlang:</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        @foreach([['male', 'buyerGenderMale', $maleAvail, 'bi-gender-male text-male', 'Erkak'], ['female', 'buyerGenderFemale', $femaleAvail, 'bi-gender-female text-danger', "Urg'ochi"]] as [$value, $id, $avail, $icon, $label])
+                            <label for="{{ $id }}" class="block cursor-pointer has-disabled:cursor-not-allowed has-disabled:opacity-40">
+                                <input type="radio" name="gender" value="{{ $value }}" class="peer sr-only" id="{{ $id }}" data-available="{{ $avail }}"
+                                       @checked($defaultGender === $value) @disabled($avail <= 0) required>
+                                <div class="flex flex-col items-center gap-1 rounded-xl border-[1.5px] border-line bg-surface p-3 text-center transition peer-checked:border-brand peer-checked:bg-brand/12 peer-checked:shadow-[0_0_12px_rgba(0,142,204,.2)] peer-focus-visible:outline-2 peer-focus-visible:outline-brand">
+                                    <i class="bi {{ $icon }} text-xl"></i>
+                                    <span class="text-sm font-bold text-ink">{{ $label }}</span>
+                                    <span @class(['text-xs font-semibold', $avail > 0 ? 'text-brand' : 'text-danger'])>{{ $avail > 0 ? $avail . ' ta mavjud' : 'Tugagan' }}</span>
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Step 2: quantity --}}
+                <div>
+                    <div class="mb-2 flex items-center justify-between">
+                        <label for="buyerQuantityInput" class="text-sm font-bold text-ink">2. Miqdorni tanlang:</label>
+                        <span class="text-sm text-muted" id="buyerAvailHint">
+                            Mavjud: <strong class="text-brand" id="buyerMaxCount">{{ $defaultGender === 'male' ? $maleAvail : $femaleAvail }}</strong> ta
+                        </span>
+                    </div>
+                    @php $stepBtn = 'flex h-full w-12 cursor-pointer items-center justify-center text-lg font-bold text-brand transition hover:bg-brand/15 disabled:cursor-not-allowed disabled:opacity-25'; @endphp
+                    <div class="flex h-12 items-center overflow-hidden rounded-xl border-[1.5px] border-line bg-surface">
+                        <button type="button" class="{{ $stepBtn }}" id="btnBuyerMinus" aria-label="Kamaytirish"><i class="bi bi-dash-lg"></i></button>
+                        <input type="number" name="quantity" id="buyerQuantityInput"
+                               class="h-full min-w-0 flex-1 bg-transparent text-center text-lg font-extrabold text-ink outline-none"
+                               value="1" min="1" max="{{ $defaultGender === 'male' ? $maleAvail : $femaleAvail }}" required>
+                        <button type="button" class="{{ $stepBtn }}" id="btnBuyerPlus" aria-label="Ko'paytirish"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+                </div>
+
+                {{-- Total --}}
+                <div class="rounded-lg border border-line bg-surface p-3">
+                    <div class="mb-1 flex items-center justify-between">
+                        <span class="text-sm text-muted">Jami to'lov:</span>
+                        <span class="text-xl font-bold text-brand" id="buyerTotalPrice">
+                            {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
+                        </span>
+                    </div>
+                    <div class="text-sm text-muted" id="buyerSummaryText">
+                        1 ta &times; {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2 px-6 pb-6">
+                <button type="button" data-dialog-close class="btn flex-1 rounded-full border-field bg-white text-muted hover:border-muted hover:text-ink">Bekor qilish</button>
+                <button type="submit" class="btn btn-primary flex-1 rounded-full disabled:bg-slate-500 disabled:text-slate-300" id="btnSubmitOrder">
+                    <i class="bi bi-send-check"></i> So'rov yuborish
+                </button>
+            </div>
+        </form>
+    </dialog>
 @endif
 
-<style>
-/* ── DETAIL PAGE STYLING (DARK LUXURY THEME) ── */
-.post-detail-container {
-    max-width: 1240px;
-}
-
-/* Topbar & Breadcrumb */
-.detail-topbar {
-    background: rgba(255, 255, 255, 0.75);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 10px 16px;
-    backdrop-filter: blur(12px);
-}
-.btn-back-crumb {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 12px;
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 0.78rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-.btn-back-crumb:hover {
-    color: var(--lime);
-    border-color: var(--lime);
-    background: rgba(0, 142, 204, 0.08);
-    transform: translateX(-2px);
-}
-.breadcrumb {
-    font-size: 0.8rem;
-}
-.breadcrumb-item a {
-    color: var(--muted);
-    text-decoration: none;
-    transition: color 0.15s;
-}
-.breadcrumb-item a:hover {
-    color: var(--lime);
-}
-.breadcrumb-item.active {
-    color: var(--cream);
-    font-weight: 600;
-}
-.breadcrumb-item + .breadcrumb-item::before {
-    content: "›";
-    color: var(--muted);
-    font-size: 0.95rem;
-    padding: 0 6px;
-}
-.badge-post-meta {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.72rem;
-    color: var(--muted);
-    background: rgba(0, 0, 0, 0.035);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    padding: 3px 9px;
-    border-radius: 999px;
-}
-
-/* Gallery Shell */
-.gallery-card-shell {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    overflow: hidden;
-    padding: 14px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-}
-.gallery-main-view {
-    height: 460px;
-    position: relative;
-    border-radius: 16px;
-    overflow: hidden;
-    background: #f5f5f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.gallery-ambient-backdrop {
-    position: absolute;
-    inset: -14px;
-    background-size: cover;
-    background-position: center;
-    filter: blur(24px) brightness(0.24) saturate(1.4);
-    opacity: 0.9;
-    transform: scale(1.15);
-    pointer-events: none;
-    transition: background-image 0.25s ease;
-}
-.gallery-main-img {
-    position: relative;
-    z-index: 2;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    transition: opacity 0.2s ease, transform 0.3s ease;
-}
-.gallery-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: var(--muted);
-    font-size: 0.9rem;
-}
-.gallery-placeholder i {
-    font-size: 2.8rem;
-    color: var(--line);
-}
-
-.gallery-overlay-top {
-    position: absolute;
-    top: 14px;
-    left: 14px;
-    right: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 3;
-    pointer-events: none;
-}
-.gallery-glass-pill {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.74rem;
-    font-weight: 700;
-    padding: 5px 12px;
-    border-radius: 9999px;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-}
-.gallery-glass-pill.pill-cat {
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    color: var(--cream);
-}
-.gallery-glass-pill.pill-active {
-    background: rgba(0, 142, 204, 0.18);
-    border: 1px solid rgba(0, 142, 204, 0.5);
-    color: var(--lime);
-}
-.gallery-glass-pill.pill-reserved {
-    background: rgba(255, 107, 43, 0.2);
-    border: 1px solid rgba(255, 107, 43, 0.5);
-    color: var(--orange);
-}
-.gallery-glass-pill.pill-sold {
-    background: rgba(239, 68, 68, 0.25);
-    border: 1px solid rgba(239, 68, 68, 0.6);
-    color: #dc3545;
-}
-.gallery-glass-pill.pill-counter {
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    color: var(--cream);
-}
-
-.gallery-thumbnails-strip {
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    margin-top: 12px;
-    padding-bottom: 4px;
-    scrollbar-width: thin;
-}
-.gallery-thumb-btn {
-    width: 76px;
-    height: 76px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #f5f7f9;
-    border: 2px solid var(--line);
-    padding: 0;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.2s ease;
-}
-.gallery-thumb-btn img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-.gallery-thumb-btn:hover {
-    border-color: rgba(0, 142, 204, 0.5);
-    transform: translateY(-2px);
-}
-.gallery-thumb-btn.active {
-    border-color: var(--lime);
-    box-shadow: 0 0 14px rgba(0, 142, 204, 0.35);
-}
-
-/* Detail Section Cards */
-.detail-section-card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 22px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-.section-card-title {
-    font-family: var(--serif);
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--cream);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-}
-.ad-full-text {
-    font-size: 0.92rem;
-    line-height: 1.7;
-    color: rgba(34, 34, 34, 0.88);
-}
-
-/* Trust Features */
-.trust-mini-feature {
-    background: rgba(0, 0, 0, 0.03);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    border-radius: 14px;
-    padding: 16px;
-    height: 100%;
-}
-.trust-icon-box {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: rgba(0, 142, 204, 0.12);
-    color: var(--lime);
-    display: grid;
-    place-items: center;
-    font-size: 1.15rem;
-    margin-bottom: 10px;
-}
-.trust-mini-feature h6 {
-    font-family: var(--serif);
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: var(--cream);
-    margin-bottom: 6px;
-}
-.trust-mini-feature p {
-    font-size: 0.76rem;
-    color: var(--muted);
-    line-height: 1.45;
-    margin: 0;
-}
-
-/* Right Sticky Sidebar */
-.sticky-detail-sidebar {
-    position: sticky;
-    top: 76px;
-}
-.detail-panel-box {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
-/* Price Box */
-.panel-price-header {
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 14px;
-    margin-bottom: 14px;
-}
-.price-val-wrap {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-.ad-price-display {
-    font-family: var(--serif);
-    font-size: 1.95rem;
-    font-weight: 800;
-    color: var(--lime);
-    letter-spacing: -0.03em;
-    line-height: 1.15;
-}
-.ad-price-unit {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: rgba(34, 34, 34, 0.75);
-}
-.badge-negotiable-glow {
-    font-size: 0.72rem;
-    font-weight: 700;
-    background: rgba(0, 142, 204, 0.12);
-    color: var(--lime);
-    border: 1px solid rgba(0, 142, 204, 0.35);
-    padding: 3px 10px;
-    border-radius: 9999px;
-}
-.ad-main-title {
-    font-family: var(--serif);
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: var(--cream);
-    line-height: 1.3;
-    margin: 0;
-}
-.detail-chip {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.75rem;
-    color: var(--muted);
-    background: rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(0, 0, 0, 0.07);
-    padding: 3px 9px;
-    border-radius: 8px;
-}
-
-/* Stock Card */
-.panel-section-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--cream);
-}
-.stock-total-badge {
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 999px;
-    background: rgba(0, 142, 204, 0.14);
-    color: var(--lime);
-    border: 1px solid rgba(0, 142, 204, 0.3);
-}
-.stock-total-badge.sold-badge {
-    background: rgba(239, 68, 68, 0.15);
-    color: #dc3545;
-    border-color: rgba(239, 68, 68, 0.4);
-}
-.stock-breakdown-card {
-    background: #f5f7f9;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.2s ease;
-}
-.stock-breakdown-card.depleted {
-    opacity: 0.45;
-    background: #fff5f4;
-    border-color: #fff1f0;
-}
-.stock-card-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    font-size: 1rem;
-    flex-shrink: 0;
-}
-.stock-card-icon.male-icon {
-    background: rgba(13, 202, 240, 0.12);
-    color: #0a8fb0;
-}
-.stock-card-icon.female-icon {
-    background: rgba(220, 53, 69, 0.12);
-    color: #dc3545;
-}
-.stock-card-title {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--cream);
-}
-.stock-card-status {
-    font-size: 0.72rem;
-    font-weight: 600;
-}
-
-/* Specs 2x3 Grid */
-.specs-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-.spec-cell {
-    background: #f5f7f9;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 9px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.spec-label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-.spec-val {
-    font-size: 0.84rem;
-    font-weight: 700;
-    color: var(--cream);
-}
-
-/* Seller Card */
-.seller-avatar-box {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #e5f4fb;
-    border: 1.5px solid rgba(0, 142, 204, 0.4);
-    color: var(--lime);
-    display: grid;
-    place-items: center;
-    font-size: 1.1rem;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-.seller-name-title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--cream);
-}
-.badge-seller-tag {
-    font-size: 0.65rem;
-    font-weight: 700;
-    background: rgba(0, 142, 204, 0.12);
-    color: var(--lime);
-    border: 1px solid rgba(0, 142, 204, 0.3);
-    padding: 1px 6px;
-    border-radius: 999px;
-}
-.seller-meta-text {
-    font-size: 0.72rem;
-    color: var(--muted);
-}
-.seller-contact-links {
-    display: flex;
-    gap: 8px;
-}
-.seller-contact-btn {
-    flex: 1;
-    height: 38px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border-radius: 10px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-.seller-contact-btn.btn-call {
-    background: rgba(0, 142, 204, 0.12);
-    border: 1px solid rgba(0, 142, 204, 0.35);
-    color: var(--lime);
-}
-.seller-contact-btn.btn-call:hover {
-    background: var(--lime);
-    color: var(--ink);
-    font-weight: 700;
-}
-.seller-contact-btn.btn-tg {
-    background: rgba(13, 202, 240, 0.12);
-    border: 1px solid rgba(13, 202, 240, 0.35);
-    color: #0a8fb0;
-}
-.seller-contact-btn.btn-tg:hover {
-    background: #0a8fb0;
-    color: #f3f9fb;
-    font-weight: 700;
-}
-
-/* Action Buttons */
-.detail-actions-box {
-    margin-top: 4px;
-}
-.btn-action-main {
-    width: 100%;
-    height: 50px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 14px;
-    font-weight: 800;
-    font-size: 0.95rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.22s ease;
-}
-.btn-main-buy {
-    background: var(--lime);
-    color: var(--ink);
-    box-shadow: 0 6px 20px rgba(0, 142, 204, 0.28);
-}
-.btn-main-buy:hover {
-    background: #0073a8;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 26px rgba(0, 142, 204, 0.4);
-}
-.btn-main-sold {
-    background: #fff1f0;
-    color: #dc3545;
-    border: 1px solid #ffd6d1;
-    cursor: not-allowed;
-}
-
-.action-secondary-row {
-    display: flex;
-    gap: 8px;
-}
-.btn-action-sub {
-    height: 42px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border-radius: 12px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    text-decoration: none;
-    border: 1px solid var(--line);
-    background: var(--panel);
-    color: var(--cream);
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-.btn-sub-like {
-    width: 100%;
-}
-.btn-sub-like:hover, .btn-sub-like.liked {
-    border-color: var(--orange);
-    color: var(--orange);
-    background: rgba(255, 107, 43, 0.12);
-}
-.btn-sub-chat {
-    padding: 0 16px;
-    background: rgba(0, 142, 204, 0.08);
-    border-color: rgba(0, 142, 204, 0.3);
-    color: var(--lime);
-}
-.btn-sub-chat:hover {
-    background: rgba(0, 142, 204, 0.18);
-    color: var(--lime);
-}
-.btn-sub-edit {
-    background: rgba(0, 0, 0, 0.04);
-    color: var(--muted);
-}
-.btn-sub-edit:hover {
-    border-color: var(--cream);
-    color: var(--cream);
-}
-.like-counter {
-    opacity: 0.75;
-    font-size: 0.76rem;
-}
-.guest-action-card {
-    background: rgba(255, 255, 255, 0.75);
-    border: 1px dashed var(--line);
-}
-
-/* Buy Modal Customization */
-.modal-buy-custom {
-    background: #ffffff !important;
-    border: 1px solid var(--line) !important;
-    color: var(--cream);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important;
-}
-.post-summary-card {
-    background: #f5f7f9;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 12px 14px;
-}
-.buyer-gender-card {
-    display: block;
-    cursor: pointer;
-    margin: 0;
-}
-.buyer-gender-card .gender-card-inner {
-    border: 1.5px solid var(--line);
-    background: #f5f7f9;
-    border-radius: 12px;
-    padding: 12px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.2s ease;
-}
-.buyer-gender-card input:checked + .gender-card-inner {
-    border-color: var(--lime);
-    background: rgba(0, 142, 204, 0.12);
-    box-shadow: 0 0 12px rgba(0, 142, 204, 0.2);
-}
-.buyer-gender-card.disabled {
-    cursor: not-allowed;
-    opacity: 0.4;
-}
-.buyer-gender-card .gender-name {
-    font-weight: 700;
-    font-size: 0.88rem;
-    color: var(--cream);
-}
-.buyer-gender-card .gender-stock {
-    font-size: 0.72rem;
-    font-weight: 600;
-}
-
-/* Stepper */
-.buyer-quantity-stepper {
-    display: flex;
-    align-items: center;
-    background: #f5f7f9;
-    border: 1.5px solid var(--line);
-    border-radius: 12px;
-    overflow: hidden;
-    height: 48px;
-}
-.btn-stepper {
-    width: 48px;
-    height: 100%;
-    border: none;
-    background: transparent;
-    color: var(--lime);
-    font-size: 1.1rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-.btn-stepper:hover {
-    background: rgba(0, 142, 204, 0.15);
-}
-.btn-stepper:disabled {
-    opacity: 0.25;
-    cursor: not-allowed;
-}
-.buyer-qty-input {
-    border: none !important;
-    background: transparent !important;
-    color: var(--cream) !important;
-    font-weight: 800;
-    font-size: 1.15rem;
-    height: 100%;
-    box-shadow: none !important;
-}
-
-/* Total Panel */
-.buyer-total-panel {
-    background: #f5f7f9;
-    border: 1px solid var(--line);
-}
-.btn-buy-confirm {
-    background: var(--lime);
-    color: var(--ink);
-    font-weight: 700;
-    border: none;
-    transition: all 0.2s ease;
-}
-.btn-buy-confirm:hover {
-    background: #0073a8;
-    color: var(--ink);
-    transform: translateY(-1px);
-}
-.btn-buy-confirm:disabled {
-    background: #475569;
-    color: #94a3b8;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* Responsive adjustments */
-@media (max-width: 991.98px) {
-    .sticky-detail-sidebar {
-        position: static;
-        margin-top: 24px;
-    }
-    .gallery-main-view {
-        height: 360px;
-    }
-    .ad-price-display {
-        font-size: 1.65rem;
-    }
-}
-@media (max-width: 575.98px) {
-    .gallery-main-view {
-        height: 280px;
-    }
-    .gallery-thumb-btn {
-        width: 64px;
-        height: 64px;
-    }
-    .specs-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
-
 <script>
-function switchImage(src, btn, index) {
+// Gallery: thumbnails swap the main image, its blurred backdrop and the counter.
+document.querySelectorAll('[data-gallery-thumb]').forEach(btn => btn.addEventListener('click', () => {
     const mainImg = document.getElementById('mainImg');
-    const ambientBackdrop = document.getElementById('ambientBackdrop');
-    const galleryCounter = document.getElementById('galleryCounter');
-    const totalCount = {{ max(1, count($allImages)) }};
-
-    if (mainImg) {
-        mainImg.style.opacity = '0';
-        setTimeout(() => {
-            mainImg.src = src;
-            mainImg.style.opacity = '1';
-        }, 120);
-    }
-    if (ambientBackdrop) {
-        ambientBackdrop.style.backgroundImage = `url('${src}')`;
-    }
-    if (galleryCounter && index) {
-        galleryCounter.textContent = `${index} / ${totalCount}`;
-    }
-
-    document.querySelectorAll('.gallery-thumb-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-}
+    const src = btn.dataset.src;
+    mainImg.style.opacity = '0';
+    setTimeout(() => { mainImg.src = src; mainImg.style.opacity = '1'; }, 120);
+    document.getElementById('ambientBackdrop').style.backgroundImage = `url('${src}')`;
+    document.getElementById('galleryCounter').textContent = `${btn.dataset.galleryThumb} / {{ max(1, count($allImages)) }}`;
+    document.querySelectorAll('[data-gallery-thumb]').forEach(b => b.removeAttribute('aria-current'));
+    btn.setAttribute('aria-current', 'true');
+}));
 
 document.addEventListener('DOMContentLoaded', function () {
     const qtyInput = document.getElementById('buyerQuantityInput');
@@ -1368,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (btnSubmitOrder) {
             btnSubmitOrder.disabled = false;
-            btnSubmitOrder.innerHTML = `<i class="bi bi-send-check me-1"></i> So'rov yuborish`;
+            btnSubmitOrder.innerHTML = `<i class="bi bi-send-check"></i> So'rov yuborish`;
         }
     }
 

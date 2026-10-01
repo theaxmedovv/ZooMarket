@@ -78,7 +78,7 @@ class PageRenderTest extends TestCase
     public function test_guest_pages_render_with_site_chrome(): void
     {
         foreach (['/', '/posts', "/posts/{$this->post->id}", '/login', '/register'] as $url) {
-            $this->get($url)->assertOk()->assertSee('zm-header', false)->assertSee('zm-footer', false);
+            $this->get($url)->assertOk()->assertSee('id="zmHeader"', false)->assertSee('id="zmFooter"', false);
         }
     }
 
@@ -116,7 +116,7 @@ class PageRenderTest extends TestCase
         $this->actingAs($this->buyer);
 
         foreach (['/', '/posts', "/posts/{$this->post->id}", '/user/profile', '/user/purchase-requests', '/chats', "/chats/{$this->chat->id}"] as $url) {
-            $this->get($url)->assertOk()->assertSee('zm-header', false)->assertSee('aria-label="Buyurtmalar"', false);
+            $this->get($url)->assertOk()->assertSee('id="zmHeader"', false)->assertSee('aria-label="Buyurtmalar"', false);
         }
     }
 
@@ -165,7 +165,7 @@ class PageRenderTest extends TestCase
         ] as $url) {
             $response = $this->get($url);
             $this->assertContains($response->status(), [200], "{$url} returned {$response->status()}");
-            $response->assertSee('zm-header', false)->assertSee("Yangi e'lon", false);
+            $response->assertSee('id="zmHeader"', false)->assertSee("Yangi e'lon", false);
         }
     }
 }

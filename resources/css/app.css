@@ -1,11 +1,108 @@
 @import 'tailwindcss';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/* Active nav item, tab, slide dot or thumbnail: aria-current="page" / "true" */
+@custom-variant current (&[aria-current]:not([aria-current='false']));
+
+/* MegaMart light theme */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Mulish', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-brand: #008ecc;
+    --color-brand-dark: #0073a8;
+    --color-brand-soft: #f3f9fb;
+    --color-brand-tint: #e5f4fb;
+    --color-navy: #212844;
+    --color-accent: #ff6b2b;
+    --color-hot: #ff4d2e;
+    --color-ok: #249b3e;
+    --color-warn: #f0a500;
+    --color-danger: #dc3545;
+    --color-male: #0a8fb0;
+
+    --color-ink: #222222;
+    --color-muted: #666666;
+    --color-faint: #9a9a9a;
+    --color-line: #ededed;
+    --color-field: #e3e3e3;
+    --color-soft: #f5f5f5;
+    --color-surface: #f5f7f9;
+
+    --animate-toast-in: toast-in 0.25s ease-out;
+    --animate-pulse-dot: pulse-dot 1.6s ease-in-out infinite;
+
+    @keyframes toast-in {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: none; }
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(1.3); }
+    }
+}
+
+@layer base {
+    body {
+        @apply bg-white font-sans text-ink antialiased;
+    }
+    :where(a, button, select, input, textarea, summary):focus-visible {
+        @apply outline-2 outline-offset-2 outline-brand;
+    }
+    /* A submitting form's button (set by app.js) */
+    [aria-busy='true'] {
+        @apply pointer-events-none cursor-progress opacity-70;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+/* ---- Shared primitives: combine with plain utilities for one-off tweaks ---- */
+
+@utility wrap {
+    @apply mx-auto w-full max-w-[1240px] px-4;
+}
+
+/* Page body: one vertical rhythm for every page (32px under the tab row, 64px before the footer) */
+@utility page {
+    @apply mx-auto w-full max-w-[1240px] px-4 pt-5 pb-12 md:pt-8 md:pb-16;
+}
+
+@utility card {
+    @apply rounded-2xl border border-line bg-white;
+}
+
+@utility btn {
+    @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[10px] border border-transparent px-5 text-sm font-extrabold whitespace-nowrap transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+    @apply bg-brand text-white hover:bg-brand-dark;
+}
+
+@utility btn-outline {
+    @apply border-field bg-white text-muted hover:border-brand hover:text-brand;
+}
+
+@utility field-label {
+    @apply mb-1.5 block text-[13px] font-bold text-ink;
+}
+
+@utility input {
+    @apply h-11 w-full min-w-0 rounded-[10px] border border-field bg-white px-3.5 text-sm text-ink transition outline-none placeholder:text-faint focus:border-brand focus:ring-3 focus:ring-brand/15 aria-invalid:border-accent;
+}
+
+/* Hide a horizontal scroller's bar but keep it scrollable */
+@utility no-scrollbar {
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
