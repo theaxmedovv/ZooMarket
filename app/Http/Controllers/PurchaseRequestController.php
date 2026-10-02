@@ -49,13 +49,18 @@ class PurchaseRequestController extends Controller
                 'integer',
                 Rule::exists('posts', 'id')->whereNull('deleted_at'),
             ],
+            'male_quantity' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'female_quantity' => ['nullable', 'integer', 'min:0', 'max:100'],
+            // Legacy single-gender form: gender + quantity
             'gender' => [
-                'required',
+                'required_without_all:male_quantity,female_quantity',
+                'nullable',
                 'string',
                 Rule::in(['male', 'female']),
             ],
             'quantity' => [
-                'required',
+                'required_without_all:male_quantity,female_quantity',
+                'nullable',
                 'integer',
                 'min:1',
                 'max:100',
@@ -63,41 +68,52 @@ class PurchaseRequestController extends Controller
         ]);
 
         $animalId = (int) $validated['animal_id'];
-        $gender = $validated['gender'];
-        $requestedQty = (int) $validated['quantity'];
+
+        if (isset($validated['male_quantity']) || isset($validated['female_quantity'])) {
+            $maleQty = (int) ($validated['male_quantity'] ?? 0);
+            $femaleQty = (int) ($validated['female_quantity'] ?? 0);
+        } else {
+            $maleQty = $validated['gender'] === 'male' ? (int) $validated['quantity'] : 0;
+            $femaleQty = $validated['gender'] === 'female' ? (int) $validated['quantity'] : 0;
+        }
+
+        if ($maleQty + $femaleQty < 1) {
+            return back()->withErrors(['quantity' => 'Kamida 1 ta hayvon tanlang.']);
+        }
 
         try {
-            DB::transaction(function () use ($user, $animalId, $gender, $requestedQty) {
+            DB::transaction(function () use ($user, $animalId, $maleQty, $femaleQty) {
                 $animal = Post::where('id', $animalId)->lockForUpdate()->firstOrFail();
 
                 if ($animal->moderation_status !== 'approved' || in_array($animal->status, ['sold', 'archived'], true) || $animal->totalAvailableCount() <= 0) {
                     throw new \RuntimeException("Ushbu hayvon sotuvda mavjud emas yoki hali tasdiqlanmagan.");
                 }
 
-                $available = $gender === 'male' ? $animal->availableMaleCount() : $animal->availableFemaleCount();
-                if ($requestedQty > $available) {
-                    $genderName = $gender === 'male' ? 'erkak' : "urg'ochi";
-                    throw new \RuntimeException("Kechirasiz, tanlangan jins ({$genderName}) bo'yicha yetarli miqdor mavjud emas. Hozirda mavjud: {$available} ta.");
+                if ($maleQty > $animal->availableMaleCount()) {
+                    throw new \RuntimeException("Kechirasiz, erkak hayvonlar yetarli emas. Hozirda mavjud: {$animal->availableMaleCount()} ta.");
                 }
 
-                // Deduct inventory
-                if ($gender === 'male') {
-                    $animal->male_quantity = max(0, $animal->male_quantity - $requestedQty);
-                } else {
-                    $animal->female_quantity = max(0, $animal->female_quantity - $requestedQty);
+                if ($femaleQty > $animal->availableFemaleCount()) {
+                    throw new \RuntimeException("Kechirasiz, urg'ochi hayvonlar yetarli emas. Hozirda mavjud: {$animal->availableFemaleCount()} ta.");
                 }
 
+                // Deduct the selected animals from the listing; the rest stays on sale
+                $animal->male_quantity -= $maleQty;
+                $animal->female_quantity -= $femaleQty;
                 $animal->quantity = $animal->male_quantity + $animal->female_quantity;
+
+                // Everything is reserved by open requests: hide from sale, but keep the
+                // listing alive until those requests are sold or rejected
                 if ($animal->quantity <= 0) {
-                    $animal->status = 'sold';
+                    $animal->status = 'reserved';
                 }
                 $animal->save();
 
                 PurchaseRequest::create([
                     'user_id' => $user->id,
                     'animal_id' => $animal->id,
-                    'gender' => $gender,
-                    'quantity' => $requestedQty,
+                    'male_quantity' => $maleQty,
+                    'female_quantity' => $femaleQty,
                     'status' => 'pending',
                 ]);
             });
@@ -172,27 +188,38 @@ class PurchaseRequestController extends Controller
             return back()->withErrors(['purchase_request' => 'Ushbu amalni bajarish uchun ruxsat yo\'q.']);
         }
 
-        DB::transaction(function () use ($purchaseRequest, $animal) {
-            // 1. Mark this purchase request as sold
+        if (! in_array($purchaseRequest->status, ['pending', 'approved'], true)) {
+            return back()->withErrors(['purchase_request' => 'Faqat faol so\'rovni sotilgan deb belgilash mumkin.']);
+        }
+
+        $archived = DB::transaction(function () use ($purchaseRequest, $animal) {
+            $animal = Post::withTrashed()->where('id', $animal->id)->lockForUpdate()->first();
+
+            // Only the animals selected in this request are sold; their stock was
+            // already deducted when the request was made
             $purchaseRequest->update(['status' => 'sold']);
+            $purchaseRequest->chat?->update(['closed_at' => now()]);
 
-            // 2. Partial Sale -> Archive: Unconditionally move listing to Archive (status = 'sold')
-            $animal->update(['status' => 'sold']);
-
-            // 3. Reject all other active requests (pending, approved) for this listing
-            PurchaseRequest::query()
+            // Archive the listing only once nothing remains: no stock left and
+            // no other open request still holding a reservation
+            $hasOpenRequests = PurchaseRequest::query()
                 ->where('animal_id', $animal->id)
-                ->where('id', '!=', $purchaseRequest->id)
                 ->whereIn('status', ['pending', 'approved'])
-                ->update(['status' => 'rejected']);
+                ->exists();
 
-            // 4. Close and deactivate all chats for this listing
-            Chat::query()
-                ->where('post_id', $animal->id)
-                ->update(['closed_at' => now()]);
+            if (! $animal->isArchived() && $animal->totalAvailableCount() <= 0 && ! $hasOpenRequests) {
+                $animal->update(['status' => 'sold']);
+                return true;
+            }
+
+            return false;
         });
 
-        return back()->with('success', 'E\'lon sotilgan deb belgilandi va arxivga o\'tkazildi. Aloqador chatlar yopildi.');
+        if ($archived) {
+            return back()->with('success', 'So\'rov sotilgan deb belgilandi. E\'londagi barcha hayvonlar sotilgani uchun e\'lon arxivga o\'tkazildi.');
+        }
+
+        return back()->with('success', 'So\'rov sotilgan deb belgilandi. Qolgan hayvonlar e\'londa qoldi.');
     }
 
     public function reject(Request $request, PurchaseRequest $purchaseRequest): RedirectResponse
@@ -207,20 +234,24 @@ class PurchaseRequestController extends Controller
             return back()->with('success', 'Bu so\'rov allaqachon rad etilgan.');
         }
 
+        if ($purchaseRequest->status === 'sold') {
+            return back()->withErrors(['purchase_request' => 'Sotilgan so\'rovni rad etib bo\'lmaydi.']);
+        }
+
         DB::transaction(function () use ($purchaseRequest, $animal) {
             $animal = Post::withTrashed()->where('id', $animal->id)->lockForUpdate()->first();
 
-            // Restore inventory only if the animal is not sold or archived, and not soft-deleted
-            if ($animal && ! in_array($animal->status, ['sold', 'archived'], true) && ! $animal->trashed()) {
-                $reqQty = max(1, (int) $purchaseRequest->quantity);
-                $restoreGender = $purchaseRequest->gender ?: ($animal->gender === 'female' ? 'female' : 'male');
-                if ($restoreGender === 'female') {
-                    $animal->female_quantity = $animal->female_quantity + $reqQty;
-                } else {
-                    $animal->male_quantity = $animal->male_quantity + $reqQty;
-                }
+            // Return the reserved animals to the listing, unless it is archived or deleted
+            if ($animal && ! $animal->isArchived()) {
+                $wasFullyReserved = $animal->totalAvailableCount() <= 0;
 
+                $animal->male_quantity += (int) $purchaseRequest->male_quantity;
+                $animal->female_quantity += (int) $purchaseRequest->female_quantity;
                 $animal->quantity = $animal->male_quantity + $animal->female_quantity;
+
+                if ($wasFullyReserved && $animal->status === 'reserved' && $animal->quantity > 0) {
+                    $animal->status = 'active';
+                }
                 $animal->save();
             }
 

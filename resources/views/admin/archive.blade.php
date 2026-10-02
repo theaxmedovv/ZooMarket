@@ -105,11 +105,7 @@
                                 @foreach($soldRequests as $soldReq)
                                     <div class="flex flex-wrap items-center gap-1">
                                         <span class="{{ $tag }} border-brand/25 bg-brand/12 font-bold text-brand"><i class="bi bi-box-seam"></i>{{ $soldReq->quantity ?? 1 }} ta sotildi</span>
-                                        @if($soldReq->gender === 'male')
-                                            <span class="{{ $tag }} border-male/25 bg-male/10 text-male"><i class="bi bi-gender-male"></i>Erkak ♂</span>
-                                        @elseif($soldReq->gender === 'female')
-                                            <span class="{{ $tag }} border-danger/25 bg-danger/10 text-danger"><i class="bi bi-gender-female"></i>Urg'ochi ♀</span>
-                                        @endif
+                                        <x-request-genders :request="$soldReq" :tag="$tag" />
                                     </div>
                                 @endforeach
                             </div>

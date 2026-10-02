@@ -74,11 +74,7 @@
                                     <a href="{{ route('posts.show', $request->animal) }}" class="font-semibold text-ink hover:text-brand">{{ Str::limit($request->animal->title, 28) }}</a>
                                     <div class="mt-1 flex flex-wrap items-center gap-1">
                                         <span class="{{ $tag }} border-line bg-black/4 text-brand"><i class="bi bi-box-seam"></i>{{ $request->quantity ?? 1 }} ta</span>
-                                        @if($request->gender === 'male')
-                                            <span class="{{ $tag }} border-male/25 bg-male/10 text-male"><i class="bi bi-gender-male"></i>Erkak</span>
-                                        @elseif($request->gender === 'female')
-                                            <span class="{{ $tag }} border-danger/25 bg-danger/10 text-danger"><i class="bi bi-gender-female"></i>Urg'ochi</span>
-                                        @endif
+                                        <x-request-genders :request="$request" :tag="$tag" />
                                         @if($request->animal->trashed())
                                             <span class="{{ $tag }} border-danger/25 bg-danger/10 text-danger"><i class="bi bi-trash"></i>O'chirilgan</span>
                                         @endif
@@ -128,9 +124,9 @@
                             @endif
 
                             @if($request->status === 'approved')
-                                <form action="{{ route('admin.purchase-requests.mark-sold', $request) }}" method="POST" onsubmit="return confirm('E\'lon sotilgan deb belgilansinmi? (E\'lon to\'liq yoki qisman sotilganda ham arxivga o\'tkaziladi va chat yopiladi)')">
+                                <form action="{{ route('admin.purchase-requests.mark-sold', $request) }}" method="POST" onsubmit="return confirm('Ushbu so\'rovdagi hayvonlar sotilgan deb belgilansinmi? (Qolgan hayvonlar e\'londa qoladi; e\'lon faqat hammasi sotilganda arxivga o\'tadi)')">
                                     @csrf
-                                    <button type="submit" class="{{ $approve }}" title="Sotilgan deb belgilash va arxivga o'tkazish"><i class="bi bi-bag-check-fill"></i> Sotildi</button>
+                                    <button type="submit" class="{{ $approve }}" title="Ushbu so'rovni sotilgan deb belgilash"><i class="bi bi-bag-check-fill"></i> Sotildi</button>
                                 </form>
                                 <form action="{{ route('admin.purchase-requests.reject', $request) }}" method="POST" onsubmit="return confirm('Ushbu tasdiqlangan so\'rovni bekor/rad qilishni xohlaysizmi?')">
                                     @csrf

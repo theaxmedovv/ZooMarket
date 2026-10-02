@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\PurchaseRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -259,7 +260,7 @@ class AnimalQuantityAndGenderTest extends TestCase
         $response->assertSessionHasErrors(['gender']);
     }
 
-    public function test_inventory_depletion_marks_post_as_sold(): void
+    public function test_inventory_depletion_reserves_post_until_requests_are_sold(): void
     {
         $post = Post::create([
             'user_id' => $this->seller->id,
@@ -286,7 +287,17 @@ class AnimalQuantityAndGenderTest extends TestCase
         $post->refresh();
         $this->assertEquals(0, $post->male_quantity);
         $this->assertEquals(0, $post->quantity);
+        $this->assertEquals('reserved', $post->status);
+        $this->assertFalse($post->isArchived());
+
+        // Selling the reserved animals finally archives the listing
+        $purchaseRequest = PurchaseRequest::first();
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.approve', $purchaseRequest));
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.mark-sold', $purchaseRequest));
+
+        $post->refresh();
         $this->assertEquals('sold', $post->status);
+        $this->assertTrue($post->isArchived());
     }
 
     public function test_rejection_restores_inventory(): void
@@ -326,5 +337,148 @@ class AnimalQuantityAndGenderTest extends TestCase
         $this->assertEquals(3, $post->female_quantity);
         $this->assertEquals(5, $post->quantity);
         $this->assertEquals('active', $post->status);
+    }
+
+    private function makeMixedPost(int $male, int $female): Post
+    {
+        return Post::create([
+            'user_id' => $this->seller->id,
+            'category_id' => $this->category->id,
+            'title' => 'Mushukchalar',
+            'content' => 'Mushukchalar haqida',
+            'breed' => 'British',
+            'quantity' => $male + $female,
+            'gender' => 'mixed',
+            'male_quantity' => $male,
+            'female_quantity' => $female,
+            'age' => '2 oy',
+            'price' => 1000000,
+            'currency' => 'UZS',
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_buyer_can_request_males_and_females_in_one_request(): void
+    {
+        $post = $this->makeMixedPost(2, 3);
+
+        $this->actingAs($this->buyer)->post(route('purchase-requests.store'), [
+            'animal_id' => $post->id,
+            'male_quantity' => 1,
+            'female_quantity' => 2,
+        ])->assertSessionHas('success');
+
+        $post->refresh();
+        $this->assertEquals(1, $post->male_quantity);
+        $this->assertEquals(1, $post->female_quantity);
+        $this->assertEquals(2, $post->quantity);
+        $this->assertEquals('active', $post->status);
+
+        $this->assertDatabaseHas('purchase_requests', [
+            'user_id' => $this->buyer->id,
+            'animal_id' => $post->id,
+            'gender' => 'mixed',
+            'male_quantity' => 1,
+            'female_quantity' => 2,
+            'quantity' => 3,
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_mixed_request_is_rejected_when_one_gender_is_short(): void
+    {
+        $post = $this->makeMixedPost(2, 3);
+
+        $this->actingAs($this->buyer)->post(route('purchase-requests.store'), [
+            'animal_id' => $post->id,
+            'male_quantity' => 1,
+            'female_quantity' => 4,
+        ])->assertSessionHasErrors(['quantity']);
+
+        $post->refresh();
+        $this->assertEquals(2, $post->male_quantity);
+        $this->assertEquals(3, $post->female_quantity);
+        $this->assertDatabaseCount('purchase_requests', 0);
+    }
+
+    public function test_request_with_zero_animals_is_rejected(): void
+    {
+        $post = $this->makeMixedPost(2, 3);
+
+        $this->actingAs($this->buyer)->post(route('purchase-requests.store'), [
+            'animal_id' => $post->id,
+            'male_quantity' => 0,
+            'female_quantity' => 0,
+        ])->assertSessionHasErrors(['quantity']);
+
+        $this->assertDatabaseCount('purchase_requests', 0);
+    }
+
+    public function test_rejecting_mixed_request_restores_both_genders(): void
+    {
+        $post = $this->makeMixedPost(2, 3);
+
+        $this->actingAs($this->buyer)->post(route('purchase-requests.store'), [
+            'animal_id' => $post->id,
+            'male_quantity' => 2,
+            'female_quantity' => 3,
+        ]);
+
+        $post->refresh();
+        $this->assertEquals(0, $post->quantity);
+        $this->assertEquals('reserved', $post->status);
+
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.reject', PurchaseRequest::first()));
+
+        $post->refresh();
+        $this->assertEquals(2, $post->male_quantity);
+        $this->assertEquals(3, $post->female_quantity);
+        $this->assertEquals(5, $post->quantity);
+        $this->assertEquals('active', $post->status);
+    }
+
+    public function test_sold_request_cannot_be_rejected_back_into_stock(): void
+    {
+        $post = $this->makeMixedPost(2, 3);
+
+        $this->actingAs($this->buyer)->post(route('purchase-requests.store'), [
+            'animal_id' => $post->id,
+            'male_quantity' => 1,
+            'female_quantity' => 1,
+        ]);
+
+        $purchaseRequest = PurchaseRequest::first();
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.mark-sold', $purchaseRequest));
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.reject', $purchaseRequest))
+            ->assertSessionHasErrors(['purchase_request']);
+
+        $post->refresh();
+        $this->assertEquals('sold', $purchaseRequest->fresh()->status);
+        $this->assertEquals(3, $post->quantity);
+    }
+
+    public function test_buy_dialog_and_request_list_show_gender_split(): void
+    {
+        Permission::firstOrCreate(['name' => 'read posts', 'guard_name' => 'web']);
+        Role::findByName('user', 'web')->givePermissionTo('read posts');
+
+        $post = $this->makeMixedPost(2, 3);
+
+        $this->actingAs($this->buyer)->get(route('posts.show', $post))
+            ->assertOk()
+            ->assertSee('name="male_quantity"', false)
+            ->assertSee('name="female_quantity"', false);
+
+        $this->actingAs($this->buyer)->post(route('purchase-requests.store'), [
+            'animal_id' => $post->id,
+            'male_quantity' => 1,
+            'female_quantity' => 2,
+        ]);
+
+        $this->actingAs($this->seller)->get(route('admin.purchase-requests.index'))
+            ->assertOk()
+            ->assertSee('Erkak ♂: 1')
+            ->assertSee("Urg'ochi ♀: 2", false)
+            ->assertSee('3 ta');
     }
 }

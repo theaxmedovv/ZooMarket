@@ -109,7 +109,9 @@
                 <div class="pointer-events-none absolute top-2.5 left-2.5 z-[3] flex flex-wrap items-center gap-1.5">
                     <span class="{{ $pill }} border border-black/12 bg-white/82 text-ink">{{ $post->category?->name ?? 'Hayvon' }}</span>
 
-                    @if($post->isSoldOut())
+                    @if($post->isSoldOut() && $post->status === 'reserved')
+                        <span class="{{ $pill }} border border-accent bg-accent/90 text-white"><i class="bi bi-hourglass-split"></i> Band qilingan</span>
+                    @elseif($post->isSoldOut())
                         <span class="{{ $pill }} border border-red-500 bg-red-500/90 text-white"><i class="bi bi-x-circle-fill"></i> Sotilgan</span>
                     @elseif($post->totalAvailableCount() > 0)
                         <span class="{{ $pill }} border border-brand bg-brand/90 text-white"><i class="bi bi-box-seam-fill"></i> {{ $post->totalAvailableCount() }} ta</span>

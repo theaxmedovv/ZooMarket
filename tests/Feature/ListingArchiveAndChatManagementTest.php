@@ -40,87 +40,114 @@ class ListingArchiveAndChatManagementTest extends TestCase
         $this->category = Category::create(['name' => 'Parrots']);
     }
 
-    /**
-     * Test Requirement 1: Partial sale moves multi-animal listing to Archive,
-     * keeps all buyer/gender/quantity/order info, and rejects other pending requests.
-     */
-    public function test_partial_sale_moves_listing_to_archive_and_rejects_other_requests(): void
+    private function makeListing(int $male, int $female): Post
     {
-        // 10 animals in one listing
-        $post = Post::create([
+        return Post::create([
             'user_id' => $this->seller->id,
             'category_id' => $this->category->id,
             'title' => 'To\'tiqushlar to\'dasi',
             'content' => 'Chiroyli to\'tiqushlar',
             'breed' => 'Ara',
-            'quantity' => 10,
+            'quantity' => $male + $female,
             'gender' => 'mixed',
-            'male_quantity' => 6,
-            'female_quantity' => 4,
+            'male_quantity' => $male,
+            'female_quantity' => $female,
             'age' => '1 yosh',
             'price' => 500000,
             'currency' => 'UZS',
             'location' => 'Toshkent',
             'status' => 'active',
         ]);
+    }
 
-        // Buyer 1 requests 1 male animal
-        $req1 = PurchaseRequest::create([
-            'user_id' => $this->buyer1->id,
+    private function requestAnimals(User $buyer, Post $post, int $male, int $female): PurchaseRequest
+    {
+        $this->actingAs($buyer)->post(route('purchase-requests.store'), [
             'animal_id' => $post->id,
-            'gender' => 'male',
-            'quantity' => 1,
-            'status' => 'approved',
-        ]);
+            'male_quantity' => $male,
+            'female_quantity' => $female,
+        ])->assertSessionHas('success');
 
-        $chat1 = Chat::create([
-            'purchase_request_id' => $req1->id,
-            'post_id' => $post->id,
-            'buyer_id' => $this->buyer1->id,
-            'seller_id' => $this->seller->id,
-        ]);
+        return PurchaseRequest::where('user_id', $buyer->id)->latest('id')->firstOrFail();
+    }
 
-        // Buyer 2 has a pending request for 2 female animals
-        $req2 = PurchaseRequest::create([
-            'user_id' => $this->buyer2->id,
-            'animal_id' => $post->id,
-            'gender' => 'female',
-            'quantity' => 2,
-            'status' => 'pending',
-        ]);
+    /**
+     * A partial sale finalizes only the selected animals: the rest stays in the
+     * listing, other buyers' requests and chats are untouched.
+     */
+    public function test_partial_sale_keeps_remaining_animals_in_listing(): void
+    {
+        $post = $this->makeListing(6, 4);
 
-        // Seller marks Buyer 1's request as sold
-        $response = $this->actingAs($this->seller)
-            ->post(route('admin.purchase-requests.mark-sold', $req1));
+        $req1 = $this->requestAnimals($this->buyer1, $post, 1, 2);
+        $req2 = $this->requestAnimals($this->buyer2, $post, 0, 2);
 
-        $response->assertRedirect();
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.approve', $req1));
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.approve', $req2));
+        $chat1 = $req1->fresh()->chat;
+        $chat2 = $req2->fresh()->chat;
+
+        $this->actingAs($this->seller)
+            ->post(route('admin.purchase-requests.mark-sold', $req1))
+            ->assertRedirect();
 
         $post->refresh();
-        $req1->refresh();
-        $req2->refresh();
-        $chat1->refresh();
 
-        // 1. Post must be moved to Archive (status = sold) even though 9 animals remained
+        // Remaining animals stay on sale
+        $this->assertSame('active', $post->status);
+        $this->assertFalse($post->isArchived());
+        $this->assertSame(5, $post->male_quantity);
+        $this->assertSame(0, $post->female_quantity);
+        $this->assertSame(5, $post->quantity);
+
+        // Only the sold request is finalized and its chat closed
+        $this->assertSame('sold', $req1->fresh()->status);
+        $this->assertTrue($chat1->fresh()->isClosed());
+        $this->actingAs($this->buyer1)
+            ->post(route('chats.messages.store', $chat1), ['body' => 'Hello, can I still buy?'])
+            ->assertSessionHasErrors('body');
+        $this->assertDatabaseMissing('messages', ['body' => 'Hello, can I still buy?']);
+
+        // The other buyer keeps their request and can keep arranging details in chat
+        $this->assertSame('approved', $req2->fresh()->status);
+        $this->assertFalse($chat2->fresh()->isClosed());
+        $this->actingAs($this->buyer2)
+            ->post(route('chats.messages.store', $chat2), ['body' => 'Qachon olib ketsam bo\'ladi?'])
+            ->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('messages', ['body' => 'Qachon olib ketsam bo\'ladi?']);
+    }
+
+    /**
+     * The listing is archived only once every animal has been sold.
+     */
+    public function test_listing_is_archived_only_when_remaining_quantity_reaches_zero(): void
+    {
+        $post = $this->makeListing(1, 2);
+
+        $req1 = $this->requestAnimals($this->buyer1, $post, 1, 1);
+        $req2 = $this->requestAnimals($this->buyer2, $post, 0, 1);
+
+        // All animals reserved, but nothing sold yet: listing is not archived
+        $post->refresh();
+        $this->assertSame(0, $post->quantity);
+        $this->assertSame('reserved', $post->status);
+        $this->assertFalse($post->isArchived());
+
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.approve', $req1));
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.mark-sold', $req1));
+
+        // Buyer 2 still holds a reservation
+        $post->refresh();
+        $this->assertFalse($post->isArchived());
+        $this->assertSame('pending', $req2->fresh()->status);
+
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.approve', $req2));
+        $this->actingAs($this->seller)->post(route('admin.purchase-requests.mark-sold', $req2));
+
+        $post->refresh();
         $this->assertSame('sold', $post->status);
         $this->assertTrue($post->isArchived());
-
-        // 2. Buyer 1 request is sold
-        $this->assertSame('sold', $req1->status);
-
-        // 3. Buyer 2 request is automatically rejected because listing is now archived/sold
-        $this->assertSame('rejected', $req2->status);
-
-        // 4. Chat is closed/deactivated
-        $this->assertTrue($chat1->isClosed());
-        $this->assertNotNull($chat1->closed_at);
-
-        // 5. Sending new messages in closed chat is blocked
-        $msgResponse = $this->actingAs($this->buyer1)
-            ->post(route('chats.messages.store', $chat1), [
-                'body' => 'Hello, can I still buy?',
-            ]);
-        $msgResponse->assertSessionHasErrors('body');
-        $this->assertDatabaseMissing('messages', ['body' => 'Hello, can I still buy?']);
+        $this->assertSame(2, PurchaseRequest::where('animal_id', $post->id)->where('status', 'sold')->count());
     }
 
     /**

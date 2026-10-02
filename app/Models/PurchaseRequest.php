@@ -13,6 +13,8 @@ class PurchaseRequest extends Model
         'animal_id',
         'gender',
         'quantity',
+        'male_quantity',
+        'female_quantity',
         'status',
     ];
 
@@ -20,7 +22,36 @@ class PurchaseRequest extends Model
     {
         return [
             'quantity' => 'integer',
+            'male_quantity' => 'integer',
+            'female_quantity' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (PurchaseRequest $request) {
+            $male = (int) $request->male_quantity;
+            $female = (int) $request->female_quantity;
+
+            // Legacy single-gender requests: derive the split from gender + quantity
+            if ($male + $female === 0) {
+                $qty = max(1, (int) $request->quantity);
+                if ($request->gender === 'female') {
+                    $female = $qty;
+                } else {
+                    $male = $qty;
+                }
+            }
+
+            $request->male_quantity = $male;
+            $request->female_quantity = $female;
+            $request->quantity = $male + $female;
+            $request->gender = match (true) {
+                $male > 0 && $female > 0 => 'mixed',
+                $female > 0 => 'female',
+                default => 'male',
+            };
+        });
     }
 
     public function user(): BelongsTo

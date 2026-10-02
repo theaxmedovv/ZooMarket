@@ -52,9 +52,7 @@
                             <div class="mb-2 flex flex-wrap items-center gap-2">
                                 <span class="{{ $tag }} border-brand/20 bg-brand/10 font-extrabold text-brand">{{ $request->animal->category?->name ?? 'Hayvon' }}</span>
                                 <span class="{{ $tag }} border-line bg-black/4 text-muted"><i class="bi bi-box-seam text-brand"></i>Miqdor: <strong>{{ $request->quantity ?? 1 }}</strong> ta</span>
-                                @if($request->gender)
-                                    <span class="{{ $tag }} border-line bg-black/4 text-muted">{{ $request->gender === 'male' ? 'Erkak ♂' : 'Urg\'ochi ♀' }}</span>
-                                @endif
+                                <x-request-genders :request="$request" :tag="$tag" />
                                 @if($request->animal->location)
                                     <span class="{{ $tag }} border-line bg-black/4 text-muted"><i class="bi bi-geo-alt text-brand"></i>{{ $request->animal->location }}</span>
                                 @endif
@@ -108,7 +106,7 @@
                     @php
                         [$hintTone, $hintIcon, $hintText] = match ($request->status) {
                             'approved' => ['text-brand', 'bi-check-circle-fill', "Sotuvchi so'rovingizni tasdiqladi! Chat orqali to'g'ridan-to'g'ri bog'lanishingiz mumkin."],
-                            'sold' => ['text-brand', 'bi-bag-check-fill', "Ushbu e'lon sotildi. So'rov \"Sold\" holatiga o'tdi."],
+                            'sold' => ['text-brand', 'bi-bag-check-fill', "Siz tanlagan hayvonlar sotildi. So'rov \"Sold\" holatiga o'tdi."],
                             'rejected' => ['text-muted', 'bi-info-circle', "Ushbu so'rov rad etilgan. Boshqa mavjud e'lonlarni ko'rib chiqishingiz mumkin."],
                             default => ['text-accent', 'bi-hourglass-split', "Sotuvchi so'rovingizni ko'rib chiqmoqda. Tez orada javob olasiz."],
                         };

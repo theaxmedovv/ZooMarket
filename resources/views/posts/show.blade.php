@@ -100,10 +100,10 @@
                                     <span class="{{ $glassPill }} border-amber-400/50 bg-white/85 text-amber-600"><i class="bi bi-clock"></i> AI tekshiruvida</span>
                                 @endif
                             @endif
-                            @if($post->isSoldOut())
-                                <span class="{{ $glassPill }} border-red-500/60 bg-red-500/25 text-danger"><i class="bi bi-x-circle-fill"></i> Sotilgan</span>
-                            @elseif($post->status === 'reserved')
+                            @if($post->status === 'reserved' && ! $post->isArchived())
                                 <span class="{{ $glassPill }} border-accent/50 bg-accent/20 text-accent"><i class="bi bi-hourglass-split"></i> Rezerv qilingan</span>
+                            @elseif($post->isSoldOut())
+                                <span class="{{ $glassPill }} border-red-500/60 bg-red-500/25 text-danger"><i class="bi bi-x-circle-fill"></i> Sotilgan</span>
                             @else
                                 <span class="{{ $glassPill }} border-brand/50 bg-brand/18 text-brand"><i class="bi bi-check-circle-fill"></i> Sotuvda faol</span>
                             @endif
@@ -198,7 +198,7 @@
                     <div class="mb-2 flex items-center justify-between gap-2">
                         <span class="text-[13px] font-bold text-ink"><i class="bi bi-boxes mr-1 text-brand"></i> Zaxira va jins taqsimoti:</span>
                         <span @class(['rounded-full border px-2.5 py-[3px] text-xs font-bold', $post->isSoldOut() ? 'border-red-500/40 bg-red-500/15 text-danger' : 'border-brand/30 bg-brand/14 text-brand'])>
-                            {{ $post->isSoldOut() ? 'Tugagan (Sold out)' : 'Jami: ' . $post->totalAvailableCount() . ' ta mavjud' }}
+                            {{ $post->isSoldOut() ? ($post->status === 'reserved' && ! $post->isArchived() ? 'Hammasi band qilingan' : 'Tugagan (Sold out)') : 'Jami: ' . $post->totalAvailableCount() . ' ta mavjud' }}
                         </span>
                     </div>
 
@@ -284,7 +284,11 @@
                 {{-- Actions --}}
                 <div class="mt-1 flex flex-col gap-2">
                     @if($isBuyer)
-                        @if($post->isSoldOut() || $post->status === 'sold')
+                        @if($post->isSoldOut() && $post->status === 'reserved' && ! $post->isArchived())
+                            <button class="inline-flex h-[50px] w-full cursor-not-allowed items-center justify-center gap-2 rounded-[14px] border border-accent/40 bg-accent/10 text-[15px] font-extrabold text-accent" disabled>
+                                <i class="bi bi-hourglass-split"></i> Barcha hayvonlar band qilingan
+                            </button>
+                        @elseif($post->isSoldOut() || $post->status === 'sold')
                             <button class="inline-flex h-[50px] w-full cursor-not-allowed items-center justify-center gap-2 rounded-[14px] border border-[#ffd6d1] bg-[#fff1f0] text-[15px] font-extrabold text-danger" disabled>
                                 <i class="bi bi-x-circle-fill"></i> E'lon sotilgan (Mavjud emas)
                             </button>
@@ -344,7 +348,7 @@
     </div>
 </div>
 
-{{-- Buy dialog with gender & quantity selection --}}
+{{-- Buy dialog: pick how many males and females to request --}}
 @if($isBuyer && ! $post->isSoldOut())
     <dialog id="buyModalDetail" aria-labelledby="buyModalLabel"
             class="m-auto w-[min(500px,calc(100vw-32px))] rounded-2xl border border-line bg-white p-0 text-ink shadow-[0_20px_60px_rgba(0,0,0,.12)] backdrop:bg-black/50">
@@ -367,40 +371,33 @@
                     </div>
                 </div>
 
-                {{-- Step 1: gender --}}
+                {{-- Step 1: how many of each gender --}}
                 <div>
-                    <span class="mb-2 block text-sm font-bold text-ink">1. Hayvon jinsini tanlang:</span>
-                    <div class="grid grid-cols-2 gap-2">
-                        @foreach([['male', 'buyerGenderMale', $maleAvail, 'bi-gender-male text-male', 'Erkak'], ['female', 'buyerGenderFemale', $femaleAvail, 'bi-gender-female text-danger', "Urg'ochi"]] as [$value, $id, $avail, $icon, $label])
-                            <label for="{{ $id }}" class="block cursor-pointer has-disabled:cursor-not-allowed has-disabled:opacity-40">
-                                <input type="radio" name="gender" value="{{ $value }}" class="peer sr-only" id="{{ $id }}" data-available="{{ $avail }}"
-                                       @checked($defaultGender === $value) @disabled($avail <= 0) required>
-                                <div class="flex flex-col items-center gap-1 rounded-xl border-[1.5px] border-line bg-surface p-3 text-center transition peer-checked:border-brand peer-checked:bg-brand/12 peer-checked:shadow-[0_0_12px_rgba(0,142,204,.2)] peer-focus-visible:outline-2 peer-focus-visible:outline-brand">
+                    <span class="mb-2 block text-sm font-bold text-ink">1. Har bir jinsdan nechta kerakligini tanlang:</span>
+                    @php $stepBtn = 'flex h-full w-10 cursor-pointer items-center justify-center text-lg font-bold text-brand transition hover:bg-brand/15 disabled:cursor-not-allowed disabled:opacity-25'; @endphp
+                    <div class="flex flex-col gap-2">
+                        @foreach([['male', $maleAvail, 'bi-gender-male text-male', 'Erkak ♂'], ['female', $femaleAvail, 'bi-gender-female text-danger', "Urg'ochi ♀"]] as [$value, $avail, $icon, $label])
+                            <div @class(['flex items-center justify-between gap-3 rounded-xl border-[1.5px] border-line bg-surface px-3 py-2', 'opacity-40' => $avail <= 0])>
+                                <label for="buyerQty_{{ $value }}" class="flex items-center gap-2">
                                     <i class="bi {{ $icon }} text-xl"></i>
-                                    <span class="text-sm font-bold text-ink">{{ $label }}</span>
-                                    <span @class(['text-xs font-semibold', $avail > 0 ? 'text-brand' : 'text-danger'])>{{ $avail > 0 ? $avail . ' ta mavjud' : 'Tugagan' }}</span>
+                                    <span>
+                                        <span class="block text-sm font-bold text-ink">{{ $label }}</span>
+                                        <span @class(['block text-xs font-semibold', $avail > 0 ? 'text-brand' : 'text-danger'])>{{ $avail > 0 ? $avail . ' ta mavjud' : 'Tugagan' }}</span>
+                                    </span>
+                                </label>
+                                <div class="flex h-10 items-center overflow-hidden rounded-lg border border-line bg-white">
+                                    <button type="button" class="{{ $stepBtn }}" data-qty-step="-1" data-qty-target="buyerQty_{{ $value }}" aria-label="{{ $label }}: kamaytirish"><i class="bi bi-dash-lg"></i></button>
+                                    <input type="number" name="{{ $value }}_quantity" id="buyerQty_{{ $value }}" data-qty-input
+                                           class="h-full w-12 bg-transparent text-center text-base font-extrabold text-ink outline-none"
+                                           value="{{ $defaultGender === $value && $avail > 0 ? 1 : 0 }}" min="0" max="{{ $avail }}" @disabled($avail <= 0)>
+                                    <button type="button" class="{{ $stepBtn }}" data-qty-step="1" data-qty-target="buyerQty_{{ $value }}" aria-label="{{ $label }}: ko'paytirish"><i class="bi bi-plus-lg"></i></button>
                                 </div>
-                            </label>
+                            </div>
                         @endforeach
                     </div>
-                </div>
-
-                {{-- Step 2: quantity --}}
-                <div>
-                    <div class="mb-2 flex items-center justify-between">
-                        <label for="buyerQuantityInput" class="text-sm font-bold text-ink">2. Miqdorni tanlang:</label>
-                        <span class="text-sm text-muted" id="buyerAvailHint">
-                            Mavjud: <strong class="text-brand" id="buyerMaxCount">{{ $defaultGender === 'male' ? $maleAvail : $femaleAvail }}</strong> ta
-                        </span>
-                    </div>
-                    @php $stepBtn = 'flex h-full w-12 cursor-pointer items-center justify-center text-lg font-bold text-brand transition hover:bg-brand/15 disabled:cursor-not-allowed disabled:opacity-25'; @endphp
-                    <div class="flex h-12 items-center overflow-hidden rounded-xl border-[1.5px] border-line bg-surface">
-                        <button type="button" class="{{ $stepBtn }}" id="btnBuyerMinus" aria-label="Kamaytirish"><i class="bi bi-dash-lg"></i></button>
-                        <input type="number" name="quantity" id="buyerQuantityInput"
-                               class="h-full min-w-0 flex-1 bg-transparent text-center text-lg font-extrabold text-ink outline-none"
-                               value="1" min="1" max="{{ $defaultGender === 'male' ? $maleAvail : $femaleAvail }}" required>
-                        <button type="button" class="{{ $stepBtn }}" id="btnBuyerPlus" aria-label="Ko'paytirish"><i class="bi bi-plus-lg"></i></button>
-                    </div>
+                    @error('quantity')
+                        <p class="mt-2 text-sm text-danger">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 {{-- Total --}}
@@ -440,106 +437,55 @@ document.querySelectorAll('[data-gallery-thumb]').forEach(btn => btn.addEventLis
 }));
 
 document.addEventListener('DOMContentLoaded', function () {
-    const qtyInput = document.getElementById('buyerQuantityInput');
-    const btnMinus = document.getElementById('btnBuyerMinus');
-    const btnPlus = document.getElementById('btnBuyerPlus');
-    const buyerMaxCount = document.getElementById('buyerMaxCount');
+    const qtyInputs = Array.from(document.querySelectorAll('[data-qty-input]'));
     const buyerTotalPrice = document.getElementById('buyerTotalPrice');
     const buyerSummaryText = document.getElementById('buyerSummaryText');
     const btnSubmitOrder = document.getElementById('btnSubmitOrder');
 
-    const maleRadio = document.getElementById('buyerGenderMale');
-    const femaleRadio = document.getElementById('buyerGenderFemale');
-
     const unitPrice = {{ (float) $post->price }};
     const currency = "{{ $post->currency }}";
 
-    function getSelectedAvailable() {
-        if (maleRadio && maleRadio.checked) {
-            return parseInt(maleRadio.getAttribute('data-available')) || 0;
-        }
-        if (femaleRadio && femaleRadio.checked) {
-            return parseInt(femaleRadio.getAttribute('data-available')) || 0;
-        }
-        return 0;
+    function clamp(input) {
+        const max = parseInt(input.max) || 0;
+        let value = parseInt(input.value) || 0;
+        value = Math.min(Math.max(value, 0), max);
+        input.value = value;
+        return value;
     }
 
     function syncBuyerModal() {
-        const available = getSelectedAvailable();
-        if (buyerMaxCount) {
-            buyerMaxCount.textContent = available;
-        }
+        let totalCount = 0;
+        qtyInputs.forEach(input => {
+            const value = input.disabled ? 0 : clamp(input);
+            totalCount += value;
+            document.querySelectorAll(`[data-qty-target="${input.id}"]`).forEach(btn => {
+                const step = parseInt(btn.dataset.qtyStep);
+                btn.disabled = input.disabled || (step < 0 ? value <= 0 : value >= (parseInt(input.max) || 0));
+            });
+        });
 
-        if (available <= 0) {
-            if (qtyInput) {
-                qtyInput.value = 0;
-                qtyInput.max = 0;
-                qtyInput.disabled = true;
-            }
-            if (btnMinus) btnMinus.disabled = true;
-            if (btnPlus) btnPlus.disabled = true;
-            if (btnSubmitOrder) {
-                btnSubmitOrder.disabled = true;
-                btnSubmitOrder.textContent = "Tanlangan jins tugagan";
-            }
-            if (buyerTotalPrice) buyerTotalPrice.textContent = `0 ${currency}`;
-            if (buyerSummaryText) buyerSummaryText.textContent = "0 ta xarid";
-            return;
-        }
-
-        if (qtyInput) {
-            qtyInput.disabled = false;
-            qtyInput.max = available;
-            let current = parseInt(qtyInput.value) || 1;
-            if (current < 1) current = 1;
-            if (current > available) current = available;
-            qtyInput.value = current;
-
-            if (btnMinus) btnMinus.disabled = current <= 1;
-            if (btnPlus) btnPlus.disabled = current >= available;
-
-            const total = current * unitPrice;
-            const formattedTotal = Number(total).toLocaleString('ru-RU');
-            const formattedUnit = Number(unitPrice).toLocaleString('ru-RU');
-
-            if (buyerTotalPrice) buyerTotalPrice.textContent = `${formattedTotal} ${currency}`;
-            if (buyerSummaryText) buyerSummaryText.textContent = `${current} ta × ${formattedUnit} ${currency}`;
-        }
+        const formattedUnit = Number(unitPrice).toLocaleString('ru-RU');
+        if (buyerTotalPrice) buyerTotalPrice.textContent = `${Number(totalCount * unitPrice).toLocaleString('ru-RU')} ${currency}`;
+        if (buyerSummaryText) buyerSummaryText.textContent = `${totalCount} ta × ${formattedUnit} ${currency}`;
 
         if (btnSubmitOrder) {
-            btnSubmitOrder.disabled = false;
-            btnSubmitOrder.innerHTML = `<i class="bi bi-send-check"></i> So'rov yuborish`;
+            btnSubmitOrder.disabled = totalCount < 1;
+            btnSubmitOrder.innerHTML = totalCount < 1
+                ? "Kamida 1 ta hayvon tanlang"
+                : `<i class="bi bi-send-check"></i> So'rov yuborish`;
         }
     }
 
-    if (maleRadio) maleRadio.addEventListener('change', syncBuyerModal);
-    if (femaleRadio) femaleRadio.addEventListener('change', syncBuyerModal);
+    document.querySelectorAll('[data-qty-step]').forEach(btn => btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.qtyTarget);
+        input.value = (parseInt(input.value) || 0) + parseInt(btn.dataset.qtyStep);
+        syncBuyerModal();
+    }));
 
-    if (btnMinus) {
-        btnMinus.addEventListener('click', function () {
-            let current = parseInt(qtyInput.value) || 1;
-            if (current > 1) {
-                qtyInput.value = current - 1;
-                syncBuyerModal();
-            }
-        });
-    }
-
-    if (btnPlus) {
-        btnPlus.addEventListener('click', function () {
-            const available = getSelectedAvailable();
-            let current = parseInt(qtyInput.value) || 1;
-            if (current < available) {
-                qtyInput.value = current + 1;
-                syncBuyerModal();
-            }
-        });
-    }
-
-    if (qtyInput) {
-        qtyInput.addEventListener('input', syncBuyerModal);
-        qtyInput.addEventListener('change', syncBuyerModal);
-    }
+    qtyInputs.forEach(input => {
+        input.addEventListener('input', syncBuyerModal);
+        input.addEventListener('change', syncBuyerModal);
+    });
 
     syncBuyerModal();
 });

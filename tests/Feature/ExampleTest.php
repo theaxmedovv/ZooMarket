@@ -138,7 +138,7 @@ class ExampleTest extends TestCase
         $response->assertSee('Xavfsiz xarid qoidalari');
     }
 
-    public function test_seller_approval_creates_chat_and_mark_sold_archives_post_and_closes_chat(): void
+    public function test_seller_approval_creates_chat_and_mark_sold_closes_chat_but_keeps_listing(): void
     {
         $seller = User::factory()->create();
         $seller->assignRole('seller');
@@ -193,7 +193,7 @@ class ExampleTest extends TestCase
         $chat = $request->chat;
         $this->assertFalse($chat->isClosed());
 
-        // Mark sold (even with 9 animals remaining, it moves to Archive and closes chat)
+        // Mark sold: only this request is finalized, the remaining animals stay listed
         $this->actingAs($seller)
             ->post(route('admin.purchase-requests.mark-sold', $request))
             ->assertRedirect();
@@ -203,7 +203,8 @@ class ExampleTest extends TestCase
         $chat->refresh();
 
         $this->assertSame('sold', $request->status);
-        $this->assertSame('sold', $post->status);
+        $this->assertSame('active', $post->status);
+        $this->assertFalse($post->isArchived());
         $this->assertTrue($chat->isClosed());
 
         // Attempting to send new message in closed chat must fail
