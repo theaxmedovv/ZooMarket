@@ -30,6 +30,7 @@ class User extends Authenticatable
         'phone',
         'telegram_username',
         'avatar',
+        'google_id',
     ];
 
     /**

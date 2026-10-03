@@ -43,6 +43,18 @@
         </button>
     </form>
 
+    {{-- Google sign-up uses the role selected above --}}
+    <x-google-button id="googleRegister" label="Google orqali ro'yxatdan o'tish"
+                     :href="route('auth.google.redirect', ['role' => old('role', 'seller')])" />
+    <script>
+        document.querySelectorAll('#registerForm input[name="role"]').forEach(radio => radio.addEventListener('change', () => {
+            const link = document.getElementById('googleRegister');
+            const url = new URL(link.href);
+            url.searchParams.set('role', radio.value);
+            link.href = url;
+        }));
+    </script>
+
     <x-slot:footer>
         <span class="text-muted">Allaqachon hisobingiz bormi?</span>
         <a href="{{ route('login') }}" class="ml-1 font-bold text-brand hover:text-brand-dark hover:underline">Kirish <i class="bi bi-box-arrow-in-right"></i></a>

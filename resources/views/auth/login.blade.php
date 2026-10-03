@@ -21,6 +21,8 @@
         </button>
     </form>
 
+    <x-google-button :href="route('auth.google.redirect')" />
+
     <x-slot:footer>
         <span class="text-muted">Hisobingiz yo'qmi?</span>
         <a href="{{ route('register') }}" class="ml-1 font-bold text-brand hover:text-brand-dark hover:underline">Ro'yxatdan o'ting <i class="bi bi-arrow-right"></i></a>
