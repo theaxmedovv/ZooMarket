@@ -1,15 +1,15 @@
 @php
     $zmUser = auth()->user();
-    $zmIsSeller = $zmUser?->hasRole('seller') ?? false;
-    $zmProfileUrl = $zmUser
-        ? ($zmUser->hasRole('user') ? route('user.profile.show') : route('profile.show'))
-        : route('login');
+    $zmIsAdmin = $zmUser?->hasRole('admin') ?? false;
+    $zmProfileUrl = $zmUser ? route('profile.show') : route('login');
+    // Every account both sells and buys; "my listings" is the listing page with ?mine=1.
+    $zmMine = request()->routeIs('posts.index') && $zmUser && request()->boolean('mine');
     $zmCategories = $navCategories ?? collect();
     $zmActiveCategory = (int) request()->query('category_id');
     // On the listing page, switching category keeps the other active filters.
-    $zmKeep = request()->routeIs('posts.index') ? request()->except('category_id', 'page') : [];
-    // Filters only apply to guests/buyers (the listing controller ignores them for sellers).
-    $zmCanFilter = ! $zmIsSeller;
+    $zmKeep = request()->routeIs('posts.index') ? request()->except('category_id', 'page', 'mine') : [];
+    // Filters only apply to the storefront (the listing controller ignores them on "my listings").
+    $zmCanFilter = ! $zmMine && ! $zmIsAdmin;
     $zmOnListing = request()->routeIs('posts.index');
     $zmF = [
         'category_id' => $zmOnListing ? (string) request('category_id', '') : '',
@@ -38,6 +38,7 @@
         }
     }
     $zmPending = (int) ($pendingRequestsCount ?? 0);
+    $zmModeration = (int) ($pendingModerationCount ?? 0);
 
     // Shared class lists for the chrome below.
     $zmBadge = 'grid h-[18px] min-w-[18px] place-items-center rounded-full bg-hot px-[5px] text-[11px] leading-none font-extrabold not-italic text-white';
@@ -69,7 +70,10 @@
         <form id="zmSearchForm" action="{{ route('posts.index') }}" method="GET" role="search"
               class="relative order-last flex h-11 min-w-0 basis-full items-center gap-3 rounded-xl border border-transparent bg-brand-soft pr-1.5 pl-4 transition focus-within:border-brand focus-within:bg-white md:order-none md:h-12 md:max-w-[640px] md:flex-1 md:basis-auto">
             <button type="submit" aria-label="Qidirish" class="cursor-pointer leading-none"><i class="bi bi-search text-lg text-brand"></i></button>
-            <input class="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-faint focus-visible:outline-none" type="search" name="q" value="{{ $zmOnListing ? request('q') : '' }}" placeholder="{{ $zmIsSeller ? "E'lonlaringiz ichidan qidiring..." : "Hayvon, zot yoki shahar bo'yicha qidiring..." }}" aria-label="Qidirish">
+            <input class="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-faint focus-visible:outline-none" type="search" name="q" value="{{ $zmOnListing ? request('q') : '' }}" placeholder="{{ $zmMine ? "E'lonlaringiz ichidan qidiring..." : "Hayvon, zot yoki shahar bo'yicha qidiring..." }}" aria-label="Qidirish">
+            @if($zmMine)
+                <input type="hidden" name="mine" value="1">
+            @endif
             @if($zmOnListing && request('sort'))
                 <input type="hidden" name="sort" value="{{ request('sort') }}">
             @endif
@@ -137,11 +141,18 @@
 
         <nav class="ml-auto flex shrink-0 items-center gap-1 text-sm" aria-label="Hisob">
             @auth
-                @if($zmIsSeller)
+                @if($zmIsAdmin)
+                    <a href="{{ route('moderation.index') }}" @if(request()->routeIs('moderation.*')) aria-current="page" @endif class="{{ $zmAction }}" aria-label="E'lonlarni tekshirish">
+                        <i class="bi bi-shield-check {{ $zmActionIcon }}"></i><span class="hidden lg:inline">Tekshiruv</span>
+                        @if($zmModeration > 0)<em class="{{ $zmBadge }} absolute top-0.5 left-[26px]">{{ $zmModeration > 99 ? '99+' : $zmModeration }}</em>@endif
+                    </a>
+                    <a href="{{ route('banners.index') }}" @if(request()->routeIs('banners.*')) aria-current="page" @endif class="{{ $zmAction }}" aria-label="Bosh sahifa bannerlari">
+                        <i class="bi bi-images {{ $zmActionIcon }}"></i><span class="hidden lg:inline">Bannerlar</span>
+                    </a>
+                @else
                     {{-- The one and only "new listing" entry point --}}
                     <a href="{{ route('posts.create') }}" @if(request()->routeIs('posts.create')) aria-current="page" @endif class="btn btn-primary mr-1.5 px-3 current:bg-brand-dark md:mr-2 md:px-[18px]"><i class="bi bi-plus-lg"></i><span class="hidden lg:inline">Yangi e'lon</span></a>
-                @else
-                    <a href="{{ route('user.profile.show') }}#saved" class="{{ $zmAction }}" aria-label="Sevimlilar">
+                    <a href="{{ route('favorites.index') }}" @if(request()->routeIs('favorites.*')) aria-current="page" @endif class="{{ $zmAction }}" aria-label="Sevimlilar">
                         <i class="bi bi-heart {{ $zmActionIcon }}"></i><span class="hidden lg:inline">Sevimlilar</span>
                         <em class="{{ $zmBadge }} absolute top-0.5 left-[26px]" data-favorites-count @if($zmFavorites === 0) hidden @endif>{{ $zmFavorites }}</em>
                     </a>
@@ -156,13 +167,21 @@
                 <div class="relative ml-1">
                     <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="zmProfileMenu" aria-label="Hisob menyusi" class="{{ $zmAction }} gap-1 pr-1.5 pl-1 md:pr-1.5 md:pl-1">
                         <span class="grid size-9 place-items-center rounded-full bg-brand text-[15px] font-extrabold text-white">{{ mb_strtoupper(mb_substr($zmUser->name, 0, 1)) }}</span><i class="bi bi-chevron-down text-xs"></i>
+                        @if(! $zmIsAdmin && $zmPending > 0)<em class="{{ $zmBadge }} absolute top-0.5 left-[26px]" title="Yangi so'rovlar">{{ $zmPending > 99 ? '99+' : $zmPending }}</em>@endif
                     </button>
                     <div id="zmProfileMenu" hidden class="absolute top-[calc(100%+10px)] right-0 z-10 w-[260px] rounded-[14px] border border-line bg-white p-2 shadow-[0_16px_36px_rgba(0,0,0,.12)]">
                         <div class="mb-1.5 border-b border-line px-3 pt-2.5 pb-3">
                             <b class="block truncate text-[15px] text-ink">{{ $zmUser->name }}</b>
-                            <small class="block truncate text-xs text-muted">{{ $zmUser->email }} · {{ $zmIsSeller ? 'Sotuvchi' : 'Xaridor' }}</small>
+                            <small class="block truncate text-xs text-muted">{{ $zmUser->email }}{{ $zmIsAdmin ? ' · Bosh admin' : '' }}</small>
                         </div>
                         <a href="{{ $zmProfileUrl }}" class="{{ $zmMenuItem }}"><i class="bi bi-person-circle text-base text-brand"></i>Profil va sozlamalar</a>
+                        {{-- Selling: the only entry points to my listings, incoming requests and the archive --}}
+                        @unless($zmIsAdmin)
+                            <a href="{{ route('posts.index', ['mine' => 1]) }}" class="{{ $zmMenuItem }}"><i class="bi bi-collection text-base text-brand"></i>Mening e'lonlarim</a>
+                            <a href="{{ route('admin.purchase-requests.index') }}" class="{{ $zmMenuItem }}"><i class="bi bi-inbox text-base text-brand"></i>Kelgan so'rovlar
+                                @if($zmPending > 0)<em class="{{ $zmBadge }} ml-auto">{{ $zmPending > 99 ? '99+' : $zmPending }}</em>@endif</a>
+                            <a href="{{ route('admin.archive.index') }}" class="{{ $zmMenuItem }}"><i class="bi bi-archive text-base text-brand"></i>Arxiv</a>
+                        @endunless
                         <hr class="my-1.5 border-line">
                         <form action="{{ route('logout') }}" method="POST">
                             @csrf
@@ -178,24 +197,13 @@
     </div>
 </header>
 
-{{-- Tab row: the seller's workspace, or the storefront's categories --}}
-<nav class="border-b border-line bg-white" aria-label="{{ $zmIsSeller ? "Sotuvchi bo'limlari" : 'Kategoriyalar' }}">
+{{-- Tab row: the storefront's categories --}}
+<nav class="border-b border-line bg-white" aria-label="Kategoriyalar">
     <div class="wrap no-scrollbar flex gap-2 overflow-x-auto py-3">
-        @if($zmIsSeller)
-            @foreach([
-                ['posts.index', ['posts.index', 'posts.show', 'posts.edit'], 'bi-collection', "E'lonlarim", 0],
-                ['admin.purchase-requests.index', ['admin.purchase-requests.*'], 'bi-inbox', "So'rovlar", $zmPending],
-                ['admin.archive.index', ['admin.archive.*', 'admin.sold-animals.*'], 'bi-archive', 'Arxiv', 0],
-            ] as [$route, $patterns, $icon, $label, $count])
-                @php $active = request()->routeIs(...$patterns); @endphp
-                <a href="{{ route($route) }}" @if($active) aria-current="page" @endif class="{{ $zmPill }}"><i @class(['bi text-[13px]', $icon, $active ? 'text-white' : 'text-brand'])></i>{{ $label }}@if($count > 0)<em class="{{ $zmBadge }} ml-0.5">{{ $count > 99 ? '99+' : $count }}</em>@endif</a>
-            @endforeach
-        @else
-            <a href="{{ route('posts.index', $zmKeep) }}" @if(request()->routeIs('posts.index') && ! $zmActiveCategory) aria-current="page" @endif class="{{ $zmPill }}">Barchasi</a>
-            @foreach($zmCategories as $category)
-                <a href="{{ route('posts.index', array_merge($zmKeep, ['category_id' => $category->id])) }}" @if($zmActiveCategory === $category->id) aria-current="page" @endif class="{{ $zmPill }}"><span aria-hidden="true">{{ $category->emoji }}</span>{{ $category->name }}</a>
-            @endforeach
-        @endif
+        <a href="{{ route('posts.index', $zmKeep) }}" @if($zmOnListing && ! $zmMine && ! $zmActiveCategory) aria-current="page" @endif class="{{ $zmPill }}">Barchasi</a>
+        @foreach($zmCategories as $category)
+            <a href="{{ route('posts.index', array_merge($zmKeep, ['category_id' => $category->id])) }}" @if($zmActiveCategory === $category->id) aria-current="page" @endif class="{{ $zmPill }}"><span aria-hidden="true">{{ $category->emoji }}</span>{{ $category->name }}</a>
+        @endforeach
     </div>
 </nav>
 

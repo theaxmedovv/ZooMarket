@@ -12,7 +12,7 @@ class GroqModerationService
     /**
      * Moderate a given animal listing post using the Groq API.
      * Analyzes both text fields and uploaded images.
-     * Fast, resilient, and never leaves listings blocked in pending queues.
+     * Fast and resilient: API failures never reject a listing; it still goes to the admin queue.
      *
      * @param Post $post
      * @return array{status: string, reason: ?string, flags: array, confidence: ?float}
@@ -164,14 +164,16 @@ class GroqModerationService
     }
 
     /**
-     * Helper to update the post record with moderation outcome.
+     * The AI is only a pre-check: a rejection is final until the seller edits the listing,
+     * but a pass leaves it pending so the main admin makes the call to publish it.
      */
     protected function applyResultToPost(Post $post, array $result): void
     {
         $post->update([
-            'moderation_status' => $result['status'],
+            'moderation_status' => $result['status'] === 'rejected' ? 'rejected' : 'pending',
             'moderation_reason' => $result['reason'],
-            'moderated_at' => now(),
+            'moderated_at' => $result['status'] === 'rejected' ? now() : null,
+            'moderated_by' => null,
         ]);
     }
 

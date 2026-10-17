@@ -68,17 +68,14 @@ Bu loyiha Laravel framework yordamida role va permission boshqarish tizimini ama
 
 ### Login
 
-Test userlar:
-
-- **Seller**: seller@example.com / password
-- **User**: user@example.com / password
+Ro'yxatdan o'ting (yoki Google orqali kiring). Bosh admin hisobi: `php artisan admin:create email@example.com`.
 
 Login sahifasi: `http://localhost:8000/login`
 
 ### Rollar va Permissions
 
-- **Seller (Admin)**: Barcha amallar
-- **User**: Ko'rish, buyurtma yuborish, chat
+- **User**: bitta hisob bilan ham sotadi, ham sotib oladi — e'lon joylash/tahrirlash/o'chirish (faqat o'z e'lonlari), kelgan so'rovlarni boshqarish, buyurtma yuborish, sevimlilar, chat
+- **Admin** (bosh admin): e'lonlarni tekshirish (moderatsiya) va bannerlar
 
 ## Rasm Yuklash (MySQL Database Storage)
 

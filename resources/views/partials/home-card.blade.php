@@ -3,6 +3,10 @@
     $liked = in_array($post->id, $likedPostIds ?? [], true);
     $emoji = \App\Models\Category::emojiFor($post->category?->name);
     $badge = $isNew ? 'YANGI' : ($post->is_negotiable ? 'KELISHUV' : ($post->category?->name ? mb_strtoupper($post->category->name) : null));
+    // Buying happens in the listing's dialog (quantity per gender); #buy opens it on arrival.
+    // Guests land on the listing, which asks them to log in; owners and the admin get no button.
+    $canBuy = ! $post->isSoldOut()
+        && (auth()->guest() || (auth()->user()->hasRole('user') && auth()->id() !== $post->user_id));
     $favButton = 'grid size-[34px] cursor-pointer place-items-center rounded-full bg-white text-base text-ink shadow-[0_2px_8px_rgba(0,0,0,.08)] hover:text-hot';
 @endphp
 <article class="group flex flex-col overflow-hidden rounded-2xl border border-line bg-white transition duration-200 hover:-translate-y-[3px] hover:border-brand hover:shadow-[0_10px_26px_rgba(0,142,204,.14)]">
@@ -41,5 +45,10 @@
         <div class="flex items-center gap-1.5 truncate text-sm font-bold text-ok">
             <i class="bi bi-geo-alt"></i>{{ $post->location ?: "O'zbekiston" }}
         </div>
+        @if($canBuy)
+            <a href="{{ route('posts.show', $post) }}#buy" class="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-[10px] bg-brand text-sm font-bold text-white transition hover:bg-brand-dark">
+                <i class="bi bi-cart-check-fill"></i> Sotib olish
+            </a>
+        @endif
     </div>
 </article>

@@ -16,7 +16,8 @@
         ? $categories->firstWhere('id', $activeFilters['category_id'])
         : null;
 
-    $isSellerView = auth()->check() && auth()->user()->hasRole('seller');
+    // $mine: the user's own listings (?mine=1) rather than the storefront
+    $isSellerView = $mine ?? false;
     $isBuyer = auth()->check() && auth()->user()->hasRole('user');
     $pageTitle = match (true) {
         (bool) $currentCategory => $currentCategory->emoji . ' ' . $currentCategory->name,
@@ -90,7 +91,10 @@
     {{-- Listing grid --}}
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-[repeat(auto-fill,minmax(270px,1fr))]">
     @forelse($posts as $post)
-        @php $liked = in_array($post->id, $likedPostIds ?? []); @endphp
+        @php
+            $liked = in_array($post->id, $likedPostIds ?? []);
+            $isOwn = auth()->id() === $post->user_id;
+        @endphp
         <article class="group relative flex min-h-[430px] flex-col overflow-hidden rounded-[18px] border border-line bg-linear-to-b from-white/70 to-white/95 transition duration-300 ease-[cubic-bezier(.2,0,0,1)] hover:-translate-y-[5px] hover:border-brand/45 hover:shadow-[0_16px_36px_rgba(0,0,0,.12),0_0_0_1px_rgba(0,142,204,.15)]">
             {{-- Image --}}
             <div class="relative h-[260px] w-full overflow-hidden border-b border-line bg-soft sm:h-[225px]">
@@ -123,13 +127,13 @@
                         @elseif($post->moderation_status === 'rejected')
                             <span class="{{ $pill }} bg-danger/90 text-white" title="{{ $post->moderation_reason }}"><i class="bi bi-shield-x"></i> Rad etilgan</span>
                         @else
-                            <span class="{{ $pill }} bg-amber-400/90 text-ink"><i class="bi bi-clock-history"></i> AI tekshiruvida</span>
+                            <span class="{{ $pill }} bg-amber-400/90 text-ink"><i class="bi bi-clock-history"></i> Tekshiruvda</span>
                         @endif
                     @endif
                 </div>
 
                 {{-- Favourite button --}}
-                @if($isBuyer)
+                @if($isBuyer && ! $isOwn)
                     <form action="{{ route('posts.like', $post) }}" method="POST" class="absolute top-2.5 right-2.5 z-[4]" data-like-form>
                         @csrf
                         <button type="submit" aria-pressed="{{ $liked ? 'true' : 'false' }}" aria-label="Yoqtirish" title="Saqlash"
@@ -152,7 +156,7 @@
                         </div>
                     </div>
 
-                    @if(auth()->check() && (auth()->user()->can('delete posts') || auth()->id() === $post->user_id))
+                    @if($isOwn)
                         <div class="relative">
                             <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="postMenu{{ $post->id }}" aria-label="Amallar"
                                     class="flex size-[26px] cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-black/6 hover:text-ink">
@@ -212,7 +216,7 @@
                     <a class="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-line bg-black/5 text-[13px] font-semibold text-ink transition hover:border-brand hover:bg-brand/12 hover:text-brand" href="{{ route('posts.show', $post) }}">
                         <span>Batafsil</span> <i class="bi bi-arrow-right"></i>
                     </a>
-                    @if($isBuyer && !$post->isSoldOut())
+                    @if($isBuyer && ! $isOwn && ! $post->isSoldOut())
                         <a class="inline-flex h-9 items-center justify-center gap-1 rounded-[10px] bg-brand px-3 text-xs font-bold text-white transition hover:-translate-y-px hover:bg-brand-dark hover:shadow-[0_4px_12px_rgba(0,142,204,.25)]" href="{{ route('posts.show', $post) }}" title="Sotib olish">
                             <i class="bi bi-cart-check-fill"></i> Xarid
                         </a>

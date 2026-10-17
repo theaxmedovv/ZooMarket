@@ -6,8 +6,8 @@ use App\Models\Category;
 use App\Models\Post;
 use App\Models\PurchaseRequest;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -18,8 +18,7 @@ class ExampleTest extends TestCase
     {
         parent::setUp();
 
-        Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        $this->seed(RolesAndPermissionsSeeder::class);
         Category::create([
             'name' => 'Big Cats',
         ]);
@@ -42,7 +41,7 @@ class ExampleTest extends TestCase
     public function test_home_page_shows_approved_listings(): void
     {
         $seller = User::factory()->create();
-        $seller->assignRole('seller');
+        $seller->assignRole('user');
 
         Post::create([
             'title' => 'Kuchuk bola',
@@ -72,14 +71,12 @@ class ExampleTest extends TestCase
     /**
      * Test that sellers are sent to their listings instead of the storefront
      */
-    public function test_home_redirects_sellers_to_posts(): void
+    public function test_home_shows_storefront_to_logged_in_users(): void
     {
-        $seller = User::factory()->create();
-        $seller->assignRole('seller');
+        $user = User::factory()->create();
+        $user->assignRole('user');
 
-        $response = $this->actingAs($seller)->get('/');
-
-        $response->assertRedirect(route('posts.index'));
+        $this->actingAs($user)->get('/')->assertOk();
     }
 
     /**
@@ -107,7 +104,7 @@ class ExampleTest extends TestCase
     public function test_post_detail_page_loads_with_modern_marketplace_layout(): void
     {
         $seller = User::factory()->create();
-        $seller->assignRole('seller');
+        $seller->assignRole('user');
 
         $post = Post::create([
             'title' => 'Kuchuk bola',
@@ -141,7 +138,7 @@ class ExampleTest extends TestCase
     public function test_seller_approval_creates_chat_and_mark_sold_closes_chat_but_keeps_listing(): void
     {
         $seller = User::factory()->create();
-        $seller->assignRole('seller');
+        $seller->assignRole('user');
 
         $buyer = User::factory()->create();
         $buyer->assignRole('user');

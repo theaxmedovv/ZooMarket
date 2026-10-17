@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
             // once(): both partials render on every page; compute the data a single time per request.
             $view->with(once(function () {
                 $pendingRequestsCount = 0;
+                $pendingModerationCount = 0;
                 $unread = 0;
                 $favoritesCount = 0;
 
@@ -37,13 +38,14 @@ class AppServiceProvider extends ServiceProvider
                     ->count();
 
                     if (auth()->user()->hasRole('user')) {
-                        $favoritesCount = auth()->user()->likedPosts()->count();
-                    }
-
-                    if (auth()->user()->hasRole('seller')) {
+                        $favoritesCount = auth()->user()->favoritePosts()->count();
                         $pendingRequestsCount = \App\Models\PurchaseRequest::where('status', 'pending')
                             ->whereHas('animal', fn ($q) => $q->where('user_id', $uid))
                             ->count();
+                    }
+
+                    if (auth()->user()->hasRole('admin')) {
+                        $pendingModerationCount = \App\Models\Post::where('moderation_status', 'pending')->count();
                     }
                 }
 
@@ -56,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
                 return [
                     'globalUnreadCount' => $unread,
                     'pendingRequestsCount' => $pendingRequestsCount,
+                    'pendingModerationCount' => $pendingModerationCount,
                     'navCategories' => $navCategories,
                     'favoritesCount' => $favoritesCount,
                 ];

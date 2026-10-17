@@ -36,10 +36,10 @@ class GoogleAuthTest extends TestCase
         $this->get(route('register'))
             ->assertOk()
             ->assertSee('Google orqali ro&#039;yxatdan o&#039;tish', false)
-            ->assertSee('role=seller', false);
+            ->assertDontSee('name="role"', false);
     }
 
-    public function test_redirect_sends_user_to_google_and_remembers_role(): void
+    public function test_redirect_sends_user_to_google(): void
     {
         config([
             'services.google.client_id' => 'test-client',
@@ -47,14 +47,13 @@ class GoogleAuthTest extends TestCase
             'services.google.redirect' => 'http://localhost/auth/google/callback',
         ]);
 
-        $response = $this->get(route('auth.google.redirect', ['role' => 'seller']));
+        $response = $this->get(route('auth.google.redirect'));
 
         $response->assertRedirect();
         $this->assertStringStartsWith('https://accounts.google.com/', $response->headers->get('Location'));
-        $response->assertSessionHas('google_role', 'seller');
     }
 
-    public function test_new_google_user_is_created_as_buyer_by_default(): void
+    public function test_new_google_user_can_both_buy_and_sell(): void
     {
         $this->fakeGoogleUser();
 
@@ -68,18 +67,6 @@ class GoogleAuthTest extends TestCase
         $this->assertNotNull($user->email_verified_at);
         $this->assertTrue($user->hasRole('user'));
         $this->assertTrue($user->can('read posts'));
-    }
-
-    public function test_new_google_user_gets_role_chosen_on_register_page(): void
-    {
-        $this->fakeGoogleUser();
-
-        $this->withSession(['google_role' => 'seller'])
-            ->get(route('auth.google.callback'))
-            ->assertRedirect(route('admin.dashboard'));
-
-        $user = User::where('email', 'ali@gmail.com')->firstOrFail();
-        $this->assertTrue($user->hasRole('seller'));
         $this->assertTrue($user->can('create posts'));
     }
 

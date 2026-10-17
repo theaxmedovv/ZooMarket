@@ -30,6 +30,7 @@ class Post extends Model
         'moderation_status',
         'moderation_reason',
         'moderated_at',
+        'moderated_by',
         'content',
         'image',
         'images',
@@ -138,6 +139,11 @@ class Post extends Model
         return array_map(function ($img) {
             return route('images.show', ['path' => $img]);
         }, $this->allImages());
+    }
+
+    public function moderator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'moderated_by');
     }
 
     public function category(): BelongsTo

@@ -7,7 +7,10 @@
     $femaleAvail = $post->availableFemaleCount();
     $defaultGender = $maleAvail > 0 ? 'male' : ($femaleAvail > 0 ? 'female' : 'male');
     $canModerate = auth()->check() && ((int) auth()->id() === (int) $post->user_id || auth()->user()->hasRole('admin'));
-    $isBuyer = auth()->check() && auth()->user()->hasRole('user');
+    $isOwner = auth()->check() && (int) auth()->id() === (int) $post->user_id;
+    // Any user can buy, just not from their own listing
+    $isBuyer = auth()->check() && auth()->user()->hasRole('user') && ! $isOwner;
+    $isAdmin = auth()->check() && auth()->user()->hasRole('admin');
 
     $panel = 'rounded-[20px] border border-line bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,.12)]';
     $sectionTitle = 'mb-4 flex items-center gap-2 text-[17px] font-bold text-ink [&_.bi]:text-brand';
@@ -24,7 +27,7 @@
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3 text-sm">
         <nav aria-label="breadcrumb" class="min-w-0">
             <ol class="flex min-w-0 items-center [&>li+li]:before:px-1.5 [&>li+li]:before:text-muted [&>li+li]:before:content-['›']">
-                <li class="whitespace-nowrap"><a href="{{ route('posts.index') }}" class="font-semibold text-brand">{{ auth()->user()?->hasRole('seller') ? "E'lonlarim" : "E'lonlar" }}</a></li>
+                <li class="whitespace-nowrap"><a href="{{ route('posts.index') }}" class="font-semibold text-brand">E'lonlar</a></li>
                 @if($post->category)
                     <li class="whitespace-nowrap"><a href="{{ route('posts.index', ['category_id' => $post->category_id]) }}" class="font-semibold text-brand">{{ $post->category->name }}</a></li>
                 @endif
@@ -34,22 +37,30 @@
         <span class="text-[13px] whitespace-nowrap text-muted"><i class="bi bi-clock mr-1"></i>{{ $post->created_at->diffForHumans() }}</span>
     </div>
 
-    {{-- AI moderation status banner for the seller --}}
-    @if($canModerate)
+    {{-- Moderation: the main admin decides here; the seller sees the outcome and, if rejected, why --}}
+    @if($isAdmin)
+        <x-moderation-panel :post="$post" class="mb-6" />
+    @elseif($canModerate)
         @if($post->moderation_status === 'rejected')
             <div class="mb-6 flex items-start gap-3 rounded-2xl border border-danger/50 bg-danger/8 p-6 shadow-sm">
                 <div class="grid size-12 shrink-0 place-items-center rounded-full bg-danger/25 text-danger"><i class="bi bi-shield-x text-2xl"></i></div>
                 <div class="flex-1">
                     <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
-                        <h5 class="text-lg font-bold text-danger"><i class="bi bi-robot mr-1"></i> E'lon Groq AI moderatsiyasidan o'tmadi</h5>
+                        <h5 class="text-lg font-bold text-danger">
+                            @if($post->moderated_by)
+                                <i class="bi bi-person-badge mr-1"></i> E'lon admin tomonidan rad etildi
+                            @else
+                                <i class="bi bi-robot mr-1"></i> E'lon avtomatik tekshiruvdan o'tmadi
+                            @endif
+                        </h5>
                         <span class="rounded-md bg-danger px-2 py-1 text-xs font-bold text-white">Ommaga ko'rsatilmaydi</span>
                     </div>
                     <p class="mb-2 text-sm text-ink">
-                        Ushbu e'lon yoki yuklangan fotosuratlar hayvonlar xavfsizligi, taqiqlangan turlar yoki sifat qoidalariga mos kelmadi.
+                        Quyidagi sababni to'g'rilab, e'lonni tahrirlang — u qayta tekshiruvga yuboriladi.
                     </p>
                     <div class="mb-3 rounded-lg border-l-[3px] border-danger bg-black/5 p-3">
                         <strong class="mb-1 block text-sm text-danger"><i class="bi bi-info-circle-fill mr-1"></i> Rad etilish sababi:</strong>
-                        <span class="text-ink">{{ $post->moderation_reason ?? 'Tavsif yoki rasm xavfsizlik talablariga mos kelmadi.' }}</span>
+                        <span class="whitespace-pre-line text-ink">{{ $post->moderation_reason ?? 'Tavsif yoki rasm xavfsizlik talablariga mos kelmadi.' }}</span>
                     </div>
                     <a href="{{ route('posts.edit', $post) }}" class="inline-flex items-center gap-1 rounded-md border border-danger px-2.5 py-1 text-sm font-semibold text-danger hover:bg-danger hover:text-white">
                         <i class="bi bi-pencil-square"></i> E'lonni tahrirlash va qayta topshirish
@@ -58,10 +69,10 @@
             </div>
         @elseif($post->moderation_status === 'pending')
             <div class="mb-6 flex items-center gap-3 rounded-2xl border border-amber-400/50 bg-amber-400/8 p-4 shadow-sm">
-                <div class="grid size-11 shrink-0 place-items-center rounded-full bg-amber-400/25 text-amber-500"><i class="bi bi-robot text-xl"></i></div>
+                <div class="grid size-11 shrink-0 place-items-center rounded-full bg-amber-400/25 text-amber-500"><i class="bi bi-hourglass-split text-xl"></i></div>
                 <div class="flex-1">
-                    <h6 class="font-bold text-amber-600"><i class="bi bi-shield-check mr-1"></i> E'lon AI moderatsiyasida</h6>
-                    <small class="text-ink/70">Groq AI tomonidan xavfsizlik tekshiruvi amalga oshirilmoqda.</small>
+                    <h6 class="font-bold text-amber-600"><i class="bi bi-shield-check mr-1"></i> E'lon admin tekshiruvida</h6>
+                    <small class="text-ink/70">Hozircha e'lonni faqat siz ko'rasiz. Admin tasdiqlagandan so'ng u hammaga ko'rinadi.</small>
                 </div>
                 <span class="rounded-md bg-amber-400 px-2 py-1 text-xs font-bold text-ink">Tekshirilmoqda</span>
             </div>
@@ -97,7 +108,7 @@
                                 @elseif($post->moderation_status === 'rejected')
                                     <span class="{{ $glassPill }} border-danger/50 bg-white/85 text-danger"><i class="bi bi-shield-x"></i> Rad etilgan</span>
                                 @else
-                                    <span class="{{ $glassPill }} border-amber-400/50 bg-white/85 text-amber-600"><i class="bi bi-clock"></i> AI tekshiruvida</span>
+                                    <span class="{{ $glassPill }} border-amber-400/50 bg-white/85 text-amber-600"><i class="bi bi-clock"></i> Tekshiruvda</span>
                                 @endif
                             @endif
                             @if($post->status === 'reserved' && ! $post->isArchived())
@@ -321,7 +332,7 @@
                         </div>
                     @endif
 
-                    @if(auth()->check() && (auth()->user()->can('edit posts') || auth()->id() === $post->user_id))
+                    @if($isOwner)
                         @if(! $post->isArchived())
                             <a href="{{ route('posts.edit', $post) }}" class="{{ $subBtn }} w-full border-line bg-black/4 text-muted hover:border-ink hover:text-ink">
                                 <i class="bi bi-pencil-square"></i> E'lonni tahrirlash

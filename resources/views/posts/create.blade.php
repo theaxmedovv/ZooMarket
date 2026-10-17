@@ -278,7 +278,7 @@
                     <button type="submit" class="btn btn-primary h-12 rounded-xl px-7 text-[15px] shadow-[0_4px_18px_rgba(0,142,204,.25)] hover:-translate-y-0.5" id="submitBtn">
                         <i class="bi bi-cloud-arrow-up-fill"></i> E'lonni chop etish
                     </button>
-                    <a href="{{ route('posts.index') }}" class="btn h-12 rounded-xl border-line font-semibold text-muted hover:border-ink hover:text-ink">Bekor qilish</a>
+                    <a href="{{ route('posts.index', ['mine' => 1]) }}" class="btn h-12 rounded-xl border-line font-semibold text-muted hover:border-ink hover:text-ink">Bekor qilish</a>
                 </div>
             </div>
 

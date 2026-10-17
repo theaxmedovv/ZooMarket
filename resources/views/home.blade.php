@@ -9,12 +9,17 @@
 </head>
 <body class="flex min-h-dvh flex-col text-[15px] leading-[1.45]">
 @php
-    $slides = [
-        ['bg-navy', "Eng yaxshi e'lonlar onlayn", "Sodiq do'stlar.", $stats['posts'] > 0 ? "Barcha hayvonlar — <b>{$stats['posts']}</b> ta e'lon" : "Birinchi e'lonlar <b>tez orada</b>", route('posts.index'), "Ko'rish", '🐕'],
-        ['bg-[#1f3a5f]', "Har kuni yangi e'lonlar", 'Mushuklar olami.', 'Narxlar — <b>kelishiladi</b>', route('posts.index', ['sort' => 'latest']), 'Yangilari', '🐈'],
-    ];
-    if (auth()->guest()) {
-        $slides[] = ['bg-[#2d2350]', 'Sotuvchilar uchun', "Bepul e'lon bering.", '<b>' . e($stats['sellers']) . '</b> sotuvchi bizga ishonadi', route('register'), 'Boshlash', '🦜'];
+    // Slides: [background, eyebrow, heading, offer html, link, button, emoji, image url].
+    // The main admin's banners come first, then the built-in ones.
+    $slides = $banners->map(fn ($b) => [
+        $b->color, $b->eyebrow, $b->title, $b->offerHtml(), $b->link,
+        $b->link ? ($b->button_text ?: 'Batafsil') : null, $b->emoji, $b->imageUrl(),
+    ])->all();
+    $slides[] = ['#212844', "Eng yaxshi e'lonlar onlayn", "Sodiq do'stlar.", $stats['posts'] > 0 ? "Barcha hayvonlar — <b>{$stats['posts']}</b> ta e'lon" : "Birinchi e'lonlar <b>tez orada</b>", route('posts.index'), "Ko'rish", '🐕', null];
+    $slides[] = ['#1f3a5f', "Har kuni yangi e'lonlar", 'Mushuklar olami.', 'Narxlar — <b>kelishiladi</b>', route('posts.index', ['sort' => 'latest']), 'Yangilari', '🐈', null];
+    // Every account can sell: guests are sent to sign up, users straight to a new listing.
+    if (! auth()->user()?->hasRole('admin')) {
+        $slides[] = ['#2d2350', 'Sotmoqchimisiz?', "Bepul e'lon bering.", '<b>' . e($stats['sellers']) . '</b> sotuvchi bizga ishonadi', auth()->check() ? route('posts.create') : route('register'), auth()->check() ? "E'lon berish" : 'Boshlash', '🦜', null];
     }
     // Horizontal product rail: 2.2 cards on phones up to 5 on wide screens.
     $rail = 'no-scrollbar grid snap-x snap-mandatory auto-cols-[calc((100%-14px)/2.2)] grid-flow-col gap-3.5 overflow-x-auto px-0.5 pt-0.5 pb-2.5 *:snap-start md:auto-cols-[calc((100%-36px)/3)] md:gap-[18px] lg:auto-cols-[calc((100%-54px)/4)] min-[1200px]:auto-cols-[calc((100%-72px)/5)]';
@@ -28,16 +33,26 @@
     <section class="relative mt-2" id="hero">
         <div class="overflow-hidden rounded-[20px]">
             <div class="flex transition-transform duration-600 ease-[cubic-bezier(.2,.7,.2,1)]" data-hero-track>
-                @foreach($slides as [$bg, $eyebrow, $heading, $offer, $href, $cta, $art])
-                    <div class="{{ $bg }} relative grid min-h-[280px] min-w-full grid-cols-1 items-center overflow-hidden px-6 py-8 text-white md:min-h-[316px] md:grid-cols-[1.1fr_1fr] md:px-[70px] md:py-9 xl:px-[90px]">
-                        <span class="absolute top-1/2 right-[12%] hidden size-[330px] -translate-y-1/2 rounded-full border-[60px] border-white/6 md:block" aria-hidden="true"></span>
+                @foreach($slides as [$bg, $eyebrow, $heading, $offer, $href, $cta, $art, $image])
+                    <div style="background-color: {{ $bg }}" class="relative grid min-h-[280px] min-w-full grid-cols-1 items-center overflow-hidden px-6 py-8 text-white md:min-h-[316px] md:grid-cols-[1.1fr_1fr] md:px-[70px] md:py-9 xl:px-[90px]">
+                        @if($image)
+                            {{-- Photo banner: the picture fills the slide, a shade keeps the text readable --}}
+                            <img src="{{ $image }}" alt="" class="absolute inset-0 size-full object-cover" @unless($loop->first) loading="lazy" @endunless>
+                            <span class="absolute inset-0 bg-linear-to-r from-black/75 via-black/45 to-black/5" aria-hidden="true"></span>
+                        @else
+                            <span class="absolute top-1/2 right-[12%] hidden size-[330px] -translate-y-1/2 rounded-full border-[60px] border-white/6 md:block" aria-hidden="true"></span>
+                        @endif
                         <div class="relative">
-                            <p class="mb-3 text-[17px] font-semibold">{{ $eyebrow }}</p>
+                            @if($eyebrow)<p class="mb-3 text-[17px] font-semibold">{{ $eyebrow }}</p>@endif
                             <h2 class="mb-3.5 text-[clamp(34px,4.4vw,52px)] leading-[1.05] font-black tracking-[.01em] uppercase">{{ $heading }}</h2>
-                            <p class="mb-[22px] text-xl font-bold [&_b]:text-[#ffd12e]">{!! $offer !!}</p>
-                            <a href="{{ $href }}" class="inline-flex items-center gap-2 rounded-lg bg-white px-[22px] py-[11px] text-sm font-extrabold text-navy hover:bg-brand hover:text-white">{{ $cta }} <i class="bi bi-arrow-right"></i></a>
+                            @if($offer)<p class="mb-[22px] text-xl font-bold [&_b]:text-[#ffd12e]">{!! $offer !!}</p>@endif
+                            @if($href)
+                                <a href="{{ $href }}" @if(str_starts_with($href, 'http')) target="_blank" rel="noopener" @endif class="inline-flex items-center gap-2 rounded-lg bg-white px-[22px] py-[11px] text-sm font-extrabold text-navy hover:bg-brand hover:text-white">{{ $cta }} <i class="bi bi-arrow-right"></i></a>
+                            @endif
                         </div>
-                        <div class="absolute right-3 bottom-2 text-[110px] leading-none opacity-45 drop-shadow-[0_18px_30px_rgba(0,0,0,.35)] md:relative md:right-auto md:bottom-auto md:justify-self-center md:text-[150px] md:opacity-100 lg:text-[200px]">{{ $art }}</div>
+                        @if($art && ! $image)
+                            <div class="absolute right-3 bottom-2 text-[110px] leading-none opacity-45 drop-shadow-[0_18px_30px_rgba(0,0,0,.35)] md:relative md:right-auto md:bottom-auto md:justify-self-center md:text-[150px] md:opacity-100 lg:text-[200px]">{{ $art }}</div>
+                        @endif
                     </div>
                 @endforeach
             </div>

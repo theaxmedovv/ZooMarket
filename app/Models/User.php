@@ -66,6 +66,14 @@ class User extends Authenticatable
         return $this->belongsToMany(Post::class, 'post_likes')->withTimestamps();
     }
 
+    /**
+     * Saved listings that can still be opened and bought: what the favourites page and its counter show.
+     */
+    public function favoritePosts(): BelongsToMany
+    {
+        return $this->likedPosts()->approved()->whereNotIn('posts.status', ['sold', 'archived']);
+    }
+
     public function purchaseRequests(): HasMany
     {
         return $this->hasMany(PurchaseRequest::class);

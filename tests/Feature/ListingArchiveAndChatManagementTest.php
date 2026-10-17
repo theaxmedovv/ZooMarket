@@ -8,8 +8,8 @@ use App\Models\Message;
 use App\Models\Post;
 use App\Models\PurchaseRequest;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ListingArchiveAndChatManagementTest extends TestCase
@@ -25,11 +25,10 @@ class ListingArchiveAndChatManagementTest extends TestCase
     {
         parent::setUp();
 
-        Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->seller = User::factory()->create(['name' => 'Seller John', 'email' => 'seller@example.com']);
-        $this->seller->assignRole('seller');
+        $this->seller->assignRole('user');
 
         $this->buyer1 = User::factory()->create(['name' => 'Buyer Alice', 'email' => 'alice@example.com', 'phone' => '+998901234567']);
         $this->buyer1->assignRole('user');
@@ -232,7 +231,7 @@ class ListingArchiveAndChatManagementTest extends TestCase
         $response = $this->actingAs($this->seller)
             ->delete(route('posts.destroy', $post));
 
-        $response->assertRedirect(route('posts.index'));
+        $response->assertRedirect(route('posts.index', ['mine' => 1]));
 
         $req->refresh();
         $this->assertSame('rejected', $req->status);

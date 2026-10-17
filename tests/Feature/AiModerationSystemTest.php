@@ -37,14 +37,11 @@ class AiModerationSystemTest extends TestCase
             Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
         }
 
-        $sellerRole = Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web']);
-        $sellerRole->syncPermissions($permissions);
-
-        $userRole = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
-        $userRole->syncPermissions(['read posts']);
+        // Every account can both sell and buy
+        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web'])->syncPermissions($permissions);
 
         $this->seller = User::factory()->create(['name' => 'Seller Alice', 'email' => 'seller@test.com']);
-        $this->seller->syncRoles(['seller']);
+        $this->seller->syncRoles(['user']);
 
         $this->buyer = User::factory()->create(['name' => 'Buyer Bob', 'email' => 'buyer@test.com']);
         $this->buyer->syncRoles(['user']);
@@ -55,9 +52,9 @@ class AiModerationSystemTest extends TestCase
     }
 
     /**
-     * Test 1: User creates safe listing -> Groq approves -> Published to marketplace.
+     * Test 1: User creates safe listing -> Groq passes it -> Waits for the main admin, still hidden.
      */
-    public function test_post_creation_is_moderated_and_approved_by_groq_ai(): void
+    public function test_post_passing_groq_ai_waits_for_admin_approval(): void
     {
         Http::fake([
             'api.groq.com/*' => Http::response([
@@ -94,17 +91,16 @@ class AiModerationSystemTest extends TestCase
         $post = Post::latest('id')->first();
 
         $this->assertNotNull($post);
-        $this->assertEquals('approved', $post->moderation_status);
+        $this->assertEquals('pending', $post->moderation_status);
         $this->assertNull($post->moderation_reason);
-        $this->assertNotNull($post->moderated_at);
 
-        $response->assertRedirect(route('posts.index'));
-        $response->assertSessionHas('success');
+        $response->assertRedirect(route('posts.show', $post));
+        $response->assertSessionHas('info');
 
-        // Verify public marketplace visibility for buyers
+        // Passing the AI check is not enough: buyers only see it once the main admin approves
         $publicResponse = $this->actingAs($this->buyer)->get(route('posts.index'));
         $publicResponse->assertStatus(200);
-        $publicResponse->assertSee('Britaniya zotli sog\'lom mushukcha');
+        $publicResponse->assertDontSee('Britaniya zotli sog\'lom mushukcha');
     }
 
     /**
@@ -165,12 +161,12 @@ class AiModerationSystemTest extends TestCase
         // Verify seller CAN view their own rejected post with the rejection reason
         $sellerDetailResponse = $this->actingAs($this->seller)->get(route('posts.show', $post));
         $sellerDetailResponse->assertStatus(200);
-        $sellerDetailResponse->assertSee('Groq AI moderatsiyasidan', false);
+        $sellerDetailResponse->assertSee("avtomatik tekshiruvdan o'tmadi", false);
         $sellerDetailResponse->assertSee('Qizil kitobga kiritilgan yovvoyi hayvonlarni sotish taqiqlanadi.', false);
     }
 
     /**
-     * Test 3: Seller can edit rejected post to fix it -> Groq re-moderates and approves -> Now visible.
+     * Test 3: Seller can edit rejected post to fix it -> Groq passes it -> Back in the admin queue.
      */
     public function test_seller_can_edit_and_resubmit_rejected_post(): void
     {
@@ -196,7 +192,7 @@ class AiModerationSystemTest extends TestCase
         // Seller opens edit page and sees previous rejection reason
         $editPageResponse = $this->actingAs($this->seller)->get(route('posts.edit', $post));
         $editPageResponse->assertStatus(200);
-        $editPageResponse->assertSee('avval Groq AI tomonidan rad etilgan', false);
+        $editPageResponse->assertSee('avval avtomatik tekshiruv tomonidan rad etilgan', false);
         $editPageResponse->assertSee('hayvonga tegishli emas', false);
 
         // Now seller corrects the post and updates it
@@ -233,12 +229,12 @@ class AiModerationSystemTest extends TestCase
         ]);
 
         $post->refresh();
-        $this->assertEquals('approved', $post->moderation_status);
+        $this->assertEquals('pending', $post->moderation_status);
         $this->assertNull($post->moderation_reason);
 
-        // Now visible to buyers on marketplace
+        // Back in the admin queue, so still hidden from buyers
         $marketplaceResponse = $this->actingAs($this->buyer)->get(route('posts.index'));
-        $marketplaceResponse->assertSee('Fors mushugi', false);
+        $marketplaceResponse->assertDontSee('Fors mushugi', false);
     }
 
     /**
@@ -274,7 +270,7 @@ class AiModerationSystemTest extends TestCase
         // Seller CAN see with pending status
         $sellerShow = $this->actingAs($this->seller)->get(route('posts.show', $post));
         $sellerShow->assertStatus(200);
-        $sellerShow->assertSee('AI moderatsiyasida', false);
+        $sellerShow->assertSee('admin tekshiruvida', false);
     }
 
     /**
@@ -314,9 +310,9 @@ class AiModerationSystemTest extends TestCase
     }
 
     /**
-     * Test 6: When GROQ_API_KEY is missing, post is auto-approved immediately without waiting ("time bo'lmasin").
+     * Test 6: When GROQ_API_KEY is missing, the AI step is skipped and the post goes straight to the admin queue.
      */
-    public function test_post_creation_is_auto_approved_immediately_when_groq_api_key_is_missing(): void
+    public function test_post_goes_to_admin_queue_when_groq_api_key_is_missing(): void
     {
         Config::set('services.groq.key', null);
 
@@ -336,17 +332,17 @@ class AiModerationSystemTest extends TestCase
 
         $post = Post::latest('id')->first();
         $this->assertNotNull($post);
-        $this->assertEquals('approved', $post->moderation_status);
+        $this->assertEquals('pending', $post->moderation_status);
         $this->assertNull($post->moderation_reason);
 
-        $response->assertRedirect(route('posts.index'));
-        $response->assertSessionHas('success');
+        $response->assertRedirect(route('posts.show', $post));
+        $response->assertSessionHas('info');
     }
 
     /**
-     * Test 7: When Groq API returns error or timeout, post is auto-approved without hanging or pending queue.
+     * Test 7: When Groq API returns error or timeout, the post is never rejected; it goes to the admin queue.
      */
-    public function test_post_creation_is_auto_approved_when_groq_api_fails_without_blocking(): void
+    public function test_post_goes_to_admin_queue_when_groq_api_fails(): void
     {
         Config::set('services.groq.key', 'gsk_mock_key');
         Http::fake([
@@ -369,9 +365,9 @@ class AiModerationSystemTest extends TestCase
 
         $post = Post::latest('id')->first();
         $this->assertNotNull($post);
-        $this->assertEquals('approved', $post->moderation_status);
+        $this->assertEquals('pending', $post->moderation_status);
         $this->assertNull($post->moderation_reason);
 
-        $response->assertRedirect(route('posts.index'));
+        $response->assertRedirect(route('posts.show', $post));
     }
 }

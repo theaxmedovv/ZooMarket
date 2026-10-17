@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Post;
 use App\Models\PurchaseRequest;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -23,11 +24,10 @@ class AnimalQuantityAndGenderTest extends TestCase
     {
         parent::setUp();
 
-        Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->seller = User::factory()->create();
-        $this->seller->assignRole('seller');
+        $this->seller->assignRole('user');
 
         $this->buyer = User::factory()->create();
         $this->buyer->assignRole('user');
@@ -53,7 +53,7 @@ class AnimalQuantityAndGenderTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response->assertRedirect(route('posts.index'));
+        $response->assertRedirect(route('posts.show', Post::latest('id')->first()));
         $this->assertDatabaseHas('posts', [
             'title' => 'Britan mushugi',
             'quantity' => 1,
@@ -131,7 +131,7 @@ class AnimalQuantityAndGenderTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response->assertRedirect(route('posts.index'));
+        $response->assertRedirect(route('posts.show', Post::latest('id')->first()));
         $this->assertDatabaseHas('posts', [
             'title' => 'Kuchukvachchalar to\'plami',
             'quantity' => 10,

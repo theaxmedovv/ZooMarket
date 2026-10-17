@@ -28,9 +28,9 @@
                 <div class="mb-6 flex items-start gap-3 rounded-2xl border border-danger/50 bg-red-50 p-4">
                     <div class="grid size-11 shrink-0 place-items-center rounded-full bg-danger/25 text-danger"><i class="bi bi-shield-x text-xl"></i></div>
                     <div class="text-sm">
-                        <strong class="block text-base text-danger">E'lon avval Groq AI tomonidan rad etilgan</strong>
+                        <strong class="block text-base text-danger">E'lon avval {{ $post->moderated_by ? 'admin' : 'avtomatik tekshiruv' }} tomonidan rad etilgan</strong>
                         <div class="mt-1 text-muted"><strong>Rad etilish sababi:</strong> {{ $post->moderation_reason }}</div>
-                        <div class="mt-1 text-muted">E'lon ma'lumotlari yoki fotosuratlarini to'g'rilab saqlasangiz, u avtomatik ravishda qayta tekshiruvdan o'tkaziladi.</div>
+                        <div class="mt-1 text-muted">E'lon ma'lumotlari yoki fotosuratlarini to'g'rilab saqlasangiz, u qayta admin tekshiruviga yuboriladi.</div>
                     </div>
                 </div>
             @endif

@@ -37,6 +37,13 @@ document.addEventListener('click', e => {
     if (e.target instanceof HTMLDialogElement) e.target.close();
 });
 
+// "Sotib olish" on a listing card links to the listing with #buy: open its buy dialog straight away.
+// The hash is dropped so a reload or Back doesn't pop the dialog up again.
+if (location.hash === '#buy') {
+    history.replaceState(null, '', location.pathname + location.search);
+    document.getElementById('buyModalDetail')?.showModal();
+}
+
 // ---- Password visibility ----------------------------------------------------
 document.addEventListener('click', e => {
     const btn = e.target.closest('[data-password-toggle]');
@@ -118,6 +125,12 @@ async function toggleLike(form) {
             badge.textContent = data.favorites;
             badge.hidden = data.favorites === 0;
         });
+        // On the favourites page an un-liked card no longer belongs there.
+        const grid = form.closest('[data-favorites-grid]');
+        if (grid && !data.liked) {
+            form.closest('article')?.remove();
+            if (!grid.querySelector('article')) window.location.reload();
+        }
         window.zmToast(data.message, 'success');
     } catch (e) {
         window.zmToast("Xatolik yuz berdi. Qaytadan urinib ko'ring.", 'error');

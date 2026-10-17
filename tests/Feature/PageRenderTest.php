@@ -32,11 +32,10 @@ class PageRenderTest extends TestCase
         foreach ($permissions as $name) {
             Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
-        Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web'])->syncPermissions($permissions);
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web'])->syncPermissions(['read posts']);
+        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web'])->syncPermissions($permissions);
 
         $this->seller = User::factory()->create();
-        $this->seller->assignRole('seller');
+        $this->seller->assignRole('user');
         $this->buyer = User::factory()->create();
         $this->buyer->assignRole('user');
 
@@ -103,19 +102,27 @@ class PageRenderTest extends TestCase
         $this->assertStringContainsString('4 ta filtr faol', $html);
     }
 
-    public function test_sellers_get_search_without_filter_panel(): void
+    public function test_my_listings_get_search_without_filter_panel(): void
+    {
+        $this->actingAs($this->seller)->get('/posts?mine=1')
+            ->assertOk()
+            ->assertSee('id="zmSearchForm"', false)
+            ->assertSee('name="mine" value="1"', false)
+            ->assertDontSee('id="zmFilterPanel"', false);
+    }
+
+    public function test_storefront_shows_filters_to_logged_in_users(): void
     {
         $this->actingAs($this->seller)->get('/posts')
             ->assertOk()
-            ->assertSee('id="zmSearchForm"', false)
-            ->assertDontSee('id="zmFilterPanel"', false);
+            ->assertSee('id="zmFilterPanel"', false);
     }
 
     public function test_buyer_pages_render_with_site_chrome(): void
     {
         $this->actingAs($this->buyer);
 
-        foreach (['/', '/posts', "/posts/{$this->post->id}", '/user/profile', '/user/purchase-requests', '/chats', "/chats/{$this->chat->id}"] as $url) {
+        foreach (['/', '/posts', "/posts/{$this->post->id}", '/profile', '/favorites', '/user/purchase-requests', '/chats', "/chats/{$this->chat->id}"] as $url) {
             $this->get($url)->assertOk()->assertSee('id="zmHeader"', false)->assertSee('aria-label="Buyurtmalar"', false);
         }
     }
@@ -133,12 +140,15 @@ class PageRenderTest extends TestCase
             return [str_replace($m[0] ?? '', '', $html), $m[1] ?? ''];
         };
 
+        // One account both sells and buys: selling and buying entry points share the same chrome.
         $this->actingAs($this->seller);
-        foreach (['/posts', "/posts/{$this->post->id}", '/profile', '/admin/purchase-requests', '/admin/archive', '/chats'] as $url) {
+        foreach (['/posts', '/posts?mine=1', "/posts/{$this->post->id}", '/profile', '/favorites', '/admin/purchase-requests', '/admin/archive', '/user/purchase-requests', '/chats'] as $url) {
             [$chrome, $main] = $split($this->get($url)->assertOk()->getContent());
             $this->assertSame(1, $count($chrome, '/posts/create'), "{$url}: 'Yangi e'lon' must appear once in the chrome");
             $this->assertSame(1, $count($chrome, '/admin/purchase-requests'), "{$url}: 'So'rovlar' must appear once in the chrome");
             $this->assertSame(1, $count($chrome, '/admin/archive'), "{$url}: 'Arxiv' must appear once in the chrome");
+            $this->assertSame(1, $count($chrome, '/user/purchase-requests'), "{$url}: 'Buyurtmalar' must appear once in the chrome");
+            $this->assertSame(1, $count($chrome, '/favorites'), "{$url}: 'Sevimlilar' must appear once in the chrome");
             $this->assertSame(0, $count($main, '/posts/create'), "{$url}: no extra 'Yangi e'lon' buttons in the page");
             $this->assertSame(0, preg_match('#href="[^"]*/admin"#', $chrome . $main), "{$url}: no links to the /admin redirect");
         }
@@ -148,11 +158,6 @@ class PageRenderTest extends TestCase
         [, $main] = $split($this->get('/admin/archive')->getContent());
         $this->assertSame(0, $count($main, '/admin/purchase-requests'));
 
-        $this->actingAs($this->buyer);
-        foreach (['/posts', '/user/profile', '/user/purchase-requests', '/chats'] as $url) {
-            [$chrome] = $split($this->get($url)->assertOk()->getContent());
-            $this->assertSame(1, $count($chrome, '/user/purchase-requests'), "{$url}: 'Buyurtmalar' must appear once in the chrome");
-        }
     }
 
     public function test_seller_pages_render_with_site_chrome(): void

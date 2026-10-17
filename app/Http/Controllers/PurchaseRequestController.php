@@ -85,6 +85,10 @@ class PurchaseRequestController extends Controller
             DB::transaction(function () use ($user, $animalId, $maleQty, $femaleQty) {
                 $animal = Post::where('id', $animalId)->lockForUpdate()->firstOrFail();
 
+                if ($animal->user_id === $user->id) {
+                    throw new \RuntimeException("O'zingizning e'loningizga sotib olish so'rovini yubora olmaysiz.");
+                }
+
                 if ($animal->moderation_status !== 'approved' || in_array($animal->status, ['sold', 'archived'], true) || $animal->totalAvailableCount() <= 0) {
                     throw new \RuntimeException("Ushbu hayvon sotuvda mavjud emas yoki hali tasdiqlanmagan.");
                 }

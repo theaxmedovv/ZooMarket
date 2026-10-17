@@ -16,11 +16,15 @@ class PostController extends Controller
 {
     private function canCreatePosts(): bool
     {
-        $user = auth()->user();
+        return (bool) auth()->user()?->can('create posts');
+    }
 
-        return (bool) $user && (
-            $user->hasRole('seller') || $user->can('create posts')
-        );
+    /**
+     * Everyone holds the edit/delete permissions, so changes are limited to the listing's owner.
+     */
+    private function authorizeOwner(Post $post): void
+    {
+        abort_unless($post->user_id === auth()->id(), 403);
     }
 
     /**
@@ -33,7 +37,9 @@ class PostController extends Controller
         }
 
         $search = trim((string) $request->query('q', ''));
-        $canUseFilters = !auth()->check() || auth()->user()->hasRole('user');
+        // ?mine=1: the user's own listings in every moderation state, instead of the storefront
+        $mine = auth()->check() && $request->boolean('mine');
+        $canUseFilters = ! $mine && (! auth()->check() || auth()->user()->hasRole('user'));
         $categoryId = $request->integer('category_id');
         $gender = (string) $request->query('gender', '');
         $location = trim((string) $request->query('location', ''));
@@ -79,7 +85,7 @@ class PostController extends Controller
         $postsQuery = Post::with(['user', 'category'])
             ->whereNotIn('status', ['sold', 'archived']);
 
-        if (auth()->check() && auth()->user()->hasRole('seller')) {
+        if ($mine) {
             $postsQuery->where('user_id', auth()->id());
         } else {
             $postsQuery->where('moderation_status', 'approved');
@@ -158,7 +164,7 @@ class PostController extends Controller
             'sort' => $sort,
         ];
 
-        return view('posts.index', compact('posts', 'search', 'likedPostIds', 'requestedAnimalIds', 'categories', 'activeFilters'));
+        return view('posts.index', compact('posts', 'search', 'mine', 'likedPostIds', 'requestedAnimalIds', 'categories', 'activeFilters'));
     }
 
     /**
@@ -254,19 +260,16 @@ class PostController extends Controller
         $data['moderation_status'] = 'pending';
         $post = $request->user()->posts()->create($data);
 
-        // Run Groq AI moderation
+        // AI pre-check; anything it lets through waits for the main admin
         $moderation = app(GroqModerationService::class)->moderate($post);
 
         if ($moderation['status'] === 'rejected') {
             return redirect()->route('posts.show', $post)
-                ->with('warning', "E'lon Groq AI tomonidan rad etildi: " . ($moderation['reason'] ?? 'Xavfsizlik qoidalariga mos kelmadi.'));
-        } elseif ($moderation['status'] === 'approved') {
-            return redirect()->route('posts.index')
-                ->with('success', "E'lon Groq AI tomonidan muvaffaqiyatli tekshirildi va e'lon qilindi!");
+                ->with('warning', "E'lon avtomatik tekshiruvdan o'tmadi: " . ($moderation['reason'] ?? 'Xavfsizlik qoidalariga mos kelmadi.'));
         }
 
         return redirect()->route('posts.show', $post)
-            ->with('info', "E'lon qabul qilindi va moderatorlar ko'rib chiqishida.");
+            ->with('info', "E'lon qabul qilindi. Admin tekshirib tasdiqlagandan so'ng hammaga ko'rinadi.");
     }
 
     /**
@@ -332,6 +335,7 @@ class PostController extends Controller
     {
         $post = Post::withTrashed()->findOrFail($id);
         Gate::authorize('edit posts');
+        $this->authorizeOwner($post);
 
         if ($post->status === 'sold' || $post->status === 'archived' || $post->trashed()) {
             abort(403, "Arxivlangan yoki sotilgan e'lonlar faqat o'qish uchun (read-only) saqlanadi va ularni tahrirlab bo'lmaydi.");
@@ -349,6 +353,7 @@ class PostController extends Controller
     {
         $post = Post::withTrashed()->findOrFail($id);
         Gate::authorize('edit posts');
+        $this->authorizeOwner($post);
 
         if ($post->status === 'sold' || $post->status === 'archived' || $post->trashed()) {
             abort(403, "Arxivlangan yoki sotilgan e'lonlar faqat o'qish uchun (read-only) saqlanadi va ularni tahrirlab bo'lmaydi.");
@@ -430,19 +435,16 @@ class PostController extends Controller
         $data['moderation_status'] = 'pending';
         $post->update($data);
 
-        // Re-run Groq AI moderation upon update
+        // Any edit sends the listing back through the AI pre-check and the admin queue
         $moderation = app(GroqModerationService::class)->moderate($post);
 
         if ($moderation['status'] === 'rejected') {
             return redirect()->route('posts.show', $post)
-                ->with('warning', "E'lon yangilandi, biroq Groq AI moderatsiyasidan o'tmadi: " . ($moderation['reason'] ?? 'Xavfsizlik qoidalariga mos kelmadi.'));
-        } elseif ($moderation['status'] === 'approved') {
-            return redirect()->route('posts.show', $post)
-                ->with('success', "E'lon yangilandi va Groq AI moderatsiyasidan muvaffaqiyatli o'tdi!");
+                ->with('warning', "E'lon yangilandi, biroq avtomatik tekshiruvdan o'tmadi: " . ($moderation['reason'] ?? 'Xavfsizlik qoidalariga mos kelmadi.'));
         }
 
         return redirect()->route('posts.show', $post)
-            ->with('info', "E'lon yangilandi va moderatorlar ko'rib chiqishida.");
+            ->with('info', "E'lon yangilandi va qayta admin tekshiruviga yuborildi. Tasdiqlangach hammaga ko'rinadi.");
     }
 
     /**
@@ -451,16 +453,8 @@ class PostController extends Controller
     public function destroy(string $id)
     {
         $post = Post::withTrashed()->findOrFail($id);
-        $user = auth()->user();
-
-        abort_unless(
-            $user && (
-                $user->can('delete posts')
-                || $user->hasRole('seller')
-                || $post->user_id === $user->id
-            ),
-            403
-        );
+        Gate::authorize('delete posts');
+        $this->authorizeOwner($post);
 
         if ($post->status === 'sold' || $post->status === 'archived') {
             return back()->withErrors(['error' => 'Sotilgan yoki arxivlangan e\'lonlar arxivda saqlanadi va ularni o\'chirib bo\'lmaydi.']);
@@ -483,7 +477,7 @@ class PostController extends Controller
             $post->delete();
         });
 
-        return redirect()->route('posts.index')->with('success', 'E\'lon muvaffaqiyatli o\'chirildi va tegishli so\'rovlar yangilandi.');
+        return redirect()->route('posts.index', ['mine' => 1])->with('success', 'E\'lon muvaffaqiyatli o\'chirildi va tegishli so\'rovlar yangilandi.');
     }
 
     public function toggleLike(Request $request, Post $post)
@@ -508,7 +502,7 @@ class PostController extends Controller
             return response()->json([
                 'liked' => $liked,
                 'likes' => $post->likedByUsers()->count(),
-                'favorites' => $user->likedPosts()->count(),
+                'favorites' => $user->favoritePosts()->count(),
                 'message' => $message,
             ]);
         }

@@ -49,14 +49,13 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:seller,user'],
         ]);
 
-        $user = $this->createUserWithRole([
+        $user = $this->createUser([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
-        ], $data['role']);
+        ]);
 
         Auth::login($user);
         $request->session()->regenerate();
@@ -64,12 +63,8 @@ class AuthController extends Controller
         return $this->redirectAfterLogin($user);
     }
 
-    public function redirectToGoogle(Request $request): RedirectResponse
+    public function redirectToGoogle(): RedirectResponse
     {
-        // Role picked on the register page; sign-ups from the login page become buyers
-        $role = in_array($request->query('role'), ['seller', 'user'], true) ? $request->query('role') : 'user';
-        $request->session()->put('google_role', $role);
-
         return $this->googleDriver()->redirect();
     }
 
@@ -103,18 +98,16 @@ class AuthController extends Controller
                 ])->save();
             }
         } else {
-            $user = $this->createUserWithRole([
+            $user = $this->createUser([
                 'name' => $googleUser->getName() ?: Str::before($googleUser->getEmail(), '@'),
                 'email' => $googleUser->getEmail(),
                 'google_id' => $googleUser->getId(),
                 // Google accounts sign in without a password; store an unguessable one
                 'password' => Str::random(40),
-            ], $request->session()->get('google_role', 'user'));
+            ]);
 
             $user->forceFill(['email_verified_at' => now()])->save();
         }
-
-        $request->session()->forget('google_role');
 
         Auth::login($user, true);
         $request->session()->regenerate();
@@ -134,22 +127,20 @@ class AuthController extends Controller
         return Socialite::driver('google')->redirectUrl($redirect);
     }
 
-    private function createUserWithRole(array $attributes, string $roleName): User
+    /**
+     * Every account can both sell (post listings) and buy (send purchase requests).
+     */
+    private function createUser(array $attributes): User
     {
-        return DB::transaction(function () use ($attributes, $roleName) {
+        return DB::transaction(function () use ($attributes) {
             // Ensure the role and core permissions exist
-            $role = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+            $role = Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
 
-            if ($roleName === 'seller') {
-                $sellerPermissions = ['create posts', 'read posts', 'edit posts', 'delete posts'];
-                foreach ($sellerPermissions as $p) {
-                    Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
-                }
-                $role->syncPermissions($sellerPermissions);
-            } elseif ($roleName === 'user') {
-                $userPermission = Permission::firstOrCreate(['name' => 'read posts', 'guard_name' => 'web']);
-                $role->syncPermissions([$userPermission]);
+            $permissions = ['create posts', 'read posts', 'edit posts', 'delete posts'];
+            foreach ($permissions as $p) {
+                Permission::firstOrCreate(['name' => $p, 'guard_name' => 'web']);
             }
+            $role->syncPermissions($permissions);
 
             $user = User::create($attributes);
             $user->assignRole($role);
@@ -160,8 +151,8 @@ class AuthController extends Controller
 
     private function redirectAfterLogin(User $user): RedirectResponse
     {
-        if ($user->hasRole('seller')) {
-            return redirect()->route('admin.dashboard');
+        if ($user->hasRole('admin')) {
+            return redirect()->route('moderation.index');
         }
 
         return redirect()->route('posts.index');

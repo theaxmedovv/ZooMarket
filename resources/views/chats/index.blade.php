@@ -17,7 +17,7 @@
                     $last    = $chat->lastMessage;
                     $isMine  = $last && $last->sender_id === auth()->id();
                     $unread  = $chat->unread;
-                    $isSeller = $other->hasRole('seller');
+                    $isSeller = $other->id === $chat->seller_id;
                     $img = $chat->post?->allImages()[0] ?? null;
                 @endphp
                 <a href="{{ route('chats.show', $chat) }}" @class([

@@ -29,11 +29,10 @@ class UxFeedbackTest extends TestCase
         foreach ($permissions as $name) {
             Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
-        Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web'])->syncPermissions($permissions);
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web'])->syncPermissions(['read posts']);
+        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web'])->syncPermissions($permissions);
 
         $this->seller = User::factory()->create();
-        $this->seller->assignRole('seller');
+        $this->seller->assignRole('user');
         $this->buyer = User::factory()->create();
         $this->buyer->assignRole('user');
         $this->category = Category::firstOrCreate(['name' => 'Mushuk']);
@@ -115,7 +114,7 @@ class UxFeedbackTest extends TestCase
 
         $this->actingAs($this->buyer)->get(route('posts.index'))
             ->assertOk()
-            ->assertSee('#saved', false)
+            ->assertSee(route('favorites.index'), false)
             ->assertSeeInOrder(['data-favorites-count', '>1<'], false);
     }
 

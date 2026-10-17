@@ -8,38 +8,25 @@ use Illuminate\Http\Request;
 
 class ProfileController extends Controller
 {
-    private function profileData(Request $request): array
+    /**
+     * Profile and settings, with the user's own listings. Saved listings live on their own page (favorites.index).
+     */
+    public function show(Request $request)
     {
         $user = $request->user()->loadCount('posts');
+
         $recentPosts = $user->posts()
             ->where('status', '!=', 'sold')
             ->latest()
             ->take(5)
             ->get();
 
-        return compact('user', 'recentPosts');
+        return view('profile.show', compact('user', 'recentPosts'));
     }
 
-    private function likedProfileData(Request $request): array
+    public function user()
     {
-        $user = $request->user()->loadCount('likedPosts');
-        $likedPosts = $user->likedPosts()
-            ->with(['user', 'category'])
-            ->latest('post_likes.created_at')
-            ->take(12)
-            ->get();
-
-        return compact('user', 'likedPosts');
-    }
-
-    public function show(Request $request)
-    {
-        return view('profile.show', $this->profileData($request));
-    }
-
-    public function user(Request $request)
-    {
-        return view('profile.user', $this->likedProfileData($request));
+        return redirect()->route('profile.show');
     }
 
     public function updateUserProfile(Request $request): RedirectResponse

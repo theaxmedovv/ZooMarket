@@ -40,7 +40,7 @@
                 <ul class="{{ $zmFooterList }}">
                     <li><a href="#">Biz haqimizda</a></li>
                     <li><a href="#">Xavfsiz xarid qoidalari</a></li>
-                    @guest<li><a href="{{ route('register') }}">Sotuvchi bo'lish</a></li>@endguest
+                    @guest<li><a href="{{ route('register') }}">E'lon joylash</a></li>@endguest
                     <li><a href="#">Foydalanish shartlari</a></li>
                     <li><a href="#">Maxfiylik siyosati</a></li>
                 </ul>

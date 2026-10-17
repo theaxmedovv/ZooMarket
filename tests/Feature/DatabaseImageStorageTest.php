@@ -6,9 +6,9 @@ use App\Models\Category;
 use App\Models\DatabaseImage;
 use App\Models\Post;
 use App\Models\User;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class DatabaseImageStorageTest extends TestCase
@@ -23,11 +23,10 @@ class DatabaseImageStorageTest extends TestCase
     {
         parent::setUp();
 
-        Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web']);
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
+        $this->seed(RolesAndPermissionsSeeder::class);
 
         $this->seller = User::factory()->create();
-        $this->seller->assignRole('seller');
+        $this->seller->assignRole('user');
 
         $this->user = User::factory()->create();
         $this->user->assignRole('user');
@@ -123,7 +122,7 @@ class DatabaseImageStorageTest extends TestCase
             'images' => [$img1, $img2],
         ]);
 
-        $response->assertRedirect(route('posts.index'));
+        $response->assertRedirect(route('posts.show', Post::latest('id')->first()));
 
         $post = Post::where('title', 'Fors mushugi')->firstOrFail();
         $this->assertCount(2, $post->allImages());
@@ -147,7 +146,7 @@ class DatabaseImageStorageTest extends TestCase
 
         // Delete post
         $delResponse = $this->actingAs($this->seller)->delete(route('posts.destroy', $post));
-        $delResponse->assertRedirect(route('posts.index'));
+        $delResponse->assertRedirect(route('posts.index', ['mine' => 1]));
 
         // Verify images deleted from MySQL
         foreach ($post->allImages() as $imgPath) {

@@ -10,7 +10,8 @@ use Spatie\Permission\PermissionRegistrar;
 class RolesAndPermissionsSeeder extends Seeder
 {
     /**
-     * Roles the app relies on: sellers manage listings, users (buyers) browse and request.
+     * Roles the app relies on: every user can both sell (post listings) and buy (request them),
+     * and the main admin reviews every listing before it goes public.
      */
     public function run(): void
     {
@@ -22,10 +23,10 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
         }
 
-        Role::firstOrCreate(['name' => 'seller', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web'])
             ->syncPermissions($permissions);
 
-        Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web'])
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web'])
             ->syncPermissions(['read posts']);
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();

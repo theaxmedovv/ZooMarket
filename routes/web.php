@@ -2,9 +2,12 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\BannerController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImageController;
+use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ProfileController;
@@ -48,11 +51,11 @@ Route::post('/profile/password', [ProfileController::class, 'updatePassword'])
     ->name('profile.password.update');
 
 Route::get('/admin', [AdminController::class, 'index'])
-    ->middleware(['auth', 'role:seller'])
+    ->middleware(['auth', 'role:user'])
     ->name('admin.dashboard');
 
 Route::post('/admin/profile', [AdminController::class, 'updateProfile'])
-    ->middleware(['auth', 'role:seller'])
+    ->middleware(['auth', 'role:user|admin'])
     ->name('admin.profile.update');
 
 Route::get('/home', function () {
@@ -62,7 +65,7 @@ Route::get('/home', function () {
 
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 
-Route::middleware(['auth', 'role:seller'])->group(function () {
+Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
@@ -79,6 +82,10 @@ Route::post('/posts/{post}/like', [PostController::class, 'toggleLike'])
     ->whereNumber('post')
     ->name('posts.like');
 
+Route::get('/favorites', [FavoriteController::class, 'index'])
+    ->middleware(['auth', 'role:user'])
+    ->name('favorites.index');
+
 Route::post('/purchase-requests', [PurchaseRequestController::class, 'store'])
     ->middleware(['auth', 'role:user'])
     ->name('purchase-requests.store');
@@ -93,7 +100,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/chats/{chat}/messages', [ChatController::class, 'store'])->name('chats.messages.store');
 });
 
-Route::middleware(['auth', 'role:seller'])->group(function () {
+Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/admin/purchase-requests', [PurchaseRequestController::class, 'index'])
         ->name('admin.purchase-requests.index');
     Route::get('/admin/archive', [AdminController::class, 'archive'])
@@ -109,4 +116,15 @@ Route::middleware(['auth', 'role:seller'])->group(function () {
         ->name('admin.purchase-requests.mark-sold');
     Route::post('/admin/purchase-requests/{purchaseRequest}/reject', [PurchaseRequestController::class, 'reject'])
         ->name('admin.purchase-requests.reject');
+});
+
+// Main admin: reviews every listing before it is shown to the public
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/moderation', [ModerationController::class, 'index'])->name('moderation.index');
+    Route::post('/moderation/posts/{post}/approve', [ModerationController::class, 'approve'])->name('moderation.approve');
+    Route::post('/moderation/posts/{post}/reject', [ModerationController::class, 'reject'])->name('moderation.reject');
+
+    // Rotating hero slides on the home page
+    Route::resource('banners', BannerController::class)->except('show');
+    Route::patch('/banners/{banner}/toggle', [BannerController::class, 'toggle'])->name('banners.toggle');
 });

@@ -5,7 +5,7 @@
     $me    = auth()->user();
     $other = $chat->otherParticipant($me->id);
     $imgs  = $chat->post?->allImages() ?? [];
-    $isSeller = $other->hasRole('seller');
+    $isSeller = $other->id === $chat->seller_id;
     $avatar = 'flex shrink-0 items-center justify-center rounded-full bg-brand-tint font-bold text-brand';
 @endphp
 
