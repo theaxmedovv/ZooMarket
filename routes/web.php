@@ -11,6 +11,7 @@ use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Stream images directly from MySQL database (zero filesystem storage)
@@ -18,6 +19,8 @@ Route::get('/images/{path}', [ImageController::class, 'show'])->where('path', '.
 Route::get('/storage/{path}', [ImageController::class, 'show'])->where('path', '.*');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+// "Yana 12 tasini ko'rish" on the home page
+Route::get('/more', [HomeController::class, 'more'])->name('home.more');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -59,13 +62,18 @@ Route::post('/admin/profile', [AdminController::class, 'updateProfile'])
     ->name('admin.profile.update');
 
 Route::get('/home', function () {
-    return redirect()->route('posts.index');
+    return redirect()->route('home');
 })->middleware(['auth', 'role:user'])->name('post');
 
-
-Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+// There is no separate listing page any more: old links (bookmarks, banners) land on the home page.
+Route::get('/posts', function (Request $request) {
+    return $request->boolean('mine')
+        ? redirect()->route('posts.mine')
+        : redirect()->route('home', $request->query());
+});
 
 Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::get('/my-posts', [PostController::class, 'mine'])->name('posts.mine');
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');

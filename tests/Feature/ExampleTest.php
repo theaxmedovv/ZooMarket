@@ -84,7 +84,7 @@ class ExampleTest extends TestCase
      */
     public function test_posts_page_loads(): void
     {
-        $response = $this->get('/posts');
+        $response = $this->get('/');
 
         $response->assertStatus(200);
     }
@@ -94,10 +94,10 @@ class ExampleTest extends TestCase
      */
     public function test_posts_page_with_filters_and_sort(): void
     {
-        $response = $this->get('/posts?gender=male&price_min=10&price_max=500&sort=price_asc');
+        $response = $this->get('/?gender=male&price_min=10&price_max=500&sort=price_asc');
 
         $response->assertStatus(200);
-        $response->assertSee('Filtrlar');
+        $response->assertSee('Katalog');
         $response->assertSee('Narx: arzonroq');
     }
 

@@ -76,53 +76,48 @@ class PageRenderTest extends TestCase
 
     public function test_guest_pages_render_with_site_chrome(): void
     {
-        foreach (['/', '/posts', "/posts/{$this->post->id}", '/login', '/register'] as $url) {
+        foreach (['/', '/?q=Mushuk', "/posts/{$this->post->id}", '/login', '/register'] as $url) {
             $this->get($url)->assertOk()->assertSee('id="zmHeader"', false)->assertSee('id="zmFooter"', false);
         }
     }
 
-    public function test_header_search_form_carries_the_filters(): void
+    public function test_header_has_katalog_left_of_search_and_no_filter_panel(): void
     {
         $category = Category::firstWhere('name', 'Mushuk');
 
-        $html = $this->get('/posts?' . http_build_query([
-            'q' => 'britan', 'category_id' => $category->id, 'gender' => 'female', 'price_min' => 100, 'location' => 'Toshkent',
-        ]))->assertOk()->getContent();
+        $html = $this->get('/?' . http_build_query(['q' => 'britan', 'category_id' => $category->id]))
+            ->assertOk()->getContent();
 
-        // One form handles search and filters; the old in-page filter bar is gone.
         $this->assertSame(1, substr_count($html, 'id="zmSearchForm"'));
-        $this->assertStringNotContainsString('search-filter-hero', $html);
-        $this->assertStringContainsString('id="zmFilterPanel"', $html);
+        $this->assertStringNotContainsString('zmFilterPanel', $html);
 
-        // Current values are pre-filled and the active-filter count is shown.
+        // Katalog comes before the search form and lists every category
+        $this->assertLessThan(strpos($html, 'id="zmSearchForm"'), strpos($html, 'aria-controls="zmCatalog"'));
+        $menu = substr($html, strpos($html, 'id="zmCatalog"'), 3000);
+        $this->assertStringContainsString('category_id=' . $category->id, $menu);
+
         $this->assertMatchesRegularExpression('/name="q" value="britan"/', $html);
-        $this->assertMatchesRegularExpression('/<option value="' . $category->id . '" selected>/', $html);
-        $this->assertMatchesRegularExpression('/name="gender" value="female" checked/', $html);
-        $this->assertStringContainsString('value="Toshkent"', $html);
-        $this->assertStringContainsString('4 ta filtr faol', $html);
     }
 
-    public function test_my_listings_get_search_without_filter_panel(): void
+    public function test_my_listings_search_targets_my_listings(): void
     {
-        $this->actingAs($this->seller)->get('/posts?mine=1')
+        $this->actingAs($this->seller)->get('/my-posts')
             ->assertOk()
-            ->assertSee('id="zmSearchForm"', false)
-            ->assertSee('name="mine" value="1"', false)
-            ->assertDontSee('id="zmFilterPanel"', false);
+            ->assertSee('action="' . route('posts.mine') . '"', false)
+            ->assertDontSee('zmFilterPanel', false);
     }
 
-    public function test_storefront_shows_filters_to_logged_in_users(): void
+    public function test_old_listing_page_links_land_on_the_home_page(): void
     {
-        $this->actingAs($this->seller)->get('/posts')
-            ->assertOk()
-            ->assertSee('id="zmFilterPanel"', false);
+        $this->get('/posts?category_id=3&sort=price_asc')->assertRedirect(route('home', ['category_id' => 3, 'sort' => 'price_asc']));
+        $this->actingAs($this->seller)->get('/posts?mine=1')->assertRedirect(route('posts.mine'));
     }
 
     public function test_buyer_pages_render_with_site_chrome(): void
     {
         $this->actingAs($this->buyer);
 
-        foreach (['/', '/posts', "/posts/{$this->post->id}", '/profile', '/favorites', '/user/purchase-requests', '/chats', "/chats/{$this->chat->id}"] as $url) {
+        foreach (['/', '/?q=Mushuk', "/posts/{$this->post->id}", '/profile', '/favorites', '/user/purchase-requests', '/chats', "/chats/{$this->chat->id}"] as $url) {
             $this->get($url)->assertOk()->assertSee('id="zmHeader"', false)->assertSee('aria-label="Buyurtmalar"', false);
         }
     }
@@ -142,7 +137,7 @@ class PageRenderTest extends TestCase
 
         // One account both sells and buys: selling and buying entry points share the same chrome.
         $this->actingAs($this->seller);
-        foreach (['/posts', '/posts?mine=1', "/posts/{$this->post->id}", '/profile', '/favorites', '/admin/purchase-requests', '/admin/archive', '/user/purchase-requests', '/chats'] as $url) {
+        foreach (['/?q=Mushuk', '/my-posts', "/posts/{$this->post->id}", '/profile', '/favorites', '/admin/purchase-requests', '/admin/archive', '/user/purchase-requests', '/chats'] as $url) {
             [$chrome, $main] = $split($this->get($url)->assertOk()->getContent());
             $this->assertSame(1, $count($chrome, '/posts/create'), "{$url}: 'Yangi e'lon' must appear once in the chrome");
             $this->assertSame(1, $count($chrome, '/admin/purchase-requests'), "{$url}: 'So'rovlar' must appear once in the chrome");
@@ -165,7 +160,7 @@ class PageRenderTest extends TestCase
         $this->actingAs($this->seller);
 
         foreach ([
-            '/posts', '/posts/create', "/posts/{$this->post->id}", "/posts/{$this->post->id}/edit",
+            '/', '/my-posts', '/posts/create', "/posts/{$this->post->id}", "/posts/{$this->post->id}/edit",
             '/profile', '/admin/purchase-requests', '/admin/archive', '/chats', "/chats/{$this->chat->id}",
         ] as $url) {
             $response = $this->get($url);

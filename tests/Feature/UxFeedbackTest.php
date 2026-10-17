@@ -73,8 +73,8 @@ class UxFeedbackTest extends TestCase
     {
         $post = $this->makePost();
 
-        $this->actingAs($this->buyer)->from(route('posts.index'))->post(route('posts.like', $post))
-            ->assertRedirect(route('posts.index'))
+        $this->actingAs($this->buyer)->from(route('home'))->post(route('posts.like', $post))
+            ->assertRedirect(route('home'))
             ->assertSessionHas('success');
     }
 
@@ -112,19 +112,19 @@ class UxFeedbackTest extends TestCase
         $post = $this->makePost();
         $this->buyer->likedPosts()->attach($post->id);
 
-        $this->actingAs($this->buyer)->get(route('posts.index'))
+        $this->actingAs($this->buyer)->get(route('home'))
             ->assertOk()
             ->assertSee(route('favorites.index'), false)
             ->assertSeeInOrder(['data-favorites-count', '>1<'], false);
     }
 
-    public function test_listing_pagination_uses_site_markup(): void
+    public function test_my_listings_pagination_uses_site_markup(): void
     {
-        foreach (range(1, 13) as $i) {
+        foreach (range(1, 21) as $i) {
             $this->makePost(['title' => "Mushuk {$i}"]);
         }
 
-        $this->get(route('posts.index'))
+        $this->actingAs($this->seller)->get(route('posts.mine'))
             ->assertOk()
             ->assertSee('aria-label="Sahifalar"', false)
             ->assertSee('rel="next"', false);

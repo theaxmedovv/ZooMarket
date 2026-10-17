@@ -45,6 +45,12 @@
 }
 
 @layer base {
+    /* Pin the rem base: otherwise a browser set to a smaller/larger default font
+       shrinks every rem-sized control while px-sized parts stay, and the layout drifts.
+       Page zoom (Ctrl +/-) still scales everything evenly. */
+    html {
+        font-size: 16px;
+    }
     body {
         @apply bg-white font-sans text-ink antialiased;
     }

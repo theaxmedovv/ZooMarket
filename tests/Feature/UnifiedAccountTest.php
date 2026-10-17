@@ -66,7 +66,7 @@ class UnifiedAccountTest extends TestCase
             'email' => 'vali@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-        ])->assertRedirect(route('posts.index'));
+        ])->assertRedirect(route('home'));
 
         $user = User::where('email', 'vali@example.com')->firstOrFail();
         $this->assertTrue($user->hasRole('user'));
@@ -145,14 +145,14 @@ class UnifiedAccountTest extends TestCase
         $other = $this->makeListing($this->bob);
         $other->update(['title' => 'Bobning e\'loni']);
 
-        $this->actingAs($this->alice)->get(route('posts.index', ['mine' => 1]))
+        $this->actingAs($this->alice)->get(route('posts.mine'))
             ->assertOk()
             ->assertSee("Mening e&#039;lonlarim", false)
             ->assertSee("Mening tekshiruvdagi e&#039;lonim", false)
             ->assertDontSee("Bobning e&#039;loni", false);
 
         // The storefront shows only approved listings, including other people's
-        $this->actingAs($this->alice)->get(route('posts.index'))
+        $this->actingAs($this->alice)->get(route('home'))
             ->assertOk()
             ->assertSee("Bobning e&#039;loni", false)
             ->assertDontSee("Mening tekshiruvdagi e&#039;lonim", false);

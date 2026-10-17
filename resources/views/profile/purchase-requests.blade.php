@@ -137,7 +137,7 @@
             </div>
         @empty
             <x-empty-state icon="bi-bag-x" title="Buyurtmalar topilmadi" text="Hozircha siz tomonidan yuborilgan xarid so'rovlari mavjud emas.">
-                <a href="{{ route('posts.index') }}" class="btn btn-primary"><i class="bi bi-compass"></i> E'lonlarni ko'rish va xarid qilish</a>
+                <a href="{{ route('home') }}" class="btn btn-primary"><i class="bi bi-compass"></i> E'lonlarni ko'rish va xarid qilish</a>
             </x-empty-state>
         @endforelse
     </div>

@@ -25,7 +25,7 @@
         <div class="flex flex-col gap-6 xl:col-span-7">
             <x-panel title="Mening e'lonlarim" subtitle="Siz joylagan e'lonlar">
                 <x-slot:action>
-                    <a href="{{ route('posts.index', ['mine' => 1]) }}" class="{{ $panelLink }}">Hammasi <i class="bi bi-arrow-right"></i></a>
+                    <a href="{{ route('posts.mine') }}" class="{{ $panelLink }}">Barchasini ko'rish <i class="bi bi-arrow-right"></i></a>
                 </x-slot:action>
 
                 <div class="divide-y divide-line">

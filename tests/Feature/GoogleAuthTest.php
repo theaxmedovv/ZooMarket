@@ -58,7 +58,7 @@ class GoogleAuthTest extends TestCase
         $this->fakeGoogleUser();
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('posts.index'));
+            ->assertRedirect(route('home'));
 
         $user = User::where('email', 'ali@gmail.com')->firstOrFail();
         $this->assertAuthenticatedAs($user);

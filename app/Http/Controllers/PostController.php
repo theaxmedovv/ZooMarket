@@ -9,6 +9,7 @@ use App\Models\Post;
 use App\Models\PurchaseRequest;
 use App\Services\DatabaseImageService;
 use App\Services\GroqModerationService;
+use App\Support\ListingFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
@@ -28,143 +29,22 @@ class PostController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * "Mening e'lonlarim": the user's own listings in every moderation state.
+     * The public storefront (search, filters, categories) is the home page.
      */
-    public function index(Request $request)
+    public function mine(Request $request)
     {
-        if (auth()->check()) {
-            Gate::authorize('read posts');
-        }
-
         $search = trim((string) $request->query('q', ''));
-        // ?mine=1: the user's own listings in every moderation state, instead of the storefront
-        $mine = auth()->check() && $request->boolean('mine');
-        $canUseFilters = ! $mine && (! auth()->check() || auth()->user()->hasRole('user'));
-        $categoryId = $request->integer('category_id');
-        $gender = (string) $request->query('gender', '');
-        $location = trim((string) $request->query('location', ''));
-        $currency = (string) $request->query('currency', '');
-        $priceMin = $request->query('price_min');
-        $priceMax = $request->query('price_max');
-        $sort = (string) $request->query('sort', 'latest');
 
-        if (! $canUseFilters) {
-            $categoryId = null;
-            $gender = '';
-            $location = '';
-            $currency = '';
-            $priceMin = null;
-            $priceMax = null;
-            $sort = 'latest';
-        }
+        $posts = Post::with(['user', 'category'])
+            ->where('user_id', $request->user()->id)
+            ->whereNotIn('status', ['sold', 'archived'])
+            ->when($search !== '', fn ($q) => ListingFilters::applySearch($q, $search))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
 
-        $availableCategoryIds = Category::query()->pluck('id')->all();
-        $allowedGenders = ['male', 'female'];
-        $allowedCurrencies = ['UZS', 'USD', 'EUR', 'RUB'];
-        $allowedSorts = ['latest', 'price_asc', 'price_desc', 'oldest'];
-
-        if (! in_array($categoryId, $availableCategoryIds, true)) {
-            $categoryId = null;
-        }
-
-        if (! in_array($gender, $allowedGenders, true)) {
-            $gender = '';
-        }
-
-        if (! in_array($currency, $allowedCurrencies, true)) {
-            $currency = '';
-        }
-
-        if (! in_array($sort, $allowedSorts, true)) {
-            $sort = 'latest';
-        }
-
-        $priceMin = is_numeric($priceMin) ? (float) $priceMin : null;
-        $priceMax = is_numeric($priceMax) ? (float) $priceMax : null;
-
-        $postsQuery = Post::with(['user', 'category'])
-            ->whereNotIn('status', ['sold', 'archived']);
-
-        if ($mine) {
-            $postsQuery->where('user_id', auth()->id());
-        } else {
-            $postsQuery->where('moderation_status', 'approved');
-        }
-
-        $postsQuery->when($categoryId, function ($query) use ($categoryId) {
-                $query->where('category_id', $categoryId);
-            })
-            ->when($gender !== '', function ($query) use ($gender) {
-                $query->where('gender', $gender);
-            })
-            ->when($location !== '', function ($query) use ($location) {
-                $query->where('location', 'like', "%{$location}%");
-            })
-            ->when($currency !== '', function ($query) use ($currency) {
-                $query->where('currency', $currency);
-            })
-            ->when($priceMin !== null, function ($query) use ($priceMin) {
-                $query->where('price', '>=', $priceMin);
-            })
-            ->when($priceMax !== null, function ($query) use ($priceMax) {
-                $query->where('price', '<=', $priceMax);
-            })
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('breed', 'like', "%{$search}%")
-                        ->orWhere('location', 'like', "%{$search}%")
-                        ->orWhereHas('user', function ($userQuery) use ($search) {
-                            $userQuery->where('name', 'like', "%{$search}%");
-                        })
-                        ->orWhereHas('category', function ($categoryQuery) use ($search) {
-                            $categoryQuery->where('name', 'like', "%{$search}%");
-                        });
-                });
-            });
-
-        if ($sort === 'price_asc') {
-            $postsQuery->orderBy('price', 'asc');
-        } elseif ($sort === 'price_desc') {
-            $postsQuery->orderBy('price', 'desc');
-        } elseif ($sort === 'oldest') {
-            $postsQuery->oldest();
-        } else {
-            $postsQuery->latest();
-        }
-
-        if (auth()->check()) {
-            $postsQuery->withCount('likedByUsers');
-        }
-
-        $posts = $postsQuery->paginate(12)->withQueryString();
-
-        $likedPostIds = auth()->check()
-            ? auth()->user()->likedPosts()->pluck('posts.id')->all()
-            : [];
-
-        $requestedAnimalIds = auth()->check() && auth()->user()->hasRole('user')
-            ? PurchaseRequest::query()
-                ->where('user_id', auth()->id())
-                ->whereIn('status', ['pending', 'approved'])
-                ->pluck('animal_id')
-                ->all()
-            : [];
-
-        $categories = Category::query()->orderBy('name')->get();
-
-        $activeFilters = [
-            'category_id' => $categoryId,
-            'gender' => $gender,
-            'location' => $location,
-            'currency' => $currency,
-            'price_min' => $priceMin,
-            'price_max' => $priceMax,
-            'sort' => $sort,
-        ];
-
-        return view('posts.index', compact('posts', 'search', 'mine', 'likedPostIds', 'requestedAnimalIds', 'categories', 'activeFilters'));
+        return view('posts.mine', compact('posts', 'search'));
     }
 
     /**
@@ -477,7 +357,7 @@ class PostController extends Controller
             $post->delete();
         });
 
-        return redirect()->route('posts.index', ['mine' => 1])->with('success', 'E\'lon muvaffaqiyatli o\'chirildi va tegishli so\'rovlar yangilandi.');
+        return redirect()->route('posts.mine')->with('success', 'E\'lon muvaffaqiyatli o\'chirildi va tegishli so\'rovlar yangilandi.');
     }
 
     public function toggleLike(Request $request, Post $post)

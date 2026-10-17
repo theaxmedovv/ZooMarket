@@ -7,7 +7,7 @@
     @if($chats->isEmpty())
         <x-empty-state icon="bi-chat-square-dots" title="Hozircha xabarlar yo'q"
             text="Xarid so'rovi tasdiqlangandan so'ng, ushbu sahifada sotuvchi va xaridor o'rtasida avtomatik chat ochiladi.">
-            <a href="{{ route('posts.index') }}" class="btn btn-primary"><i class="bi bi-compass"></i> Marketplace'ga o'tish</a>
+            <a href="{{ route('home') }}" class="btn btn-primary"><i class="bi bi-compass"></i> Marketplace'ga o'tish</a>
         </x-empty-state>
     @else
         <div class="flex flex-col gap-3">

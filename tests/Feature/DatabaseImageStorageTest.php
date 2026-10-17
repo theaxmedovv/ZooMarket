@@ -146,7 +146,7 @@ class DatabaseImageStorageTest extends TestCase
 
         // Delete post
         $delResponse = $this->actingAs($this->seller)->delete(route('posts.destroy', $post));
-        $delResponse->assertRedirect(route('posts.index', ['mine' => 1]));
+        $delResponse->assertRedirect(route('posts.mine'));
 
         // Verify images deleted from MySQL
         foreach ($post->allImages() as $imgPath) {

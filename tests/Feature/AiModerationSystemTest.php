@@ -98,7 +98,7 @@ class AiModerationSystemTest extends TestCase
         $response->assertSessionHas('info');
 
         // Passing the AI check is not enough: buyers only see it once the main admin approves
-        $publicResponse = $this->actingAs($this->buyer)->get(route('posts.index'));
+        $publicResponse = $this->actingAs($this->buyer)->get(route('home'));
         $publicResponse->assertStatus(200);
         $publicResponse->assertDontSee('Britaniya zotli sog\'lom mushukcha');
     }
@@ -150,7 +150,7 @@ class AiModerationSystemTest extends TestCase
         $response->assertSessionHas('warning');
 
         // Verify HIDDEN from public marketplace
-        $publicMarketResponse = $this->actingAs($this->buyer)->get(route('posts.index'));
+        $publicMarketResponse = $this->actingAs($this->buyer)->get(route('home'));
         $publicMarketResponse->assertStatus(200);
         $publicMarketResponse->assertDontSee('Noyob Qor bars bolasi');
 
@@ -233,7 +233,7 @@ class AiModerationSystemTest extends TestCase
         $this->assertNull($post->moderation_reason);
 
         // Back in the admin queue, so still hidden from buyers
-        $marketplaceResponse = $this->actingAs($this->buyer)->get(route('posts.index'));
+        $marketplaceResponse = $this->actingAs($this->buyer)->get(route('home'));
         $marketplaceResponse->assertDontSee('Fors mushugi', false);
     }
 
@@ -260,7 +260,7 @@ class AiModerationSystemTest extends TestCase
         ]);
 
         // Buyer cannot see on index
-        $buyerIndex = $this->actingAs($this->buyer)->get(route('posts.index'));
+        $buyerIndex = $this->actingAs($this->buyer)->get(route('home'));
         $buyerIndex->assertDontSee('Tekshiruvdagi quyoncha');
 
         // Buyer cannot view show page

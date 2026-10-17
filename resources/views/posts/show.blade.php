@@ -27,9 +27,9 @@
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3 text-sm">
         <nav aria-label="breadcrumb" class="min-w-0">
             <ol class="flex min-w-0 items-center [&>li+li]:before:px-1.5 [&>li+li]:before:text-muted [&>li+li]:before:content-['›']">
-                <li class="whitespace-nowrap"><a href="{{ route('posts.index') }}" class="font-semibold text-brand">E'lonlar</a></li>
+                <li class="whitespace-nowrap"><a href="{{ route('home') }}" class="font-semibold text-brand">Bosh sahifa</a></li>
                 @if($post->category)
-                    <li class="whitespace-nowrap"><a href="{{ route('posts.index', ['category_id' => $post->category_id]) }}" class="font-semibold text-brand">{{ $post->category->name }}</a></li>
+                    <li class="whitespace-nowrap"><a href="{{ route('home', ['category_id' => $post->category_id]) }}" class="font-semibold text-brand">{{ $post->category->name }}</a></li>
                 @endif
                 <li class="min-w-0 truncate font-semibold text-ink" aria-current="page">{{ Str::limit($post->title, 40) }}</li>
             </ol>

@@ -9,49 +9,83 @@
 </head>
 <body class="flex min-h-dvh flex-col text-[15px] leading-[1.45]">
 @php
-    // Slides: [background, eyebrow, heading, offer html, link, button, emoji, image url].
-    // The main admin's banners come first, then the built-in ones.
-    $slides = $banners->map(fn ($b) => [
-        $b->color, $b->eyebrow, $b->title, $b->offerHtml(), $b->link,
-        $b->link ? ($b->button_text ?: 'Batafsil') : null, $b->emoji, $b->imageUrl(),
-    ])->all();
-    $slides[] = ['#212844', "Eng yaxshi e'lonlar onlayn", "Sodiq do'stlar.", $stats['posts'] > 0 ? "Barcha hayvonlar — <b>{$stats['posts']}</b> ta e'lon" : "Birinchi e'lonlar <b>tez orada</b>", route('posts.index'), "Ko'rish", '🐕', null];
-    $slides[] = ['#1f3a5f', "Har kuni yangi e'lonlar", 'Mushuklar olami.', 'Narxlar — <b>kelishiladi</b>', route('posts.index', ['sort' => 'latest']), 'Yangilari', '🐈', null];
-    // Every account can sell: guests are sent to sign up, users straight to a new listing.
-    if (! auth()->user()?->hasRole('admin')) {
-        $slides[] = ['#2d2350', 'Sotmoqchimisiz?', "Bepul e'lon bering.", '<b>' . e($stats['sellers']) . '</b> sotuvchi bizga ishonadi', auth()->check() ? route('posts.create') : route('register'), auth()->check() ? "E'lon berish" : 'Boshlash', '🦜', null];
+    // Two views of the one storefront page: search results ($results), or hero + "Eng arzon narxlarda" + "Mashhurlar".
+    $isResults = isset($results);
+    $grid = 'grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+    $moreButton = 'btn h-12 rounded-xl border-brand bg-white px-6 text-brand hover:bg-brand-soft';
+
+    if (! $isResults) {
+        // Slides: [background, eyebrow, heading, offer html, link, button, emoji, image url].
+        // The main admin's banners come first, then the built-in ones.
+        $slides = $banners->map(fn ($b) => [
+            $b->color, $b->eyebrow, $b->title, $b->offerHtml(), $b->link,
+            $b->link ? ($b->button_text ?: 'Batafsil') : null, $b->emoji, $b->imageUrl(),
+        ])->all();
+        $slides[] = ['#212844', "Eng yaxshi e'lonlar onlayn", "Sodiq do'stlar.", $stats['posts'] > 0 ? "Sotuvda — <b>{$stats['posts']}</b> ta e'lon" : "Birinchi e'lonlar <b>tez orada</b>", '#mashhurlar', "Ko'rish", '🐕', null];
+        $slides[] = ['#1f3a5f', "Hamyonbop narxlar", 'Mushuklar olami.', 'Narxlar — <b>kelishiladi</b>', '#eng-arzon', 'Arzonlari', '🐈', null];
+        // Every account can sell: guests are sent to sign up, users straight to a new listing.
+        if (! auth()->user()?->hasRole('admin')) {
+            $slides[] = ['#2d2350', 'Sotmoqchimisiz?', "Bepul e'lon bering.", '<b>' . e($stats['sellers']) . '</b> sotuvchi bizga ishonadi', auth()->check() ? route('posts.create') : route('register'), auth()->check() ? "E'lon berish" : 'Boshlash', '🦜', null];
+        }
+    } else {
+        $sorts = [
+            'latest' => ['bi-clock', 'Eng yangilari'],
+            'price_asc' => ['bi-arrow-up-circle', 'Narx: arzonroq'],
+            'price_desc' => ['bi-arrow-down-circle', 'Narx: qimmatroq'],
+            'oldest' => ['bi-calendar', 'Eng eskisi'],
+        ];
+        $f = $filters;
+        $resultsTitle = match (true) {
+            (bool) $category => $category->name,
+            $f->search !== '' => '"' . $f->search . "\" bo'yicha",
+            default => 'Qidiruv natijalari',
+        };
+        // Removable chips: [query keys to drop, label]
+        $chips = array_values(array_filter([
+            $f->search !== '' ? [['q'], 'Qidiruv: "' . $f->search . '"'] : null,
+            $category ? [['category_id'], $category->name] : null,
+            $f->gender !== '' ? [['gender'], 'Jinsi: ' . ($f->gender === 'male' ? 'Erkak ♂' : "Urg'ochi ♀")] : null,
+            $f->location !== '' ? [['location'], 'Manzil: ' . $f->location] : null,
+            $f->currency !== '' ? [['currency'], 'Valyuta: ' . $f->currency] : null,
+            ($f->priceMin !== null || $f->priceMax !== null) ? [['price_min', 'price_max'], 'Narx: ' . ($f->priceMin ?? '0') . ' — ' . ($f->priceMax ?? '∞')] : null,
+        ]));
+        $menu = 'absolute top-[calc(100%+4px)] right-0 z-20 min-w-[170px] rounded-[10px] border border-line bg-white p-1.5 shadow-lg';
+        $menuItem = 'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] text-ink hover:bg-brand/12 hover:text-brand current:bg-brand/12 current:text-brand';
+        $chip = 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors';
     }
-    // Horizontal product rail: 2.2 cards on phones up to 5 on wide screens.
-    $rail = 'no-scrollbar grid snap-x snap-mandatory auto-cols-[calc((100%-14px)/2.2)] grid-flow-col gap-3.5 overflow-x-auto px-0.5 pt-0.5 pb-2.5 *:snap-start md:auto-cols-[calc((100%-36px)/3)] md:gap-[18px] lg:auto-cols-[calc((100%-54px)/4)] min-[1200px]:auto-cols-[calc((100%-72px)/5)]';
 @endphp
 
 @include('partials.site-header')
 
 <main class="wrap pb-16">
 
+@if($isResults)
+    @include('partials.home-results')
+@else
     {{-- ============ Hero ============ --}}
     <section class="relative mt-2" id="hero">
-        <div class="overflow-hidden rounded-[20px]">
-            <div class="flex transition-transform duration-600 ease-[cubic-bezier(.2,.7,.2,1)]" data-hero-track>
+        {{-- md+: the banner keeps a fixed shape, height = 33.308824% of the width (the padding-bottom trick) --}}
+        <div class="relative overflow-hidden rounded-[20px] md:pb-[33.308824%]">
+            <div class="flex transition-transform duration-600 ease-[cubic-bezier(.2,.7,.2,1)] md:absolute md:inset-0" data-hero-track>
                 @foreach($slides as [$bg, $eyebrow, $heading, $offer, $href, $cta, $art, $image])
-                    <div style="background-color: {{ $bg }}" class="relative grid min-h-[280px] min-w-full grid-cols-1 items-center overflow-hidden px-6 py-8 text-white md:min-h-[316px] md:grid-cols-[1.1fr_1fr] md:px-[70px] md:py-9 xl:px-[90px]">
+                    <div style="background-color: {{ $bg }}" class="relative grid min-h-[280px] min-w-full grid-cols-1 items-center overflow-hidden px-6 py-8 text-white md:grid-cols-[1.1fr_1fr] md:px-[70px] md:py-9 xl:px-[90px]">
                         @if($image)
                             {{-- Photo banner: the picture fills the slide, a shade keeps the text readable --}}
                             <img src="{{ $image }}" alt="" class="absolute inset-0 size-full object-cover" @unless($loop->first) loading="lazy" @endunless>
                             <span class="absolute inset-0 bg-linear-to-r from-black/75 via-black/45 to-black/5" aria-hidden="true"></span>
                         @else
-                            <span class="absolute top-1/2 right-[12%] hidden size-[330px] -translate-y-1/2 rounded-full border-[60px] border-white/6 md:block" aria-hidden="true"></span>
+                            <span class="absolute top-1/2 right-[10%] hidden size-[330px] lg:size-[440px] -translate-y-1/2 rounded-full border-[60px] border-white/6 md:block" aria-hidden="true"></span>
                         @endif
                         <div class="relative">
-                            @if($eyebrow)<p class="mb-3 text-[17px] font-semibold">{{ $eyebrow }}</p>@endif
-                            <h2 class="mb-3.5 text-[clamp(34px,4.4vw,52px)] leading-[1.05] font-black tracking-[.01em] uppercase">{{ $heading }}</h2>
-                            @if($offer)<p class="mb-[22px] text-xl font-bold [&_b]:text-[#ffd12e]">{!! $offer !!}</p>@endif
+                            @if($eyebrow)<p class="mb-3 text-[17px] font-semibold md:mb-4 md:text-xl">{{ $eyebrow }}</p>@endif
+                            <h2 class="mb-3.5 text-[clamp(34px,5.2vw,68px)] leading-[1.05] md:mb-5 font-black tracking-[.01em] uppercase">{{ $heading }}</h2>
+                            @if($offer)<p class="mb-[22px] text-xl font-bold md:mb-7 md:text-2xl [&_b]:text-[#ffd12e]">{!! $offer !!}</p>@endif
                             @if($href)
-                                <a href="{{ $href }}" @if(str_starts_with($href, 'http')) target="_blank" rel="noopener" @endif class="inline-flex items-center gap-2 rounded-lg bg-white px-[22px] py-[11px] text-sm font-extrabold text-navy hover:bg-brand hover:text-white">{{ $cta }} <i class="bi bi-arrow-right"></i></a>
+                                <a href="{{ $href }}" @if(str_starts_with($href, 'http')) target="_blank" rel="noopener" @endif class="inline-flex items-center gap-2 rounded-lg bg-white px-[22px] py-[11px] text-sm font-extrabold text-navy md:px-7 md:py-3.5 md:text-base hover:bg-brand hover:text-white">{{ $cta }} <i class="bi bi-arrow-right"></i></a>
                             @endif
                         </div>
                         @if($art && ! $image)
-                            <div class="absolute right-3 bottom-2 text-[110px] leading-none opacity-45 drop-shadow-[0_18px_30px_rgba(0,0,0,.35)] md:relative md:right-auto md:bottom-auto md:justify-self-center md:text-[150px] md:opacity-100 lg:text-[200px]">{{ $art }}</div>
+                            <div class="absolute right-3 bottom-2 text-[110px] leading-none opacity-45 drop-shadow-[0_18px_30px_rgba(0,0,0,.35)] md:relative md:right-auto md:bottom-auto md:justify-self-center md:text-[170px] md:opacity-100 lg:text-[260px]">{{ $art }}</div>
                         @endif
                     </div>
                 @endforeach
@@ -63,19 +97,33 @@
         <div class="mt-4 flex justify-center gap-2" data-hero-dots></div>
     </section>
 
-    {{-- ============ Latest listings ============ --}}
-    <x-home-section :href="route('posts.index', ['sort' => 'latest'])" :rail="$latestPosts->count() > 5 ? 'railLatest' : null">
-        <x-slot:title>Eng yangi <span>e'lonlar</span></x-slot:title>
-        @if($latestPosts->isNotEmpty())
-            <div class="{{ $rail }}" id="railLatest">
-                @foreach($latestPosts as $post)
-                    @include('partials.home-card', ['post' => $post, 'likedPostIds' => $likedPostIds])
-                @endforeach
+    {{-- ============ Popular: most liked first, 12 more per click ============ --}}
+    <x-home-section id="mashhurlar">
+        <x-slot:title><span>Mashhurlar</span></x-slot:title>
+        @if($popular->isNotEmpty())
+            <div class="{{ $grid }}" id="popularGrid">
+                @include('partials.post-cards', ['posts' => $popular])
             </div>
+            @if($moreUrl)
+                <div class="mt-8 flex justify-center">
+                    <button type="button" data-load-more="{{ $moreUrl }}" data-load-into="popularGrid" class="{{ $moreButton }}"><i class="bi bi-arrow-down-circle"></i> Yana 12 tasini ko'rish</button>
+                </div>
+            @endif
         @else
             <div class="rounded-2xl border border-dashed border-[#d9d9d9] px-5 py-11 text-center font-semibold text-faint"><span class="mb-1.5 block text-[50px]">🐾</span>Hozircha e'lonlar yo'q. Tez orada bu yerda yangi do'stlar paydo bo'ladi!</div>
         @endif
     </x-home-section>
+
+    {{-- ============ Cheapest: the four lowest prices (in so'm) that can still be bought ============ --}}
+    @if($cheapest->isNotEmpty())
+        <x-home-section id="eng-arzon">
+            <x-slot:title>Eng arzon <span>narxlarda</span></x-slot:title>
+            <div class="{{ $grid }}">
+                @include('partials.post-cards', ['posts' => $cheapest])
+            </div>
+        </x-home-section>
+    @endif
+@endif
 </main>
 
 @include('partials.site-footer')

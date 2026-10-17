@@ -70,7 +70,7 @@ class AdminModerationTest extends TestCase
             ->assertSee('admin tekshiruvida', false);
 
         $this->actingAs($this->buyer)->get(route('posts.show', $post))->assertNotFound();
-        $this->actingAs($this->buyer)->get(route('posts.index'))->assertDontSee('Labrador kuchukcha');
+        $this->actingAs($this->buyer)->get(route('home'))->assertDontSee('Labrador kuchukcha');
 
         $this->actingAs($this->admin)->get(route('moderation.index'))
             ->assertOk()
@@ -94,7 +94,7 @@ class AdminModerationTest extends TestCase
         $this->assertSame('approved', $post->moderation_status);
         $this->assertSame($this->admin->id, $post->moderated_by);
 
-        $this->actingAs($this->buyer)->get(route('posts.index'))->assertSee('Labrador kuchukcha');
+        $this->actingAs($this->buyer)->get(route('home'))->assertSee('Labrador kuchukcha');
         $this->actingAs($this->buyer)->get(route('posts.show', $post))->assertOk();
     }
 

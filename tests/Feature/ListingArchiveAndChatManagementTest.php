@@ -231,7 +231,7 @@ class ListingArchiveAndChatManagementTest extends TestCase
         $response = $this->actingAs($this->seller)
             ->delete(route('posts.destroy', $post));
 
-        $response->assertRedirect(route('posts.index', ['mine' => 1]));
+        $response->assertRedirect(route('posts.mine'));
 
         $req->refresh();
         $this->assertSame('rejected', $req->status);

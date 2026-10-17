@@ -80,7 +80,7 @@ class BannerController extends Controller
             'eyebrow' => ['nullable', 'string', 'max:80'],
             'title' => ['required', 'string', 'max:80'],
             'offer' => ['nullable', 'string', 'max:140'],
-            // Site paths ("/posts?...") or full http(s) links only — never javascript: and the like.
+            // Site paths ("/?category_id=...") or full http(s) links only — never javascript: and the like.
             'link' => ['nullable', 'string', 'max:255', 'regex:#^(https?://[^\s]+|/(?!/)[^\s]*)$#i'],
             'button_text' => ['nullable', 'string', 'max:30'],
             'emoji' => ['nullable', 'string', 'max:16'],

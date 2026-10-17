@@ -2,24 +2,14 @@
     $zmUser = auth()->user();
     $zmIsAdmin = $zmUser?->hasRole('admin') ?? false;
     $zmProfileUrl = $zmUser ? route('profile.show') : route('login');
-    // Every account both sells and buys; "my listings" is the listing page with ?mine=1.
-    $zmMine = request()->routeIs('posts.index') && $zmUser && request()->boolean('mine');
+    // The home page is the one storefront: search and category links all show their results there.
+    // "My listings" has its own page and searches only the user's own listings.
+    $zmMine = request()->routeIs('posts.mine');
     $zmCategories = $navCategories ?? collect();
-    $zmActiveCategory = (int) request()->query('category_id');
-    // On the listing page, switching category keeps the other active filters.
-    $zmKeep = request()->routeIs('posts.index') ? request()->except('category_id', 'page', 'mine') : [];
-    // Filters only apply to the storefront (the listing controller ignores them on "my listings").
-    $zmCanFilter = ! $zmMine && ! $zmIsAdmin;
-    $zmOnListing = request()->routeIs('posts.index');
-    $zmF = [
-        'category_id' => $zmOnListing ? (string) request('category_id', '') : '',
-        'gender' => $zmOnListing ? (string) request('gender', '') : '',
-        'currency' => $zmOnListing ? (string) request('currency', '') : '',
-        'price_min' => $zmOnListing ? (string) request('price_min', '') : '',
-        'price_max' => $zmOnListing ? (string) request('price_max', '') : '',
-        'location' => $zmOnListing ? (string) request('location', '') : '',
-    ];
-    $zmFilterCount = count(array_filter($zmF, fn ($v) => $v !== ''));
+    $zmOnListing = request()->routeIs('home');
+    $zmActiveCategory = $zmOnListing ? (int) request()->query('category_id') : 0;
+    // On the home page, switching category keeps the other active filters.
+    $zmKeep = $zmOnListing ? request()->except('category_id', 'page') : [];
     $zmUnread = (int) ($globalUnreadCount ?? 0);
     $zmFavorites = (int) ($favoritesCount ?? 0);
 
@@ -42,12 +32,9 @@
 
     // Shared class lists for the chrome below.
     $zmBadge = 'grid h-[18px] min-w-[18px] place-items-center rounded-full bg-hot px-[5px] text-[11px] leading-none font-extrabold not-italic text-white';
-    $zmAction = 'relative inline-flex h-11 cursor-pointer items-center gap-2 rounded-[10px] px-2 font-bold whitespace-nowrap text-muted hover:bg-brand-soft hover:text-brand current:bg-brand-soft current:text-brand md:px-3';
-    $zmActionIcon = 'text-[21px] leading-none text-brand';
+    $zmAction = 'relative inline-flex h-10 cursor-pointer items-center gap-2 rounded-[10px] px-2 font-bold whitespace-nowrap text-muted hover:bg-brand-soft hover:text-brand current:bg-brand-soft current:text-brand md:px-3';
+    $zmActionIcon = 'text-xl leading-none text-brand';
     $zmMenuItem = 'flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-ink hover:bg-brand-soft hover:text-brand';
-    $zmPill = 'relative inline-flex h-[38px] shrink-0 items-center gap-2 rounded-full bg-soft px-4 text-sm font-semibold whitespace-nowrap text-ink transition-colors hover:bg-brand-tint current:bg-brand current:text-white';
-    $zmFieldTitle = 'text-xs font-extrabold tracking-wider text-muted uppercase [&_.bi]:mr-0.5 [&_.bi]:text-brand';
-    $zmFieldInput = 'input h-[42px] rounded-lg px-3';
 @endphp
 
 {{-- Top bar: information only (every destination lives in the header or tab row) --}}
@@ -63,79 +50,27 @@
 
 {{-- Header --}}
 <header id="zmHeader" class="sticky top-0 z-30 border-b border-line bg-white">
-    <div class="wrap flex flex-wrap items-center gap-3 py-3 md:h-[76px] md:flex-nowrap md:gap-8 md:py-0">
-        <a href="{{ route('home') }}" class="shrink-0 text-2xl leading-none font-black tracking-tight text-brand md:text-[28px]">ZooMarket</a>
+    <div class="wrap flex flex-wrap items-center gap-3 py-3 md:h-16 md:flex-nowrap md:gap-4 md:py-0">
+        <a href="{{ route('home') }}" class="shrink-0 text-2xl leading-none font-black tracking-tight text-brand md:text-2xl">ZooMarket</a>
 
-        {{-- Single search + filter form for the whole site --}}
-        <form id="zmSearchForm" action="{{ route('posts.index') }}" method="GET" role="search"
-              class="relative order-last flex h-11 min-w-0 basis-full items-center gap-3 rounded-xl border border-transparent bg-brand-soft pr-1.5 pl-4 transition focus-within:border-brand focus-within:bg-white md:order-none md:h-12 md:max-w-[640px] md:flex-1 md:basis-auto">
-            <button type="submit" aria-label="Qidirish" class="cursor-pointer leading-none"><i class="bi bi-search text-lg text-brand"></i></button>
-            <input class="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-faint focus-visible:outline-none" type="search" name="q" value="{{ $zmOnListing ? request('q') : '' }}" placeholder="{{ $zmMine ? "E'lonlaringiz ichidan qidiring..." : "Hayvon, zot yoki shahar bo'yicha qidiring..." }}" aria-label="Qidirish">
-            @if($zmMine)
-                <input type="hidden" name="mine" value="1">
-            @endif
+        {{-- Katalog (category menu) sits left of the one search form for the whole site --}}
+        <div class="relative order-2 shrink-0 md:order-none">
+            <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="zmCatalog" class="btn btn-primary h-10 gap-1.5 rounded-lg px-3 text-[13px] md:px-4">
+                <i class="bi bi-grid-fill"></i><span class="hidden sm:inline">Katalog</span>
+            </button>
+            <div id="zmCatalog" hidden class="absolute top-[calc(100%+10px)] left-0 z-20 max-h-[70vh] w-[260px] overflow-y-auto rounded-[14px] border border-line bg-white p-2 shadow-[0_16px_36px_rgba(0,0,0,.12)]">
+                @foreach($zmCategories as $category)
+                    <a href="{{ route('home', ['category_id' => $category->id]) }}" @if($zmActiveCategory === $category->id) aria-current="page" @endif class="{{ $zmMenuItem }} current:text-brand">{{ $category->name }}</a>
+                @endforeach
+            </div>
+        </div>
+
+        <form id="zmSearchForm" action="{{ $zmMine ? route('posts.mine') : route('home') }}" method="GET" role="search"
+              class="relative order-last flex h-11 min-w-0 basis-full items-center gap-3 rounded-xl border border-transparent bg-brand-soft pr-1.5 pl-4 transition focus-within:border-brand focus-within:bg-white md:order-none md:h-10 md:max-w-[560px] md:flex-1 md:basis-auto">
+            <button type="submit" aria-label="Qidirish" class="cursor-pointer leading-none"><i class="bi bi-search text-base text-brand"></i></button>
+            <input class="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-faint focus-visible:outline-none" type="search" name="q" value="{{ ($zmOnListing || $zmMine) ? request('q') : '' }}" placeholder="{{ $zmMine ? "E'lonlaringiz ichidan qidiring..." : "Hayvon, zot yoki shahar bo'yicha qidiring..." }}" aria-label="Qidirish">
             @if($zmOnListing && request('sort'))
                 <input type="hidden" name="sort" value="{{ request('sort') }}">
-            @endif
-
-            @if($zmCanFilter)
-                <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="zmFilterPanel" aria-label="Filtrlar"
-                        @class(['group relative grid size-[38px] shrink-0 cursor-pointer place-items-center rounded-lg aria-expanded:bg-brand', $zmFilterCount ? 'bg-brand' : 'hover:bg-white'])>
-                    <i @class(['bi bi-sliders text-lg group-aria-expanded:text-white', $zmFilterCount ? 'text-white' : 'text-brand'])></i>
-                    @if($zmFilterCount)<em class="{{ $zmBadge }} absolute -top-1.5 -right-1.5">{{ $zmFilterCount }}</em>@endif
-                </button>
-
-                <div id="zmFilterPanel" hidden class="absolute top-[calc(100%+10px)] right-0 left-0 z-10 rounded-[14px] border border-line bg-white p-[18px] shadow-[0_20px_44px_rgba(0,0,0,.14)] md:min-w-[560px]">
-                    <div class="grid grid-cols-1 gap-x-[18px] gap-y-4 md:grid-cols-2">
-                        <label class="flex min-w-0 flex-col gap-[7px]">
-                            <span class="{{ $zmFieldTitle }}"><i class="bi bi-grid-3x3-gap"></i> Kategoriya</span>
-                            <select name="category_id" class="{{ $zmFieldInput }}">
-                                <option value="">Barcha kategoriyalar</option>
-                                @foreach($zmCategories as $category)
-                                    <option value="{{ $category->id }}" @selected($zmF['category_id'] === (string) $category->id)>{{ $category->emoji }} {{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                        </label>
-
-                        <div class="flex min-w-0 flex-col gap-[7px]">
-                            <span class="{{ $zmFieldTitle }}"><i class="bi bi-gender-ambiguous"></i> Jinsi</span>
-                            <div class="flex h-[42px] gap-1 rounded-lg border border-field p-[3px]">
-                                @foreach(['' => 'Hammasi', 'male' => 'Erkak ♂', 'female' => "Urg'ochi ♀"] as $value => $label)
-                                    <label class="flex-1 cursor-pointer"><input class="peer sr-only" type="radio" name="gender" value="{{ $value }}" @checked($zmF['gender'] === $value)><span class="grid h-full place-items-center rounded-md text-[13px] font-bold whitespace-nowrap text-muted peer-checked:bg-brand peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-brand hover:text-brand peer-checked:hover:text-white">{{ $label }}</span></label>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <div class="flex min-w-0 flex-col gap-[7px]">
-                            <span class="{{ $zmFieldTitle }}"><i class="bi bi-tag"></i> Narx oralig'i</span>
-                            <div class="grid grid-cols-[1fr_1fr_108px] gap-2">
-                                <input class="{{ $zmFieldInput }}" type="number" name="price_min" min="0" step="0.01" value="{{ $zmF['price_min'] }}" placeholder="Min">
-                                <input class="{{ $zmFieldInput }}" type="number" name="price_max" min="0" step="0.01" value="{{ $zmF['price_max'] }}" placeholder="Max">
-                                <select name="currency" aria-label="Valyuta" class="{{ $zmFieldInput }}">
-                                    <option value="">Valyuta</option>
-                                    @foreach(['UZS', 'USD', 'EUR', 'RUB'] as $currency)
-                                        <option value="{{ $currency }}" @selected($zmF['currency'] === $currency)>{{ $currency }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <label class="flex min-w-0 flex-col gap-[7px]">
-                            <span class="{{ $zmFieldTitle }}"><i class="bi bi-geo-alt"></i> Manzil</span>
-                            <input class="{{ $zmFieldInput }}" type="text" name="location" value="{{ $zmF['location'] }}" placeholder="Shahar yoki viloyat">
-                        </label>
-                    </div>
-
-                    <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3.5 text-[13px] text-muted">
-                        <span>{{ $zmFilterCount ? $zmFilterCount . ' ta filtr faol' : "Qo'shimcha parametrlar bo'yicha saralash" }}</span>
-                        <div class="flex gap-2">
-                            @if($zmFilterCount)
-                                <a href="{{ route('posts.index', array_filter(['q' => request('q'), 'sort' => request('sort')])) }}" class="inline-flex h-10 items-center gap-1.5 rounded-lg border border-field px-3.5 font-bold text-muted hover:border-danger hover:text-danger"><i class="bi bi-arrow-counterclockwise"></i> Tozalash</a>
-                            @endif
-                            <button type="submit" class="btn btn-primary h-10 rounded-lg"><i class="bi bi-funnel-fill"></i> Qo'llash</button>
-                        </div>
-                    </div>
-                </div>
             @endif
         </form>
 
@@ -151,7 +86,7 @@
                     </a>
                 @else
                     {{-- The one and only "new listing" entry point --}}
-                    <a href="{{ route('posts.create') }}" @if(request()->routeIs('posts.create')) aria-current="page" @endif class="btn btn-primary mr-1.5 px-3 current:bg-brand-dark md:mr-2 md:px-[18px]"><i class="bi bi-plus-lg"></i><span class="hidden lg:inline">Yangi e'lon</span></a>
+                    <a href="{{ route('posts.create') }}" @if(request()->routeIs('posts.create')) aria-current="page" @endif class="btn btn-primary mr-1 h-10 rounded-lg px-3 text-[13px] current:bg-brand-dark md:px-4"><i class="bi bi-plus-lg"></i><span class="hidden lg:inline">Yangi e'lon</span></a>
                     <a href="{{ route('favorites.index') }}" @if(request()->routeIs('favorites.*')) aria-current="page" @endif class="{{ $zmAction }}" aria-label="Sevimlilar">
                         <i class="bi bi-heart {{ $zmActionIcon }}"></i><span class="hidden lg:inline">Sevimlilar</span>
                         <em class="{{ $zmBadge }} absolute top-0.5 left-[26px]" data-favorites-count @if($zmFavorites === 0) hidden @endif>{{ $zmFavorites }}</em>
@@ -166,7 +101,7 @@
                 </a>
                 <div class="relative ml-1">
                     <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="zmProfileMenu" aria-label="Hisob menyusi" class="{{ $zmAction }} gap-1 pr-1.5 pl-1 md:pr-1.5 md:pl-1">
-                        <span class="grid size-9 place-items-center rounded-full bg-brand text-[15px] font-extrabold text-white">{{ mb_strtoupper(mb_substr($zmUser->name, 0, 1)) }}</span><i class="bi bi-chevron-down text-xs"></i>
+                        <span class="grid size-8 place-items-center rounded-full bg-brand text-sm font-extrabold text-white">{{ mb_strtoupper(mb_substr($zmUser->name, 0, 1)) }}</span><i class="bi bi-chevron-down text-xs"></i>
                         @if(! $zmIsAdmin && $zmPending > 0)<em class="{{ $zmBadge }} absolute top-0.5 left-[26px]" title="Yangi so'rovlar">{{ $zmPending > 99 ? '99+' : $zmPending }}</em>@endif
                     </button>
                     <div id="zmProfileMenu" hidden class="absolute top-[calc(100%+10px)] right-0 z-10 w-[260px] rounded-[14px] border border-line bg-white p-2 shadow-[0_16px_36px_rgba(0,0,0,.12)]">
@@ -177,7 +112,7 @@
                         <a href="{{ $zmProfileUrl }}" class="{{ $zmMenuItem }}"><i class="bi bi-person-circle text-base text-brand"></i>Profil va sozlamalar</a>
                         {{-- Selling: the only entry points to my listings, incoming requests and the archive --}}
                         @unless($zmIsAdmin)
-                            <a href="{{ route('posts.index', ['mine' => 1]) }}" class="{{ $zmMenuItem }}"><i class="bi bi-collection text-base text-brand"></i>Mening e'lonlarim</a>
+                            <a href="{{ route('posts.mine') }}" class="{{ $zmMenuItem }}"><i class="bi bi-collection text-base text-brand"></i>Mening e'lonlarim</a>
                             <a href="{{ route('admin.purchase-requests.index') }}" class="{{ $zmMenuItem }}"><i class="bi bi-inbox text-base text-brand"></i>Kelgan so'rovlar
                                 @if($zmPending > 0)<em class="{{ $zmBadge }} ml-auto">{{ $zmPending > 99 ? '99+' : $zmPending }}</em>@endif</a>
                             <a href="{{ route('admin.archive.index') }}" class="{{ $zmMenuItem }}"><i class="bi bi-archive text-base text-brand"></i>Arxiv</a>
@@ -197,13 +132,34 @@
     </div>
 </header>
 
-{{-- Tab row: the storefront's categories --}}
+{{-- Category row: plain text links like a marketplace menu. Links that don't fit move under "Yana"
+     (resources/js/app.js; without JS the row scrolls sideways). Clicking the active category again clears it. --}}
+@php
+    $zmCatLinks = $zmCategories->map(fn ($category) => [
+        'name' => $category->name,
+        'active' => $zmActiveCategory === $category->id,
+        'url' => route('home', $zmActiveCategory === $category->id ? $zmKeep : array_merge($zmKeep, ['category_id' => $category->id])),
+    ]);
+    $zmCatLink = 'inline-flex shrink-0 items-center gap-1.5 text-[15px] whitespace-nowrap text-muted transition-colors hover:text-ink current:font-semibold current:text-brand';
+    $zmCatMenuLink = 'flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-ink hover:bg-brand-soft hover:text-brand current:font-semibold current:text-brand';
+@endphp
 <nav class="border-b border-line bg-white" aria-label="Kategoriyalar">
-    <div class="wrap no-scrollbar flex gap-2 overflow-x-auto py-3">
-        <a href="{{ route('posts.index', $zmKeep) }}" @if($zmOnListing && ! $zmMine && ! $zmActiveCategory) aria-current="page" @endif class="{{ $zmPill }}">Barchasi</a>
-        @foreach($zmCategories as $category)
-            <a href="{{ route('posts.index', array_merge($zmKeep, ['category_id' => $category->id])) }}" @if($zmActiveCategory === $category->id) aria-current="page" @endif class="{{ $zmPill }}"><span aria-hidden="true">{{ $category->emoji }}</span>{{ $category->name }}</a>
-        @endforeach
+    <div class="wrap flex h-12 items-center gap-7" data-overflow-nav>
+        <div class="no-scrollbar flex min-w-0 flex-1 items-center gap-7 overflow-x-auto" data-overflow-items>
+            @foreach($zmCatLinks as $link)
+                <a href="{{ $link['url'] }}" @if($link['active']) aria-current="page" title="Kategoriyani bekor qilish" @endif class="{{ $zmCatLink }}">{{ $link['name'] }}@if($link['active'])<i class="bi bi-x-lg text-[11px]"></i>@endif</a>
+            @endforeach
+        </div>
+        <div class="relative shrink-0" data-overflow-more hidden>
+            <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="zmCatMore" class="inline-flex cursor-pointer items-center gap-1 text-sm text-muted transition-colors hover:text-ink aria-expanded:text-ink">
+                Yana <i class="bi bi-chevron-down text-xs"></i>
+            </button>
+            <div id="zmCatMore" hidden class="absolute top-[calc(100%+12px)] right-0 z-20 max-h-[60vh] w-[240px] overflow-y-auto rounded-[14px] border border-line bg-white p-2 shadow-[0_16px_36px_rgba(0,0,0,.12)]">
+                @foreach($zmCatLinks as $link)
+                    <a href="{{ $link['url'] }}" @if($link['active']) aria-current="page" @endif data-overflow-copy hidden class="{{ $zmCatMenuLink }}">{{ $link['name'] }}@if($link['active'])<i class="bi bi-x-lg ml-auto text-[11px]"></i>@endif</a>
+                @endforeach
+            </div>
+        </div>
     </div>
 </nav>
 

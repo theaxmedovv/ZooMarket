@@ -32,7 +32,7 @@ class BannerTest extends TestCase
             'eyebrow' => 'Faqat shu hafta',
             'title' => 'Itlar uchun ozuqa',
             'offer' => 'Barchasiga **20% chegirma**',
-            'link' => '/posts?sort=latest',
+            'link' => '/?sort=latest',
             'button_text' => 'Xarid qilish',
             'color' => '#212844',
             'sort_order' => 1,

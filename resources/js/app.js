@@ -197,10 +197,51 @@ if (hero) {
     go(0);
 }
 
-// ---- Home: product rail arrows ----------------------------------------------
-document.querySelectorAll('[data-rail]').forEach(box => {
-    const rail = document.getElementById(box.dataset.rail);
-    box.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
-        rail.scrollBy({ left: Number(btn.dataset.dir) * rail.clientWidth * 0.8, behavior: 'smooth' });
-    }));
+// ---- Category row: links that don't fit go under "Yana" ----------------------
+// The row holds every link and the "Yana" menu a hidden copy of each; on every resize
+// the first link that runs past the row's edge and all after it swap to their copy.
+document.querySelectorAll('[data-overflow-nav]').forEach(nav => {
+    const row = nav.querySelector('[data-overflow-items]');
+    const more = nav.querySelector('[data-overflow-more]');
+    const links = [...row.children];
+    const copies = [...more.querySelectorAll('[data-overflow-copy]')];
+    row.classList.replace('overflow-x-auto', 'overflow-hidden');
+
+    const layout = () => {
+        // Measure with every link shown and no "Yana", then make room for "Yana" if needed.
+        more.hidden = true;
+        links.forEach(link => (link.hidden = false));
+        more.hidden = row.scrollWidth <= row.clientWidth;
+        const edge = row.getBoundingClientRect().right + 1;
+        let overflowing = false;
+        links.forEach((link, i) => {
+            overflowing ||= !more.hidden && link.getBoundingClientRect().right > edge;
+            link.hidden = overflowing;
+            copies[i].hidden = !overflowing;
+        });
+    };
+
+    new ResizeObserver(layout).observe(nav);
+    document.fonts?.ready.then(layout);
+});
+
+// ---- Home: "Yana 12 tasini ko'rish" ------------------------------------------
+// <button data-load-more="url" data-load-into="gridId">: the url answers {html, next};
+// the cards are appended and the button moves on to the next 12, or goes away at the end.
+document.addEventListener('click', async e => {
+    const button = e.target.closest('[data-load-more]');
+    if (!button || button.getAttribute('aria-busy') === 'true') return;
+    button.setAttribute('aria-busy', 'true');
+    try {
+        const res = await fetch(button.dataset.loadMore, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        document.getElementById(button.dataset.loadInto)?.insertAdjacentHTML('beforeend', data.html);
+        if (data.next) button.dataset.loadMore = data.next;
+        else button.parentElement.remove();
+    } catch (err) {
+        window.zmToast("Xatolik yuz berdi. Qaytadan urinib ko'ring.", 'error');
+    } finally {
+        button.removeAttribute('aria-busy');
+    }
 });

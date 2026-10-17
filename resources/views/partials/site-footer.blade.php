@@ -29,9 +29,8 @@
                 <h5 class="{{ $zmFooterTitle }}">Mashhur kategoriyalar</h5>
                 <ul class="{{ $zmFooterList }}">
                     @foreach(($navCategories ?? collect())->take(7) as $category)
-                        <li><a href="{{ route('posts.index', ['category_id' => $category->id]) }}">{{ $category->name }}</a></li>
+                        <li><a href="{{ route('home', ['category_id' => $category->id]) }}">{{ $category->name }}</a></li>
                     @endforeach
-                    <li><a href="{{ route('posts.index') }}">Barcha e'lonlar</a></li>
                 </ul>
             </div>
             {{-- Account links live only in the header; the footer is for browsing and info. --}}

@@ -85,6 +85,28 @@ class Post extends Model
         return $query->where('moderation_status', 'approved');
     }
 
+    /**
+     * Public listings that are still on sale (fully reserved ones included, they show a "Band" badge).
+     */
+    public function scopeListed($query)
+    {
+        return $query->approved()->whereNotIn('status', ['sold', 'archived']);
+    }
+
+    /**
+     * Order by price converted to so'm, so a 100 USD listing doesn't rank as cheaper than 200 000 UZS.
+     */
+    public function scopeOrderByPrice($query, string $direction = 'asc')
+    {
+        $direction = $direction === 'desc' ? 'desc' : 'asc';
+        $rates = config('zoomarket.currency_rates');
+
+        return $query->orderByRaw(
+            "price * (CASE currency WHEN 'USD' THEN ? WHEN 'EUR' THEN ? WHEN 'RUB' THEN ? ELSE 1 END) {$direction}",
+            [$rates['USD'], $rates['EUR'], $rates['RUB']]
+        );
+    }
+
     public function availableMaleCount(): int
     {
         return max(0, (int) $this->male_quantity);

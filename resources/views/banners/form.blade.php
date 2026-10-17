@@ -44,7 +44,7 @@
 
                 <div>
                     <label for="link" class="{{ $label }}">Havola</label>
-                    <input type="text" name="link" id="link" value="{{ old('link', $banner->link) }}" class="{{ $field }}" maxlength="255" placeholder="/posts?category_id=1 yoki https://...">
+                    <input type="text" name="link" id="link" value="{{ old('link', $banner->link) }}" class="{{ $field }}" maxlength="255" placeholder="/?category_id=1 yoki https://...">
                     <p class="{{ $hint }}">Bo'sh qoldirsangiz, bannerda tugma ko'rinmaydi.</p>
                 </div>
                 <div>
