@@ -71,7 +71,7 @@ class SimilarListingsTest extends TestCase
         $this->assertStringContainsString('Boshqa mushuk', $section);
         $this->assertStringNotContainsString('Bir it', $section);
         $this->assertStringNotContainsString('Asosiy mushuk', $section, 'The listing itself is left out');
-        $this->assertStringContainsString('lg:grid-cols-4', $section);
+        $this->assertStringContainsString('lg:grid-cols-3 xl:grid-cols-4', $section);
     }
 
     public function test_same_breed_comes_first_and_at_most_sixteen_are_shown(): void

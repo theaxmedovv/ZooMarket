@@ -29,7 +29,7 @@
             <input type="file" name="avatar" id="avatar" data-avatar-input accept="image/*"
                    class="w-full cursor-pointer rounded-[10px] border border-line text-sm text-muted file:mr-3 file:cursor-pointer file:border-0 file:bg-brand-tint file:px-3 file:py-2.5 file:font-semibold file:text-brand hover:file:bg-brand/20">
         </div>
-        <button type="submit" class="btn btn-primary mt-2 h-[38px] w-full rounded-lg text-[13px]">
+        <button type="submit" class="btn btn-primary mt-2 h-11 w-full rounded-lg text-[13px]">
             <i class="bi bi-floppy2"></i> Saqlash
         </button>
     </form>
@@ -47,7 +47,7 @@
                 @enderror
             </div>
         @endforeach
-        <button type="submit" class="btn mt-2 h-[38px] w-full rounded-lg border-accent/35 bg-white text-[13px] font-semibold text-danger hover:border-danger hover:bg-danger/5">
+        <button type="submit" class="btn mt-2 h-11 w-full rounded-lg border-accent/35 bg-white text-[13px] font-semibold text-danger hover:border-danger hover:bg-danger/5">
             <i class="bi bi-shield-lock"></i> Parolni yangilash
         </button>
     </form>

@@ -3,27 +3,73 @@ import './bootstrap';
 // ---- Dropdowns and popovers ------------------------------------------------
 // <button data-dropdown-toggle aria-controls="menuId" aria-expanded="false"> + <div id="menuId" hidden>
 // One open at a time; closes on outside click and Escape.
+// Several buttons may control one panel (the profile menu has a header button and a tab-bar button); they stay in sync.
+// A panel with [data-dropdown-backdrop="id"] next to it gets that dim layer, and a full-screen panel
+// (the phone's Katalog) stops the page behind it from scrolling.
 const toggles = () => document.querySelectorAll('[data-dropdown-toggle]');
 const panelOf = btn => document.getElementById(btn.getAttribute('aria-controls'));
+const phone = matchMedia('(max-width: 767px)');
 
 function setOpen(btn, open) {
     const panel = panelOf(btn);
     if (!panel) return;
     panel.hidden = !open;
-    btn.setAttribute('aria-expanded', open);
+    toggles().forEach(t => { if (panelOf(t) === panel) t.setAttribute('aria-expanded', open); });
+    const backdrop = document.querySelector('[data-dropdown-backdrop="' + panel.id + '"]');
+    if (backdrop) backdrop.hidden = !open;
+    if (panel.hasAttribute('data-catalog') && phone.matches) document.body.classList.toggle('overflow-hidden', open);
 }
 
 document.addEventListener('click', e => {
     const btn = e.target.closest('[data-dropdown-toggle]');
+    const willOpen = btn ? btn.getAttribute('aria-expanded') !== 'true' : false;
     toggles().forEach(other => {
-        if (other === btn) return;
+        if (btn && panelOf(other) === panelOf(btn)) return;
         if (!panelOf(other)?.contains(e.target)) setOpen(other, false);
     });
-    if (btn) setOpen(btn, btn.getAttribute('aria-expanded') !== 'true');
+    if (btn) setOpen(btn, willOpen);
 });
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape') toggles().forEach(btn => setOpen(btn, false));
 });
+
+// Header: a soft shadow once the page has scrolled
+const header = document.getElementById('zmHeader');
+if (header) {
+    const mark = () => header.toggleAttribute('data-scrolled', scrollY > 4);
+    addEventListener('scroll', mark, { passive: true });
+    mark();
+}
+
+// Tab bar "Qidirish": back to the top and into the search field
+document.addEventListener('click', e => {
+    if (!e.target.closest('[data-focus-search]')) return;
+    scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('#zmSearchForm input[type=search]')?.focus({ preventScroll: true });
+});
+
+// ---- Bottom sheets ----------------------------------------------------------
+// <button data-sheet-open="id"> shows <div id="id" class="max-lg:hidden ...">, a dim layer sits behind it; data-sheet-close,
+// the layer or Escape closes it. From `lg` up the sheet is simply part of the page (the filters).
+const sheetLayer = document.createElement('div');
+sheetLayer.hidden = true;
+sheetLayer.className = 'fixed inset-0 z-40 bg-black/40 lg:hidden';
+document.body.appendChild(sheetLayer);
+let openSheet = null;
+
+function toggleSheet(sheet) {
+    if (openSheet) openSheet.classList.add('max-lg:hidden');
+    openSheet = sheet;
+    sheetLayer.hidden = !sheet;
+    document.body.classList.toggle('overflow-hidden', !!sheet);
+    if (sheet) sheet.classList.remove('max-lg:hidden');
+}
+document.addEventListener('click', e => {
+    const opener = e.target.closest('[data-sheet-open]');
+    if (opener) toggleSheet(document.getElementById(opener.dataset.sheetOpen));
+    else if (e.target.closest('[data-sheet-close]') || e.target === sheetLayer) toggleSheet(null);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && openSheet) toggleSheet(null); });
 
 // ---- Dialogs ----------------------------------------------------------------
 // <button data-dialog-open="dialogId"> opens a native <dialog>; [data-dialog-close] or a backdrop click closes it.
@@ -173,7 +219,8 @@ if (hero) {
     for (let i = 0; i < slides.length; i++) {
         const dot = document.createElement('button');
         dot.type = 'button';
-        dot.className = 'h-2.5 w-2.5 cursor-pointer rounded-full bg-[#d9d9d9] transition-all duration-300 current:w-[30px] current:bg-brand';
+        dot.className = 'group grid h-11 min-w-11 cursor-pointer place-items-center';
+        dot.innerHTML = '<span class="block h-2.5 w-2.5 rounded-full bg-field transition-all duration-300 group-aria-[current]:w-7 group-aria-[current]:bg-brand"></span>';
         dot.setAttribute('aria-label', (i + 1) + '-slayd');
         dot.addEventListener('click', () => go(i));
         dots.appendChild(dot);
@@ -261,11 +308,42 @@ document.querySelectorAll('[data-catalog]').forEach(menu => {
         panels.forEach(panel => (panel.hidden = panel.dataset.catalogPanel !== id));
     };
 
+    // Phone: the panel is full-screen. First the category list; tapping one drills into its lists, the arrow goes back.
+    const list = menu.querySelector('[data-catalog-list]');
+    const back = menu.querySelector('[data-catalog-back]');
+    const title = menu.querySelector('[data-catalog-title]');
+    const overview = () => {
+        list.hidden = false;
+        back.hidden = true;
+        title.textContent = 'Katalog';
+        panels.forEach(panel => (panel.hidden = true));
+    };
+    const drill = tab => {
+        show(tab.dataset.catalogTab);
+        list.hidden = true;
+        back.hidden = false;
+        title.textContent = tab.textContent.trim();
+        menu.scrollTop = 0;
+    };
+
     tabs.forEach(tab => {
-        tab.addEventListener('mouseenter', () => show(tab.dataset.catalogTab));
-        tab.addEventListener('focus', () => show(tab.dataset.catalogTab));
+        tab.addEventListener('mouseenter', () => { if (!phone.matches) show(tab.dataset.catalogTab); });
+        tab.addEventListener('focus', () => { if (!phone.matches) show(tab.dataset.catalogTab); });
+        tab.addEventListener('click', e => {
+            if (!phone.matches) return;
+            e.preventDefault();
+            drill(tab);
+        });
     });
-    show((menu.querySelector('[data-catalog-tab][aria-current]') ?? tabs[0])?.dataset.catalogTab);
+    back.addEventListener('click', overview);
+
+    const initial = () => {
+        if (phone.matches) { overview(); return; }
+        list.hidden = false;
+        show((menu.querySelector('[data-catalog-tab][aria-current]') ?? tabs[0])?.dataset.catalogTab);
+    };
+    initial();
+    phone.addEventListener('change', initial);
 });
 
 // "Yana N": reveals the folded items next to it (Katalog menu lists and the filter sidebar).
@@ -278,7 +356,10 @@ document.addEventListener('click', e => {
 
 // ---- Filter sidebar ------------------------------------------------------------
 // data-autosubmit: any change reloads the results; empty fields are left out of the URL.
-document.addEventListener('change', e => e.target.closest('form[data-autosubmit]')?.requestSubmit());
+document.addEventListener('change', e => {
+    const form = e.target.closest('form[data-autosubmit]');
+    if (form && !(form.hasAttribute('data-sheet-form') && matchMedia('(max-width: 1023px)').matches)) form.requestSubmit();
+});
 document.addEventListener('submit', e => {
     if (!e.target.matches('form[data-autosubmit]')) return;
     [...e.target.elements].forEach(el => {
@@ -286,14 +367,6 @@ document.addEventListener('submit', e => {
     });
     // Back/forward restores the page from cache: don't leave fields disabled
     addEventListener('pageshow', () => [...e.target.elements].forEach(el => (el.disabled = false)), { once: true });
-});
-
-// The filter panel is always open on wide screens and folded behind a button on phones.
-document.querySelectorAll('[data-filter-details]').forEach(details => {
-    const wide = matchMedia('(min-width: 1024px)');
-    const sync = () => { if (wide.matches) details.open = true; };
-    sync();
-    wide.addEventListener('change', sync);
 });
 
 // ---- Category row: links that don't fit go under "Yana" ----------------------
@@ -304,12 +377,17 @@ document.querySelectorAll('[data-overflow-nav]').forEach(nav => {
     const more = nav.querySelector('[data-overflow-more]');
     const links = [...row.children];
     const copies = [...more.querySelectorAll('[data-overflow-copy]')];
-    row.classList.replace('overflow-x-auto', 'overflow-hidden');
+    const wide = matchMedia('(min-width: 1024px)');
 
     const layout = () => {
+        // Below lg the chips simply scroll sideways: everything shown, no "Yana".
+        row.classList.toggle('overflow-hidden', wide.matches);
+        row.classList.toggle('overflow-x-auto', !wide.matches);
         // Measure with every link shown and no "Yana", then make room for "Yana" if needed.
         more.hidden = true;
         links.forEach(link => (link.hidden = false));
+        copies.forEach(copy => (copy.hidden = true));
+        if (!wide.matches) return;
         more.hidden = row.scrollWidth <= row.clientWidth;
         const edge = row.getBoundingClientRect().right + 1;
         let overflowing = false;

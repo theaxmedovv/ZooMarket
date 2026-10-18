@@ -7,12 +7,12 @@
     <meta name="description" content="Faunara — O'zbekistondagi uy hayvonlari e'lonlari: itlar, mushuklar, qushlar va boshqalar.">
     @include('partials.head')
 </head>
-<body class="flex min-h-dvh flex-col text-[15px] leading-[1.45]">
+<body class="flex min-h-dvh flex-col text-[15px] leading-normal max-md:pb-16 md:text-base">
 @php
     // Two views of the one storefront page: search results ($results), or hero + "Eng arzon narxlarda" + "Mashhurlar".
     $isResults = isset($results);
-    $grid = 'grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
-    $moreButton = 'btn h-12 rounded-xl border-brand bg-white px-6 text-brand hover:bg-brand-soft';
+    $grid = 'grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4';
+    $moreButton = 'btn h-12 w-full rounded-xl border-brand bg-white px-6 text-brand hover:bg-brand-soft sm:w-auto';
 
     if (! $isResults) {
         // Slides: [background, eyebrow, heading, offer html, link, button, emoji, image url].
@@ -34,7 +34,7 @@
             $f->currency !== '' ? [['currency'], 'Valyuta: ' . $f->currency] : null,
             ($f->priceMin !== null || $f->priceMax !== null) ? [['price_min', 'price_max'], 'Narx: ' . ($f->priceMin ?? '0') . ' — ' . ($f->priceMax ?? '∞')] : null,
         ]));
-        $chip = 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors';
+        $chip = 'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors';
     }
 @endphp
 
@@ -54,7 +54,7 @@
                 @foreach($slides as [$bg, $eyebrow, $heading, $offer, $href, $cta, $art, $image, $imageOnly])
                     @if($imageOnly)
                         {{-- Just a picture: shown as it is, the whole banner is the link --}}
-                        <div style="background-color: {{ $bg }}" class="relative min-h-[160px] min-w-full overflow-hidden sm:min-h-[220px]">
+                        <div style="background-color: {{ $bg }}" class="relative aspect-[3/1] min-w-full overflow-hidden md:aspect-auto">
                             <img src="{{ $image }}" alt="" class="absolute inset-0 size-full object-cover" @unless($loop->first) loading="lazy" @endunless>
                             @if($href)
                                 <a href="{{ $href }}" @if(str_starts_with($href, 'http')) target="_blank" rel="noopener" @endif class="absolute inset-0" aria-label="Batafsil"></a>
@@ -62,7 +62,7 @@
                         </div>
                         @continue
                     @endif
-                    <div style="background-color: {{ $bg }}" class="relative grid min-h-[280px] min-w-full grid-cols-1 items-center overflow-hidden px-6 py-8 text-white md:grid-cols-[1.1fr_1fr] md:px-[70px] md:py-9 xl:px-[90px]">
+                    <div style="background-color: {{ $bg }}" class="relative grid min-h-64 min-w-full grid-cols-1 items-center overflow-hidden px-5 py-6 text-white sm:min-h-72 sm:px-6 sm:py-8 md:grid-cols-[1.1fr_1fr] md:px-16 md:py-9 xl:px-24">
                         @if($image)
                             {{-- Photo banner: the picture fills the slide, a shade keeps the text readable --}}
                             <img src="{{ $image }}" alt="" class="absolute inset-0 size-full object-cover" @unless($loop->first) loading="lazy" @endunless>
@@ -72,10 +72,10 @@
                         @endif
                         <div class="relative">
                             @if($eyebrow)<p class="mb-3 text-[17px] font-semibold md:mb-4 md:text-xl">{{ $eyebrow }}</p>@endif
-                            @if($heading)<h2 class="mb-3.5 text-[clamp(34px,5.2vw,68px)] leading-[1.05] md:mb-5 font-black tracking-[.01em] uppercase">{{ $heading }}</h2>@endif
+                            @if($heading)<h2 class="mb-3.5 text-[clamp(28px,5.2vw,68px)] leading-[1.05] font-black tracking-[.01em] break-words uppercase md:mb-5">{{ $heading }}</h2>@endif
                             @if($offer)<p class="mb-[22px] text-xl font-bold md:mb-7 md:text-2xl [&_b]:text-[#ffd12e]">{!! $offer !!}</p>@endif
                             @if($href)
-                                <a href="{{ $href }}" @if(str_starts_with($href, 'http')) target="_blank" rel="noopener" @endif class="inline-flex items-center gap-2 rounded-lg bg-white px-[22px] py-[11px] text-sm font-extrabold text-navy md:px-7 md:py-3.5 md:text-base hover:bg-brand hover:text-white">{{ $cta }} <i class="bi bi-arrow-right"></i></a>
+                                <a href="{{ $href }}" @if(str_starts_with($href, 'http')) target="_blank" rel="noopener" @endif class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-2.5 text-sm font-extrabold text-navy hover:bg-brand hover:text-white sm:w-auto md:px-7 md:py-3.5 md:text-base">{{ $cta }} <i class="bi bi-arrow-right"></i></a>
                             @endif
                         </div>
                         @if($art && ! $image)

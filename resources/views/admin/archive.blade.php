@@ -10,11 +10,11 @@
     <x-page-head title="Arxiv" subtitle="Sotilgan va arxivlangan e'lonlar tarixi. Bu yerdagi ma'lumotlarni o'zgartirib bo'lmaydi." />
 
     {{-- Stats --}}
-    <div class="mb-6 grid grid-cols-2 gap-4">
+    <div class="mb-6 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:gap-4">
         @foreach([['bi-archive-fill', 'bg-brand/12 text-brand', $totalArchived, 'Jami arxivda'], ['bi-bag-check-fill', 'bg-accent/12 text-accent', $totalSold, 'Muvaffaqiyatli sotilgan']] as [$icon, $tone, $value, $label])
             <div class="flex items-center gap-3.5 rounded-[14px] border border-line bg-white p-4">
                 <div class="grid size-11 shrink-0 place-items-center rounded-[10px] text-xl {{ $tone }}"><i class="bi {{ $icon }}"></i></div>
-                <div>
+                <div class="min-w-0">
                     <div class="text-xl leading-tight font-bold text-ink">{{ $value }} ta</div>
                     <div class="text-xs text-muted">{{ $label }}</div>
                 </div>

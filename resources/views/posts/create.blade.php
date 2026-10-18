@@ -36,7 +36,7 @@
 
         <div class="grid items-start gap-6 lg:grid-cols-3">
             {{-- Main column: form sections --}}
-            <div class="flex flex-col gap-6 lg:col-span-2">
+            <div class="flex min-w-0 flex-col gap-6 lg:col-span-2">
 
                 {{-- Section 1: basics --}}
                 <x-form-section icon="bi-info-circle-fill" title="Asosiy ma'lumotlar" desc="E'lonning nomi, kategoriyasi va turini belgilang">
@@ -183,9 +183,9 @@
                                 <div class="{{ $iconWrap }} flex-1">
                                     <i class="bi bi-currency-exchange {{ $icon }}"></i>
                                     <input type="number" step="0.01" min="0" name="price" id="price" value="{{ old('price') }}"
-                                           class="h-11 w-full min-w-0 bg-transparent pr-3.5 pl-[42px] text-sm text-ink outline-none placeholder:text-faint" placeholder="Masalan: 1500000" required>
+                                           class="h-11 w-full min-w-0 bg-transparent pr-3.5 pl-[42px] text-base text-ink outline-none placeholder:text-faint lg:text-sm" placeholder="Masalan: 1500000" required>
                                 </div>
-                                <select name="currency" id="currency" class="h-11 cursor-pointer border-l border-line bg-white px-3.5 text-sm font-bold text-brand outline-none" required>
+                                <select name="currency" id="currency" class="h-11 cursor-pointer border-l border-line bg-white px-3.5 text-base font-bold text-brand outline-none lg:text-sm" required>
                                     @foreach(['UZS', 'USD', 'EUR', 'RUB'] as $currency)
                                         <option value="{{ $currency }}" @selected(old('currency', 'UZS') === $currency)>{{ $currency }}</option>
                                     @endforeach
@@ -230,27 +230,27 @@
                 {{-- Section 4: photos (up to 3) --}}
                 <x-form-section icon="bi-images" desc="Birinchi fotosurat asosiy muqova bo'ladi. Har biri 2MB dan oshmasin.">
                     <x-slot:title>Fotosuratlar <span class="text-base font-normal text-muted">(Maksimum 3 ta)</span></x-slot:title>
-                    <div class="grid gap-4 md:grid-cols-3">
+                    <div class="grid grid-cols-3 gap-2 md:gap-4">
                         @foreach([
                             ['bi-cloud-arrow-up-fill', '1-rasmni yuklash', 'JPG, PNG, GIF (max 2MB)', 'Muqova rasm'],
                             ['bi-image', '2-rasm (ixtiyoriy)', 'Boshqa burchakdan', '2-rasm'],
                             ['bi-image', '3-rasm (ixtiyoriy)', "Qo'shimcha tafsilot", '3-rasm'],
                         ] as $i => [$slotIcon, $slotText, $slotHint, $alt])
-                            <div id="slotWrap{{ $i }}" @class(['relative flex h-[150px] flex-col items-center justify-center overflow-hidden rounded-[14px] border-[1.5px] border-dashed bg-surface transition hover:border-brand hover:bg-brand/3', $i === 0 ? 'border-brand/35' : 'border-line'])>
+                            <div id="slotWrap{{ $i }}" @class(['relative flex aspect-square flex-col items-center justify-center md:aspect-auto md:h-40 overflow-hidden rounded-[14px] border-[1.5px] border-dashed bg-surface transition hover:border-brand hover:bg-brand/3', $i === 0 ? 'border-brand/35' : 'border-line'])>
                                 <input type="file" name="images[]" id="imageInput{{ $i }}" hidden accept="image/jpeg,image/png,image/jpg,image/gif" data-slot="{{ $i }}">
                                 @if($i === 0)
-                                    <div class="pointer-events-none absolute top-2 left-2 z-[2] rounded-full border border-brand/30 bg-brand/15 px-2 py-0.5 text-[11px] font-bold text-brand">Asosiy muqova</div>
+                                    <div class="pointer-events-none absolute top-2 left-2 z-[2] rounded-full border border-brand/30 bg-brand/15 px-2 py-0.5 text-xs font-bold text-brand">Asosiy muqova</div>
                                 @endif
 
-                                <label for="imageInput{{ $i }}" data-slot-empty class="flex size-full cursor-pointer flex-col items-center justify-center p-4 text-center">
-                                    <span class="mb-1.5 text-2xl text-brand opacity-90"><i class="bi {{ $slotIcon }}"></i></span>
-                                    <span class="mb-0.5 text-[13px] font-bold text-ink">{{ $slotText }}</span>
-                                    <span class="text-[11px] text-muted">{{ $slotHint }}</span>
+                                <label for="imageInput{{ $i }}" data-slot-empty class="flex size-full cursor-pointer flex-col items-center justify-center p-2 text-center md:p-4">
+                                    <span class="mb-1 text-2xl text-brand opacity-90 md:mb-1.5"><i class="bi {{ $slotIcon }}"></i></span>
+                                    <span class="mb-0.5 text-xs leading-tight font-bold text-ink md:text-[13px]">{{ $slotText }}</span>
+                                    <span class="hidden text-xs text-muted md:block">{{ $slotHint }}</span>
                                 </label>
 
                                 <div class="absolute inset-0" id="previewState{{ $i }}" hidden>
                                     <img src="" alt="{{ $alt }}" id="previewImg{{ $i }}" class="size-full object-cover">
-                                    <button type="button" class="absolute top-2 right-2 z-[3] grid size-7 cursor-pointer place-items-center rounded-full border border-white/20 bg-black/75 text-[13px] text-danger transition hover:scale-110 hover:bg-[#ff3333] hover:text-white" onclick="removeImage({{ $i }})" title="O'chirish">
+                                    <button type="button" class="absolute top-1 right-1 z-[3] grid size-11 cursor-pointer md:top-2 md:right-2 md:size-8 place-items-center rounded-full border border-white/20 bg-black/75 text-[13px] text-danger transition hover:scale-110 hover:bg-[#ff3333] hover:text-white" onclick="removeImage({{ $i }})" title="O'chirish">
                                         <i class="bi bi-x-lg"></i>
                                     </button>
                                 </div>
@@ -276,22 +276,22 @@
                             "🧸 Bolalar bilan o'ynashni yaxshi ko'radi, fe'l-atvori yuvosh." => "+ Yuvosh va o'ynoqi",
                             '🚗 Boshqa viloyatlarga kelishilgan holda yetkazib berish mumkin.' => '+ Yetkazib berish',
                         ] as $snippet => $pillLabel)
-                            <button type="button" data-append="{{ $snippet }}" class="cursor-pointer rounded-full border border-line bg-black/4 px-2.5 py-1 text-xs font-semibold text-muted transition hover:-translate-y-px hover:border-brand hover:bg-brand/9 hover:text-brand">{{ $pillLabel }}</button>
+                            <button type="button" data-append="{{ $snippet }}" class="min-h-11 cursor-pointer rounded-full border border-line bg-black/4 px-3 py-1 text-sm font-semibold text-muted lg:min-h-0 lg:px-2.5 lg:text-xs transition hover:-translate-y-px hover:border-brand hover:bg-brand/9 hover:text-brand">{{ $pillLabel }}</button>
                         @endforeach
                     </div>
                 </x-form-section>
 
                 {{-- Submit bar --}}
-                <div class="flex flex-wrap items-center gap-3">
-                    <button type="submit" class="btn btn-primary h-12 rounded-xl px-7 text-[15px] shadow-[0_4px_18px_rgba(0,142,204,.25)] hover:-translate-y-0.5" id="submitBtn">
+                <div class="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 -mx-4 flex items-center gap-2 border-t border-line bg-white px-4 py-3 md:static md:mx-0 md:flex-wrap md:gap-3 md:border-0 md:bg-transparent md:p-0">
+                    <button type="submit" class="btn btn-primary h-12 min-w-0 flex-1 rounded-xl px-4 text-[15px] md:flex-none md:px-7 shadow-[0_4px_18px_rgba(0,142,204,.25)] hover:-translate-y-0.5" id="submitBtn">
                         <i class="bi bi-cloud-arrow-up-fill"></i> E'lonni chop etish
                     </button>
-                    <a href="{{ route('posts.mine') }}" class="btn h-12 rounded-xl border-line font-semibold text-muted hover:border-ink hover:text-ink">Bekor qilish</a>
+                    <a href="{{ route('posts.mine') }}" aria-label="Bekor qilish" class="btn h-12 w-12 shrink-0 rounded-xl border-line bg-white px-0 font-semibold text-muted hover:border-ink hover:text-ink sm:w-auto sm:px-5"><i class="bi bi-x-lg sm:hidden"></i><span class="max-sm:hidden">Bekor qilish</span></a>
                 </div>
             </div>
 
             {{-- Sidebar: live preview & selling tips --}}
-            <div class="lg:sticky lg:top-[92px]">
+            <div class="min-w-0 lg:sticky lg:top-24">
                 {{-- Live preview --}}
                 <div class="mb-6 rounded-[18px] border border-line bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,.12)]">
                     <div class="mb-3.5 flex items-center justify-between border-b border-line pb-2.5">

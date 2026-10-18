@@ -27,7 +27,7 @@
 
     <x-slot:footer>
         <span class="text-muted">Allaqachon hisobingiz bormi?</span>
-        <a href="{{ route('login') }}" class="ml-1 font-bold text-brand hover:text-brand-dark hover:underline">Kirish <i class="bi bi-box-arrow-in-right"></i></a>
+        <a href="{{ route('login') }}" class="ml-1 inline-flex min-h-11 items-center gap-1 font-bold text-brand hover:text-brand-dark hover:underline">Kirish <i class="bi bi-box-arrow-in-right"></i></a>
     </x-slot:footer>
 </x-auth-card>
 @endsection

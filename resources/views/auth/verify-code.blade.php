@@ -18,11 +18,11 @@
     <form action="{{ route('password.resend') }}" method="POST" class="mb-6 text-center text-sm">
         @csrf
         <span class="text-muted">Kod kelmadimi?</span>
-        <button type="submit" class="ml-1 cursor-pointer font-bold text-brand hover:text-brand-dark hover:underline">Qayta yuborish</button>
+        <button type="submit" class="ml-1 inline-flex min-h-11 cursor-pointer items-center font-bold text-brand hover:text-brand-dark hover:underline">Qayta yuborish</button>
     </form>
 
     <x-slot:footer>
-        <a href="{{ route('password.request') }}" class="font-bold text-brand hover:text-brand-dark hover:underline"><i class="bi bi-arrow-left"></i> Boshqa email kiritish</a>
+        <a href="{{ route('password.request') }}" class="inline-flex min-h-11 items-center gap-1 font-bold text-brand hover:text-brand-dark hover:underline"><i class="bi bi-arrow-left"></i> Boshqa email kiritish</a>
     </x-slot:footer>
 </x-auth-card>
 @endsection

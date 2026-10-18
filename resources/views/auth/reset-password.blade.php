@@ -17,7 +17,7 @@
     </form>
 
     <x-slot:footer>
-        <a href="{{ route('login') }}" class="font-bold text-brand hover:text-brand-dark hover:underline"><i class="bi bi-arrow-left"></i> Kirish sahifasiga qaytish</a>
+        <a href="{{ route('login') }}" class="inline-flex min-h-11 items-center gap-1 font-bold text-brand hover:text-brand-dark hover:underline"><i class="bi bi-arrow-left"></i> Kirish sahifasiga qaytish</a>
     </x-slot:footer>
 </x-auth-card>
 @endsection

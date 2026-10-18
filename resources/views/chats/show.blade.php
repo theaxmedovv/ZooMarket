@@ -46,8 +46,8 @@
     {{-- Conversation --}}
     <div class="flex h-full flex-col overflow-hidden bg-white">
         {{-- Header --}}
-        <div class="flex h-16 shrink-0 items-center gap-3 border-b border-line bg-white px-5">
-            <a href="{{ route('chats.index') }}" class="mr-1 text-xl text-ink md:hidden" aria-label="Barcha xabarlar">
+        <div class="flex h-16 shrink-0 items-center gap-3 border-b border-line bg-white px-3 md:px-5">
+            <a href="{{ route('chats.index') }}" class="mr-1 grid size-11 shrink-0 place-items-center text-xl text-ink md:hidden" aria-label="Barcha xabarlar">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div class="{{ $avatar }} size-[38px] text-sm">{{ mb_strtoupper(mb_substr($other->name, 0, 1)) }}</div>
@@ -59,7 +59,7 @@
                         <span class="rounded-full bg-slate-500 px-2 py-0.5 text-[11px] text-white"><i class="bi bi-lock-fill mr-1"></i> Yopilgan</span>
                     @endif
                 </div>
-                <div class="max-w-[320px] truncate text-xs text-muted">
+                <div class="max-w-xs truncate text-xs text-muted">
                     <i class="bi bi-box-seam mr-1 text-brand"></i> {{ Str::limit($chat->post?->title ?? 'E\'lon', 35) }}
                     @if($other->phone)
                         <span class="ml-2"><i class="bi bi-telephone mr-1 text-brand"></i><a href="tel:{{ $other->phone }}">{{ $other->phone }}</a></span>
@@ -67,14 +67,14 @@
                 </div>
             </div>
             @if($chat->post)
-                <a href="{{ route('posts.show', $chat->post) }}" class="inline-flex items-center gap-1 rounded-lg border border-line bg-surface px-3 py-[5px] text-xs font-semibold text-ink transition hover:border-brand hover:text-brand md:hidden">
+                <a href="{{ route('posts.show', $chat->post) }}" class="inline-flex items-center gap-1 min-h-11 rounded-lg border border-line bg-surface px-3 py-1 text-xs font-semibold text-ink transition hover:border-brand hover:text-brand md:hidden">
                     <i class="bi bi-box-arrow-up-right"></i> E'lon
                 </a>
             @endif
         </div>
 
         {{-- Messages --}}
-        <div class="flex flex-1 flex-col gap-3 overflow-y-auto scroll-smooth bg-[radial-gradient(circle_at_top_right,rgba(0,142,204,.03)_0%,transparent_60%)] p-5" id="messagesBox">
+        <div class="flex flex-1 flex-col gap-3 overflow-y-auto scroll-smooth bg-[radial-gradient(circle_at_top_right,rgba(0,142,204,.03)_0%,transparent_60%)] p-3 md:p-5" id="messagesBox">
             @if($chat->messages->isEmpty())
                 <div class="m-auto max-w-[340px] text-center text-muted">
                     <div class="mb-2.5 text-[2.5rem] text-brand opacity-60"><i class="bi bi-chat-heart"></i></div>
@@ -126,7 +126,7 @@
                     @csrf
                     <div class="flex-1 rounded-[14px] border border-line bg-surface p-0.5 transition focus-within:border-brand focus-within:ring-3 focus-within:ring-brand/15 has-aria-invalid:border-accent">
                         <textarea name="body" id="chatInput" aria-label="Xabar"
-                                  class="block max-h-[120px] w-full resize-none overflow-y-auto bg-transparent px-3.5 py-[9px] text-sm leading-snug text-ink outline-none placeholder:text-muted"
+                                  class="block max-h-[120px] w-full resize-none overflow-y-auto bg-transparent px-3.5 py-[9px] text-base leading-snug text-ink outline-none placeholder:text-muted lg:text-sm"
                                   @if($errors->has('body')) aria-invalid="true" @endif
                                   placeholder="Xabaringizni yozing... (Ctrl + Enter yuborish)"
                                   rows="1"

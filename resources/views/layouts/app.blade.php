@@ -6,7 +6,7 @@
     <title>{{ config('app.name', 'Faunara') }}</title>
     @include('partials.head')
 </head>
-<body class="flex min-h-dvh flex-col leading-normal">
+<body class="flex min-h-dvh flex-col text-[15px] leading-normal max-md:pb-16 md:text-base">
     @include('partials.site-header')
     <main>@yield('content')</main>
     @include('partials.site-footer')

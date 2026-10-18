@@ -4,7 +4,7 @@
     $status = $post->moderation_status;
     // Several panels share one page, so a failed reject only re-opens the form it came from.
     $failedHere = (int) old('post_id') === (int) $post->id && $errors->has('reason');
-    $btn = 'inline-flex h-10 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-4 text-sm font-bold whitespace-nowrap transition';
+    $btn = 'inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-4 text-sm font-bold whitespace-nowrap transition';
 @endphp
 <div {{ $attributes->class('rounded-2xl border border-line bg-white p-4 shadow-sm') }}>
     <div class="flex flex-wrap items-center justify-between gap-3">
@@ -38,7 +38,7 @@
     @endif
 
     <details class="group mt-3" @if($failedHere) open @endif>
-        <summary class="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm font-bold text-danger hover:underline">
+        <summary class="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 text-sm font-bold text-danger hover:underline">
             <i class="bi bi-x-circle"></i> {{ $status === 'rejected' ? "Sababni o'zgartirish" : 'Rad etish' }}
         </summary>
         <form action="{{ route('moderation.reject', $post) }}" method="POST" class="mt-3 flex flex-col gap-2">

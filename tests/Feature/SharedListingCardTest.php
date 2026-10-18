@@ -79,11 +79,11 @@ class SharedListingCardTest extends TestCase
             ->assertDontSee('aria-label="Yoqtirish"', false);
     }
 
-    public function test_home_grids_show_four_cards_per_row(): void
+    public function test_home_grids_are_responsive_and_reach_four_cards_per_row(): void
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('lg:grid-cols-4', false)
+            ->assertSee('lg:grid-cols-3 xl:grid-cols-4', false)
             ->assertDontSee('xl:grid-cols-5', false);
     }
 

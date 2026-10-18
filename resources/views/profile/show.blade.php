@@ -3,9 +3,9 @@
 @section('content')
 @php
     $isAdmin = $user->hasRole('admin');
-    $panelLink = 'inline-flex items-center gap-1 rounded-lg border border-line px-3 py-[7px] text-xs font-semibold text-ink transition hover:border-brand hover:bg-brand/8 hover:text-brand';
+    $panelLink = 'inline-flex min-h-11 items-center gap-1 rounded-lg border border-line px-3 py-2 text-xs lg:min-h-9 font-semibold text-ink transition hover:border-brand hover:bg-brand/8 hover:text-brand';
     $rowThumb = 'size-[62px] shrink-0 rounded-xl border border-line object-cover';
-    $rowBtn = 'inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border border-line text-muted transition hover:border-brand hover:bg-brand/8 hover:text-brand';
+    $rowBtn = 'inline-flex size-11 shrink-0 items-center justify-center rounded-[10px] border border-line text-muted transition hover:border-brand hover:bg-brand/8 hover:text-brand';
 @endphp
 <div class="page">
     @include('profile.partials.header', $isAdmin

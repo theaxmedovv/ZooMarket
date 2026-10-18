@@ -11,7 +11,7 @@
     ];
     $block = 'mb-6 border-b border-line pb-6 last:mb-0 last:border-0 last:pb-0';
     $heading = 'mb-3 text-sm font-extrabold text-ink';
-    $option = 'flex cursor-pointer items-center gap-2.5 py-1 text-sm text-ink hover:text-brand';
+    $option = 'flex min-h-11 cursor-pointer items-center gap-2.5 py-1 text-sm text-ink hover:text-brand lg:min-h-8';
     $radio = 'size-4 shrink-0 cursor-pointer accent-brand';
     $visible = 6;
     $filterByGender = ! $category || \App\Support\ListingProfile::forCategory($category)->usesGender();
@@ -24,21 +24,24 @@
     ], fn ($g) => count($g[2]) > 0);
 @endphp
 <section class="mt-5" id="natijalar">
-    <div class="grid items-start gap-5 lg:grid-cols-[250px_1fr] lg:gap-8">
+    <div class="grid items-start gap-5 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-8">
 
         {{-- ============ Filters ============ --}}
         <aside>
-            {{-- Folded behind a button on phones, always open from lg up (data-filter-details) --}}
-            <details data-filter-details>
-                <summary class="btn btn-outline mb-4 w-full cursor-pointer list-none lg:hidden"><i class="bi bi-sliders"></i> Filtrlar</summary>
+            {{-- A bottom sheet on phones and tablets (opened by the filter button in the header), part of the page from lg up --}}
+            <div id="filterSheet" class="max-lg:hidden max-lg:sheet lg:pr-1">
+                <div class="mb-2 flex items-center justify-between lg:hidden">
+                    <b class="text-lg text-ink">Filtrlar</b>
+                    <button type="button" data-sheet-close aria-label="Yopish" class="grid size-11 cursor-pointer place-items-center rounded-lg text-xl text-ink hover:bg-soft"><i class="bi bi-x-lg"></i></button>
+                </div>
 
-                <form action="{{ route('home') }}" method="GET" data-autosubmit>
+                <form action="{{ route('home') }}" method="GET" data-autosubmit data-sheet-form>
                     @if($f->search !== '')<input type="hidden" name="q" value="{{ $f->search }}">@endif
                     @if($f->categoryId)<input type="hidden" name="category_id" value="{{ $f->categoryId }}">@endif
 
                     <div class="{{ $block }}">
                         <h3 class="{{ $heading }}">Saralash</h3>
-                        <select name="sort" aria-label="Saralash" class="input h-10 rounded-lg px-3 text-sm">
+                        <select name="sort" aria-label="Saralash" class="input">
                             @foreach($sorts as $value => $label)
                                 <option value="{{ $value }}" @selected($f->sort === $value)>{{ $label }}</option>
                             @endforeach
@@ -55,7 +58,7 @@
                                     <li>
                                         <a href="{{ route('home', $isActive ? array_filter(['q' => $f->search]) : array_filter(['q' => $f->search, 'category_id' => $c->id])) }}"
                                            @if($isActive) aria-current="page" @endif
-                                           class="flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-soft hover:text-ink current:bg-brand-soft current:font-bold current:text-brand">
+                                           class="flex min-h-11 items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-soft hover:text-ink current:bg-brand-soft current:font-bold current:text-brand lg:min-h-9">
                                             {{ $c->name }}@if($isActive)<i class="bi bi-x-lg text-[11px]"></i>@endif
                                         </a>
                                     </li>
@@ -67,10 +70,10 @@
                     <div class="{{ $block }}">
                         <h3 class="{{ $heading }}">Narx</h3>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" name="price_min" min="0" step="any" value="{{ $f->priceMin }}" placeholder="dan" aria-label="Eng kam narx" class="input h-10 rounded-lg px-3 text-sm">
-                            <input type="number" name="price_max" min="0" step="any" value="{{ $f->priceMax }}" placeholder="gacha" aria-label="Eng ko'p narx" class="input h-10 rounded-lg px-3 text-sm">
+                            <input type="number" name="price_min" min="0" step="any" value="{{ $f->priceMin }}" placeholder="dan" aria-label="Eng kam narx" class="input">
+                            <input type="number" name="price_max" min="0" step="any" value="{{ $f->priceMax }}" placeholder="gacha" aria-label="Eng ko'p narx" class="input">
                         </div>
-                        <select name="currency" aria-label="Valyuta" class="input mt-2 h-10 rounded-lg px-3 text-sm">
+                        <select name="currency" aria-label="Valyuta" class="input mt-2">
                             <option value="">Barcha valyutalar</option>
                             @foreach(\App\Support\ListingFilters::CURRENCIES as $currency)
                                 <option value="{{ $currency }}" @selected($f->currency === $currency)>{{ $currency }}</option>
@@ -104,26 +107,27 @@
                                     </label>
                                 @endforeach
                                 @if($folded && count($options) > $visible)
-                                    <button type="button" data-catalog-more class="mt-1 inline-flex cursor-pointer items-center gap-1 text-sm text-muted hover:text-brand">Yana {{ count($options) - $visible }} <i class="bi bi-chevron-down text-xs"></i></button>
+                                    <button type="button" data-catalog-more class="mt-1 inline-flex min-h-11 cursor-pointer items-center gap-1 text-sm text-muted hover:text-brand lg:min-h-0">Yana {{ count($options) - $visible }} <i class="bi bi-chevron-down text-xs"></i></button>
                                 @endif
                             </div>
                         </div>
                     @endforeach
 
-                    <div class="flex gap-2">
-                        <button type="submit" class="btn btn-primary h-10 flex-1 rounded-lg text-[13px]"><i class="bi bi-funnel-fill"></i> Qo'llash</button>
+                    {{-- On phones this bar sticks to the bottom of the sheet --}}
+                    <div class="flex gap-2 max-lg:sticky max-lg:bottom-[calc(-1rem-env(safe-area-inset-bottom))] max-lg:-mx-4 max-lg:border-t max-lg:border-line max-lg:bg-white max-lg:px-4 max-lg:py-3">
+                        <button type="submit" class="btn btn-primary flex-1 text-[13px]"><i class="bi bi-funnel-fill"></i> <span class="lg:hidden">Natijalarni ko'rsatish ({{ $results->total() }})</span><span class="max-lg:hidden">Qo'llash</span></button>
                         @if($anyFilter)
-                            <a href="{{ route('home', array_filter(['q' => $f->search])) }}" class="btn btn-outline h-10 rounded-lg px-3 text-[13px]" title="Filtrlarni tozalash"><i class="bi bi-arrow-counterclockwise"></i> Tozalash</a>
+                            <a href="{{ route('home', array_filter(['q' => $f->search])) }}" class="btn btn-outline px-3 text-[13px]" title="Filtrlarni tozalash"><i class="bi bi-arrow-counterclockwise"></i> <span class="max-[420px]:sr-only">Tozalash</span></a>
                         @endif
                     </div>
                 </form>
-            </details>
+            </div>
         </aside>
 
         {{-- ============ Listings ============ --}}
         <div class="min-w-0">
             @if($chips)
-                <div class="mb-4 flex flex-wrap items-center gap-1.5">
+                <div class="mb-4 flex flex-wrap items-center gap-2">
                     @foreach($chips as [$keys, $label])
                         <a class="{{ $chip }} border-line bg-soft text-ink hover:border-danger hover:text-danger" href="{{ route('home', request()->except($keys)) }}" title="Olib tashlash">
                             {{ $label }} <i class="bi bi-x-lg text-[10px] opacity-70"></i>
@@ -133,7 +137,7 @@
             @endif
 
             @if($results->isNotEmpty())
-                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 min-[1180px]:grid-cols-4" id="resultsGrid">
+                <div class="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4" id="resultsGrid">
                     @include('partials.post-cards', ['posts' => $results])
                 </div>
                 @if($moreUrl)

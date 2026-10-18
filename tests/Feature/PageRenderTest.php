@@ -133,7 +133,11 @@ class PageRenderTest extends TestCase
         // Split a page into site chrome (header, tab row, footer) and page content (<main>).
         $split = function (string $html): array {
             preg_match('#<main>(.*)</main>#s', $html, $m);
-            return [str_replace($m[0] ?? '', '', $html), $m[1] ?? ''];
+            $chrome = str_replace($m[0] ?? '', '', $html);
+            // The phone's tab bar and the profile sheet's phone-only shortcuts repeat header links on purpose
+            $chrome = preg_replace('#<nav aria-label="Asosiy menyu".*?</nav>#s', '', $chrome);
+            $chrome = preg_replace('#<a [^>]*[\s"]md:hidden[^>]*>.*?</a>#s', '', $chrome);
+            return [$chrome, $m[1] ?? ''];
         };
 
         // One account both sells and buys: selling and buying entry points share the same chrome.

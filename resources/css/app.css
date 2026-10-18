@@ -100,12 +100,12 @@
 /* ---- Shared primitives: combine with plain utilities for one-off tweaks ---- */
 
 @utility wrap {
-    @apply mx-auto w-full max-w-[1240px] px-4;
+    @apply mx-auto w-full max-w-7xl px-4 md:px-6 lg:px-8;
 }
 
 /* Page body: one vertical rhythm for every page (32px under the tab row, 64px before the footer) */
 @utility page {
-    @apply mx-auto w-full max-w-[1240px] px-4 pt-5 pb-12 md:pt-8 md:pb-16;
+    @apply mx-auto w-full max-w-7xl px-4 pt-5 pb-12 md:px-6 md:pt-8 md:pb-16 lg:px-8;
 }
 
 @utility card {
@@ -142,7 +142,7 @@
 }
 
 @utility input {
-    @apply h-11 w-full min-w-0 rounded-[10px] border border-field bg-white px-3.5 text-sm text-ink transition outline-none placeholder:text-faint focus:border-brand focus:ring-3 focus:ring-brand/15 aria-invalid:border-accent;
+    @apply h-11 w-full min-w-0 rounded-[10px] border border-field bg-white px-3.5 text-base text-ink lg:text-sm transition outline-none placeholder:text-faint focus:border-brand focus:ring-3 focus:ring-brand/15 aria-invalid:border-accent;
 }
 
 /* Hide a horizontal scroller's bar but keep it scrollable */
@@ -151,4 +151,14 @@
     &::-webkit-scrollbar {
         display: none;
     }
+}
+
+/* Bottom sheet on phones, normal block from `lg` up (filters) or `md` up (profile menu) */
+@utility sheet {
+    @apply fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto overscroll-contain rounded-t-2xl border-t border-line bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-12px_32px_rgba(0,0,0,.18)];
+}
+
+/* Fade at the edges of a sideways scroller */
+@utility edge-fade {
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
 }

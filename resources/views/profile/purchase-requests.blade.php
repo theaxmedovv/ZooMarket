@@ -3,7 +3,7 @@
 @section('content')
 @php
     $tag = 'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold';
-    $action = 'inline-flex h-[38px] items-center justify-center gap-1.5 rounded-[10px] px-3.5 text-[13px] font-bold transition max-md:w-full';
+    $action = 'inline-flex h-11 items-center justify-center gap-1.5 rounded-[10px] px-3.5 text-[13px] font-bold transition max-md:w-full';
 @endphp
 <div class="page">
     <x-page-head title="Mening buyurtmalarim" subtitle="Yuborgan xarid so'rovlaringiz va ularning holati." />

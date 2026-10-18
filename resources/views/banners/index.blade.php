@@ -2,15 +2,15 @@
 
 @section('content')
 @php
-    $iconBtn = 'grid size-10 cursor-pointer place-items-center rounded-[10px] border border-field bg-white text-muted transition hover:border-brand hover:text-brand';
+    $iconBtn = 'grid size-11 cursor-pointer place-items-center rounded-[10px] border border-field bg-white text-muted transition hover:border-brand hover:text-brand';
     $statusPill = [
         'pending' => ['border-amber-400/40 bg-amber-100 text-amber-700', 'bi-clock-history', 'Tekshiruvda'],
         'approved' => ['border-ok/30 bg-ok/10 text-ok', 'bi-shield-check', 'Tasdiqlangan'],
         'rejected' => ['border-danger/30 bg-danger/10 text-danger', 'bi-shield-x', 'Rad etilgan'],
     ];
     $tabs = ['' => 'Hammasi', 'pending' => 'Kutilmoqda', 'approved' => 'Tasdiqlangan', 'rejected' => 'Rad etilgan'];
-    $rejectField = 'input h-9 min-w-0 flex-1 rounded-lg px-3 text-[13px]';
-    $rejectBtn = 'btn h-9 rounded-lg border-danger/40 bg-white px-3 text-[13px] text-danger hover:bg-danger/10';
+    $rejectField = 'input min-w-0 flex-1 rounded-lg px-3';
+    $rejectBtn = 'btn rounded-lg border-danger/40 bg-white px-3 text-[13px] text-danger hover:bg-danger/10';
 @endphp
 <div class="page">
     <x-page-head :title="$isAdmin ? 'Bosh sahifa bannerlari' : 'Mening bannerlarim'"
@@ -25,7 +25,7 @@
         @foreach($tabs as $key => $label)
             @php $count = $key === '' ? $counts->sum() : ($counts[$key] ?? 0); @endphp
             <a href="{{ route('banners.index', $key === '' ? [] : ['status' => $key]) }}" @if(($status ?? '') === $key) aria-current="page" @endif
-               class="inline-flex h-9 items-center gap-1.5 rounded-full bg-soft px-4 text-sm font-semibold text-ink transition-colors hover:bg-brand-tint current:bg-brand current:text-white">{{ $label }} <span class="text-xs opacity-75">{{ $count }}</span></a>
+               class="inline-flex h-11 items-center gap-1.5 rounded-full bg-soft px-4 text-sm font-semibold text-ink transition-colors hover:bg-brand-tint current:bg-brand current:text-white">{{ $label }} <span class="text-xs opacity-75">{{ $count }}</span></a>
         @endforeach
     </div>
 
@@ -79,7 +79,7 @@
                             @if($banner->moderation_status !== 'approved')
                                 <form action="{{ route('banners.approve', $banner) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="btn btn-primary h-9 rounded-lg px-3 text-[13px]"><i class="bi bi-check-lg"></i> Tasdiqlash</button>
+                                    <button type="submit" class="btn btn-primary rounded-lg px-3 text-[13px]"><i class="bi bi-check-lg"></i> Tasdiqlash</button>
                                 </form>
                             @endif
                             <form action="{{ route('banners.reject', $banner) }}" method="POST" class="flex min-w-[220px] max-w-[460px] flex-1 gap-2">

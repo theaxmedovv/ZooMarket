@@ -11,13 +11,13 @@
     $canBuy = ! $post->isSoldOut() && ! $alreadyRequested && (auth()->guest() || $canLike);
 
     $menu = 'absolute top-[calc(100%+4px)] right-0 z-20 min-w-[140px] rounded-[10px] border border-line bg-white p-1.5 shadow-lg';
-    $menuItem = 'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] text-ink hover:bg-brand/12 hover:text-brand';
+    $menuItem = 'flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] lg:min-h-9 text-ink hover:bg-brand/12 hover:text-brand';
     $pill = 'inline-flex items-center gap-1 rounded-full px-2.5 py-[3px] text-[11px] font-bold tracking-wide shadow-[0_4px_12px_rgba(0,0,0,.12)] backdrop-blur-md';
     $metaChip = 'inline-flex items-center gap-1 rounded-md border border-black/6 bg-black/[.035] px-[7px] py-0.5 text-xs text-muted';
 @endphp
-<article class="group relative flex min-h-[430px] flex-col overflow-hidden rounded-[18px] border border-line bg-linear-to-b from-white/70 to-white/95 transition duration-300 ease-[cubic-bezier(.2,0,0,1)] hover:-translate-y-[5px] hover:border-brand/45 hover:shadow-[0_16px_36px_rgba(0,0,0,.12),0_0_0_1px_rgba(0,142,204,.15)]">
+<article class="group relative flex h-full flex-col overflow-hidden rounded-[18px] border border-line bg-linear-to-b from-white/70 to-white/95 transition duration-300 ease-[cubic-bezier(.2,0,0,1)] hover:-translate-y-[5px] hover:border-brand/45 hover:shadow-[0_16px_36px_rgba(0,0,0,.12),0_0_0_1px_rgba(0,142,204,.15)]">
     {{-- Image --}}
-    <div class="relative h-[260px] w-full overflow-hidden border-b border-line bg-soft sm:h-[225px]">
+    <div class="relative aspect-[4/3] w-full overflow-hidden border-b border-line bg-soft">
         <a href="{{ route('posts.show', $post) }}" class="relative flex size-full items-center justify-center overflow-hidden" aria-label="{{ $post->title }}">
             @if($post->image)
                 <div class="pointer-events-none absolute -inset-3.5 scale-115 bg-cover bg-center opacity-85 blur-[18px] brightness-[.28] saturate-[1.3]" style="background-image: url('{{ $post->imageUrl() }}');"></div>
@@ -57,7 +57,7 @@
             <form action="{{ route('posts.like', $post) }}" method="POST" class="absolute top-2.5 right-2.5 z-[4]" data-like-form>
                 @csrf
                 <button type="submit" aria-pressed="{{ $liked ? 'true' : 'false' }}" aria-label="Yoqtirish" title="Saqlash"
-                        class="flex size-[34px] cursor-pointer items-center justify-center rounded-full border border-black/15 bg-white/75 text-sm text-ink backdrop-blur-md transition hover:scale-110 hover:border-accent hover:bg-accent/20 hover:text-accent aria-pressed:border-accent aria-pressed:bg-accent/25 aria-pressed:text-accent">
+                        class="flex size-11 cursor-pointer items-center justify-center rounded-full border border-black/15 bg-white/75 text-sm text-ink backdrop-blur-md transition hover:scale-110 hover:border-accent hover:bg-accent/20 hover:text-accent aria-pressed:border-accent aria-pressed:bg-accent/25 aria-pressed:text-accent">
                     <i class="bi {{ $liked ? 'bi-heart-fill' : 'bi-heart' }}"></i>
                 </button>
             </form>
@@ -65,21 +65,21 @@
     </div>
 
     {{-- Body --}}
-    <div class="flex flex-1 flex-col px-4 pt-3.5 pb-4">
+    <div class="flex min-w-0 flex-1 flex-col px-3 pt-3 pb-3 md:px-4 md:pt-3.5 md:pb-4">
         {{-- Author row & actions menu --}}
-        <div class="mb-2 flex items-center justify-between">
-            <div class="flex items-center gap-2">
+        <div class="mb-2 flex items-center justify-between gap-2">
+            <div class="flex min-w-0 items-center gap-2">
                 <span class="grid size-[26px] shrink-0 place-items-center rounded-full border border-brand/30 bg-brand-tint text-xs font-bold text-brand">{{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}</span>
-                <div class="leading-tight">
-                    <span class="block text-xs font-semibold text-ink">{{ $post->user->name }}</span>
-                    <small class="text-[11px] text-faint">{{ $post->created_at->diffForHumans() }}</small>
+                <div class="min-w-0 leading-tight">
+                    <span class="block truncate text-xs font-semibold text-ink">{{ $post->user->name }}</span>
+                    <small class="text-xs text-muted">{{ $post->created_at->diffForHumans() }}</small>
                 </div>
             </div>
 
             @if($isOwn)
                 <div class="relative">
                     <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="postMenu{{ $post->id }}" aria-label="Amallar"
-                            class="flex size-[26px] cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-black/6 hover:text-ink">
+                            class="flex size-11 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-black/6 hover:text-ink lg:size-9">
                         <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <div id="postMenu{{ $post->id }}" hidden class="{{ $menu }}">
@@ -93,7 +93,7 @@
             @endif
         </div>
 
-        <h2 class="mt-1 mb-2 text-[17px] leading-snug font-bold tracking-tight">
+        <h2 class="mt-1 mb-2 text-base leading-snug font-bold tracking-tight break-words md:text-[17px]">
             <a class="line-clamp-2 text-ink transition-colors hover:text-brand" href="{{ route('posts.show', $post) }}">{{ $post->title }}</a>
         </h2>
 
@@ -134,22 +134,22 @@
         </div>
 
         {{-- Actions --}}
-        <div class="flex items-center gap-2 border-t border-black/5 pt-2.5">
-            <a class="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-line bg-black/5 text-[13px] font-semibold text-ink transition hover:border-brand hover:bg-brand/12 hover:text-brand" href="{{ route('posts.show', $post) }}">
+        <div class="flex flex-wrap items-center gap-2 border-t border-black/5 pt-2.5">
+            <a class="inline-flex h-11 min-w-24 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-line bg-black/5 text-[13px] font-semibold text-ink transition hover:border-brand hover:bg-brand/12 hover:text-brand lg:h-9" href="{{ route('posts.show', $post) }}">
                 <span>Batafsil</span> <i class="bi bi-arrow-right"></i>
             </a>
             @if($canBuy)
-                <a class="inline-flex h-9 items-center justify-center gap-1 rounded-[10px] bg-brand px-3 text-xs font-bold text-white transition hover:-translate-y-px hover:bg-brand-dark hover:shadow-[0_4px_12px_rgba(0,142,204,.25)]" href="{{ route('posts.show', $post) }}#buy" title="Sotib olish">
+                <a class="inline-flex h-11 min-w-24 flex-1 items-center justify-center gap-1 rounded-[10px] bg-brand px-3 text-xs font-bold text-white lg:h-9 lg:flex-none transition hover:-translate-y-px hover:bg-brand-dark hover:shadow-[0_4px_12px_rgba(0,142,204,.25)]" href="{{ route('posts.show', $post) }}#buy" title="Sotib olish">
                     <i class="bi bi-cart-check-fill"></i> Xarid
                 </a>
             @elseif($alreadyRequested)
-                <a class="inline-flex h-9 items-center justify-center gap-1 rounded-[10px] border border-brand/35 bg-brand/10 px-3 text-xs font-bold text-brand transition hover:bg-brand/18" href="{{ route('user.purchase-requests.index') }}" title="So'rov yuborilgan — buyurtmalarim">
+                <a class="inline-flex h-11 min-w-24 flex-1 items-center justify-center gap-1 rounded-[10px] border border-brand/35 bg-brand/10 px-3 text-xs font-bold text-brand lg:h-9 lg:flex-none transition hover:bg-brand/18" href="{{ route('user.purchase-requests.index') }}" title="So'rov yuborilgan — buyurtmalarim">
                     <i class="bi bi-check-circle-fill"></i> So'rov yuborilgan
                 </a>
                 <form action="{{ route('user.purchase-requests.cancel', auth()->user()->activeRequestsByAnimal()[$post->id]) }}" method="POST"
                       onsubmit="return confirm('So\'rovni bekor qilasizmi? Tanlangan hayvonlar yana sotuvga qaytadi.')">
                     @csrf
-                    <button type="submit" class="inline-flex h-9 cursor-pointer items-center justify-center rounded-[10px] border border-danger/35 bg-white px-2.5 text-xs font-bold text-danger transition hover:border-danger hover:bg-danger hover:text-white" title="So'rovni bekor qilish" aria-label="So'rovni bekor qilish">
+                    <button type="submit" class="inline-flex h-11 min-w-11 cursor-pointer items-center justify-center rounded-[10px] border border-danger/35 bg-white px-2.5 text-xs lg:h-9 lg:min-w-9 font-bold text-danger transition hover:border-danger hover:bg-danger hover:text-white" title="So'rovni bekor qilish" aria-label="So'rovni bekor qilish">
                         <i class="bi bi-x-circle"></i>
                     </button>
                 </form>

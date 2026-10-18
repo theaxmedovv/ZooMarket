@@ -1,15 +1,15 @@
 @props(['title', 'subtitle', 'note'])
 {{-- Centered login/register card: brand badge, heading, error summary, form slot, footer slot. --}}
-<div class="relative overflow-hidden pt-10 pb-16">
+<div class="relative overflow-hidden pt-6 pb-12 sm:pt-10 sm:pb-16">
     <div class="pointer-events-none absolute top-1/4 left-1/2 size-[550px] -translate-1/2 rounded-full bg-[radial-gradient(circle,rgba(0,142,204,.08)_0%,transparent_70%)]" aria-hidden="true"></div>
     <div class="relative mx-auto w-full max-w-[476px] px-4 py-6">
-        <div class="rounded-[20px] border border-line bg-white px-7 py-8 shadow-[0_16px_40px_rgba(0,0,0,.12)] sm:px-9 sm:py-10">
+        <div class="rounded-[20px] border border-line bg-white px-5 py-8 shadow-[0_16px_40px_rgba(0,0,0,.12)] sm:px-9 sm:py-10">
             <div class="mb-6 text-center">
                 <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-line bg-black/4 px-3.5 py-[5px]">
                     <img src="{{ asset('brand/mark.png') }}" alt="" width="22" height="22" class="size-[22px]">
                     <span class="text-[15px] font-bold tracking-tight text-ink">Faunara</span>
                 </div>
-                <h2 class="mb-1.5 text-[1.65rem] font-extrabold tracking-tight text-ink">{{ $title }}</h2>
+                <h2 class="mb-1.5 text-2xl font-extrabold tracking-tight text-ink">{{ $title }}</h2>
                 <p class="text-sm leading-snug text-muted">{{ $subtitle }}</p>
             </div>
 

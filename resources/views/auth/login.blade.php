@@ -16,7 +16,7 @@
                 <input class="size-4 cursor-pointer accent-brand" type="checkbox" name="remember" id="remember">
                 <span>Meni eslab qol</span>
             </label>
-            <a href="{{ route('password.request') }}" class="font-semibold text-brand hover:text-brand-dark hover:underline">Parolni unutdingizmi?</a>
+            <a href="{{ route('password.request') }}" class="inline-flex min-h-11 items-center font-semibold text-brand hover:text-brand-dark hover:underline">Parolni unutdingizmi?</a>
         </div>
 
         <button type="submit" class="btn btn-primary mb-6 h-12 w-full rounded-xl text-[15px] font-bold shadow-[0_4px_14px_rgba(0,142,204,.2)] hover:-translate-y-px hover:shadow-[0_8px_22px_rgba(0,142,204,.35)]">
@@ -28,7 +28,7 @@
 
     <x-slot:footer>
         <span class="text-muted">Hisobingiz yo'qmi?</span>
-        <a href="{{ route('register') }}" class="ml-1 font-bold text-brand hover:text-brand-dark hover:underline">Ro'yxatdan o'ting <i class="bi bi-arrow-right"></i></a>
+        <a href="{{ route('register') }}" class="ml-1 inline-flex min-h-11 items-center gap-1 font-bold text-brand hover:text-brand-dark hover:underline">Ro'yxatdan o'ting <i class="bi bi-arrow-right"></i></a>
     </x-slot:footer>
 </x-auth-card>
 @endsection

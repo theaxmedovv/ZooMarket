@@ -290,7 +290,7 @@ class HomeSectionsTest extends TestCase
         $this->assertStringContainsString('Yana 2', $html);
 
         // The listing grid is four across next to the sidebar, with no title or result count above it
-        $this->assertStringContainsString('min-[1180px]:grid-cols-4', $html);
+        $this->assertStringContainsString('lg:grid-cols-3 xl:grid-cols-4', $html);
         $this->assertStringNotContainsString('ta e&#039;lon</p>', $html);
     }
 

@@ -1,7 +1,7 @@
 {{-- Main admin overview on the profile page. Needs $admin = ['stats', 'queue', 'decisions'] (ProfileController). --}}
 @php
     $stats = $admin['stats'];
-    $panelLink = 'inline-flex items-center gap-1 rounded-lg border border-line px-3 py-[7px] text-xs font-semibold text-ink transition hover:border-brand hover:bg-brand/8 hover:text-brand';
+    $panelLink = 'inline-flex min-h-11 items-center gap-1 rounded-lg border border-line px-3 py-2 text-xs lg:min-h-9 font-semibold text-ink transition hover:border-brand hover:bg-brand/8 hover:text-brand';
     $decisionPill = [
         'approved' => ['border-ok/30 bg-ok/10 text-ok', 'bi-check-circle-fill', 'Tasdiqlangan'],
         'rejected' => ['border-danger/30 bg-danger/10 text-danger', 'bi-x-circle-fill', 'Rad etilgan'],

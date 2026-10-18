@@ -14,13 +14,13 @@
     $isBuyer = auth()->check() && auth()->user()->hasRole('user') && ! $isOwner;
     $isAdmin = auth()->check() && auth()->user()->hasRole('admin');
 
-    $panel = 'rounded-[20px] border border-line bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,.12)]';
+    $panel = 'rounded-[20px] border border-line bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,.12)] md:p-5';
     $sectionTitle = 'mb-4 flex items-center gap-2 text-[17px] font-bold text-ink [&_.bi]:text-brand';
     $glassPill = 'inline-flex items-center gap-1 rounded-full border px-3 py-[5px] text-xs font-bold shadow-[0_4px_14px_rgba(0,0,0,.12)] backdrop-blur-md';
     $chip = 'inline-flex items-center gap-1 rounded-lg border border-black/7 bg-black/4 px-[9px] py-[3px] text-xs text-muted';
     $stockCard = 'flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3 py-2.5 transition data-[depleted]:border-[#fff1f0] data-[depleted]:bg-[#fff5f4] data-[depleted]:opacity-45';
     $stockIcon = 'grid size-8 shrink-0 place-items-center rounded-lg text-base';
-    $subBtn = 'inline-flex h-[42px] cursor-pointer items-center justify-center gap-1.5 rounded-xl border text-[13px] font-semibold transition';
+    $subBtn = 'inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl border text-[13px] font-semibold transition';
 @endphp
 
 <div class="page">
@@ -29,9 +29,9 @@
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3 text-sm">
         <nav aria-label="breadcrumb" class="min-w-0">
             <ol class="flex min-w-0 items-center [&>li+li]:before:px-1.5 [&>li+li]:before:text-muted [&>li+li]:before:content-['›']">
-                <li class="whitespace-nowrap"><a href="{{ route('home') }}" class="font-semibold text-brand">Bosh sahifa</a></li>
+                <li class="whitespace-nowrap"><a href="{{ route('home') }}" class="inline-flex min-h-11 items-center font-semibold text-brand">Bosh sahifa</a></li>
                 @if($post->category)
-                    <li class="whitespace-nowrap"><a href="{{ route('home', ['category_id' => $post->category_id]) }}" class="font-semibold text-brand">{{ $post->category->name }}</a></li>
+                    <li class="whitespace-nowrap"><a href="{{ route('home', ['category_id' => $post->category_id]) }}" class="inline-flex min-h-11 items-center font-semibold text-brand">{{ $post->category->name }}</a></li>
                 @endif
                 <li class="min-w-0 truncate font-semibold text-ink" aria-current="page">{{ Str::limit($post->title, 40) }}</li>
             </ol>
@@ -68,18 +68,27 @@
         @endif
     @endif
 
-    <div class="grid items-start gap-6 lg:grid-cols-12">
+    {{-- Below lg every block is a direct child of this grid and `order-*` sets the reading order:
+         gallery, price + title, stock, specs, description, seller, actions, trust. From lg up the two wrappers become columns. --}}
+    <div class="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-6">
 
         {{-- Left column: gallery, description, trust --}}
-        <div class="flex flex-col gap-6 lg:col-span-7">
+        <div class="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-6">
 
             {{-- Gallery --}}
-            <div class="overflow-hidden rounded-[20px] border border-line bg-white p-3.5 shadow-[0_10px_30px_rgba(0,0,0,.12)]">
-                <div class="relative flex h-[280px] items-center justify-center overflow-hidden rounded-2xl bg-soft sm:h-[360px] lg:h-[460px]">
+            <div class="order-1 min-w-0 overflow-hidden rounded-[20px] border border-line bg-white p-2 shadow-[0_10px_30px_rgba(0,0,0,.12)] md:p-3.5 lg:order-none">
+                <div class="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-soft lg:aspect-auto lg:h-[460px]">
                     @if(!empty($allImages))
                         <div id="ambientBackdrop" class="pointer-events-none absolute -inset-3.5 scale-115 bg-cover bg-center opacity-90 blur-[24px] brightness-[.24] saturate-[1.4]" style="background-image: url('{{ route('images.show', ['path' => $allImages[0]]) }}');"></div>
-                        <img id="mainImg" src="{{ route('images.show', ['path' => $allImages[0]]) }}" alt="{{ $post->title }}"
-                             class="relative z-[2] max-h-full max-w-full object-contain transition-opacity duration-200">
+                        {{-- Slides: swipe on a phone, thumbnails scroll to one; tapping opens it full-screen --}}
+                        <div id="gallerySlides" class="no-scrollbar relative z-[2] flex size-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain">
+                            @foreach($allImages as $i => $img)
+                                <button type="button" data-gallery-zoom="{{ route('images.show', ['path' => $img]) }}" aria-label="Rasmni kattalashtirish ({{ $i + 1 }})"
+                                        class="flex size-full shrink-0 cursor-zoom-in snap-center items-center justify-center">
+                                    <img src="{{ route('images.show', ['path' => $img]) }}" alt="{{ $post->title }} — {{ $i + 1 }}" width="800" height="600" class="max-h-full max-w-full object-contain" @if($i > 0) loading="lazy" @endif>
+                                </button>
+                            @endforeach
+                        </div>
                     @else
                         <div class="flex flex-col items-center justify-center gap-2 text-sm text-muted">
                             <i class="bi bi-image text-[2.8rem] text-line"></i>
@@ -120,7 +129,7 @@
 
                 {{-- Thumbnails --}}
                 @if(count($allImages) > 1)
-                    <div class="mt-3 flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:thin]">
+                    <div class="no-scrollbar mt-2 flex gap-2 overflow-x-auto pb-1 md:mt-3 md:gap-2.5">
                         @foreach($allImages as $i => $img)
                             <button type="button" data-gallery-thumb="{{ $i + 1 }}" data-src="{{ route('images.show', ['path' => $img]) }}" @if($i === 0) aria-current="true" @endif
                                     class="size-16 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 border-line bg-surface transition hover:-translate-y-0.5 hover:border-brand/50 current:border-brand current:shadow-[0_0_14px_rgba(0,142,204,.35)] sm:size-[76px]">
@@ -132,10 +141,10 @@
             </div>
 
             {{-- Description --}}
-            <div class="{{ $panel }} p-[22px]">
+            <div class="{{ $panel }} order-5 min-w-0 lg:order-none">
                 <div class="{{ $sectionTitle }}"><i class="bi bi-card-text"></i> E'lon tavsifi</div>
                 @if($post->description ?? $post->content)
-                    <div class="text-[15px] leading-relaxed text-ink/88">
+                    <div class="text-[15px] leading-relaxed break-words text-ink/88 md:text-base">
                         {!! nl2br(e($post->description ?? $post->content)) !!}
                     </div>
                 @else
@@ -144,7 +153,7 @@
             </div>
 
             {{-- Safe marketplace notice --}}
-            <div class="{{ $panel }} p-[22px]">
+            <div class="{{ $panel }} order-8 lg:order-none">
                 <div class="{{ $sectionTitle }}"><i class="bi bi-shield-check"></i> Xavfsiz xarid qoidalari</div>
                 <div class="grid gap-3 md:grid-cols-3">
                     @foreach([
@@ -163,14 +172,14 @@
         </div>
 
         {{-- Right column: sticky purchase & seller panel --}}
-        <div class="lg:sticky lg:top-[92px] lg:col-span-5">
-            <div class="flex flex-col gap-3">
+        <div class="contents lg:sticky lg:top-24 lg:block lg:min-w-0 lg:self-start">
+            <div class="contents lg:flex lg:flex-col lg:gap-3">
 
                 {{-- Price & title --}}
-                <div class="{{ $panel }}">
+                <div class="{{ $panel }} order-2 min-w-0 lg:order-none">
                     <div class="mb-3.5 border-b border-line pb-3.5">
                         <div class="flex flex-wrap items-center justify-between gap-2">
-                            <div class="text-[1.65rem] leading-tight font-extrabold tracking-tight text-brand lg:text-[1.95rem]">
+                            <div class="text-2xl leading-tight font-extrabold tracking-tight text-brand lg:text-3xl">
                                 {{ number_format((float) $post->price, 0, '.', ' ') }}
                                 <small class="text-[0.95rem] font-semibold text-ink/75">{{ $post->currency }}</small>
                             </div>
@@ -181,20 +190,20 @@
                         <div class="text-sm text-muted">Bir dona hayvon uchun ko'rsatilgan narx</div>
                     </div>
 
-                    <h1 class="text-[1.35rem] leading-snug font-bold text-ink">{{ $post->title }}</h1>
+                    <h1 class="text-2xl leading-snug font-bold break-words text-ink md:text-3xl">{{ $post->title }}</h1>
 
                     <div class="mt-2 flex flex-wrap items-center gap-2">
                         @if($post->breed)
                             <span class="{{ $chip }}"><i class="bi bi-award text-brand"></i> {{ $post->breed }}</span>
                         @endif
                         @if($post->location)
-                            <span class="{{ $chip }}"><i class="bi bi-geo-alt text-accent"></i> {{ $post->fullLocation() }}</span>
+                            <span class="{{ $chip }} min-w-0 break-words"><i class="bi bi-geo-alt text-accent"></i> {{ $post->fullLocation() }}</span>
                         @endif
                     </div>
                 </div>
 
                 {{-- Stock & gender breakdown --}}
-                <div class="{{ $panel }}">
+                <div class="{{ $panel }} order-3 lg:order-none">
                     <div class="mb-2 flex items-center justify-between gap-2">
                         <span class="text-[13px] font-bold text-ink"><i class="bi bi-boxes mr-1 text-brand"></i> {{ $usesGender ? 'Zaxira va jins taqsimoti:' : 'Zaxira:' }}</span>
                         <span @class(['rounded-full border px-2.5 py-[3px] text-xs font-bold', $post->isSoldOut() ? 'border-red-500/40 bg-red-500/15 text-danger' : 'border-brand/30 bg-brand/14 text-brand'])>
@@ -239,9 +248,9 @@
                 </div>
 
                 {{-- Key specifications --}}
-                <div class="{{ $panel }}">
+                <div class="{{ $panel }} order-4 min-w-0 lg:order-none">
                     <span class="mb-2 block text-[13px] font-bold text-ink"><i class="bi bi-ui-checks-grid mr-1 text-brand"></i> Asosiy xususiyatlar:</span>
-                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-2 min-[361px]:grid-cols-2">
                         @php
                             $specs = array_values(array_filter([
                                 ['bi-tag', 'Kategoriya', $post->category?->name ?? '—'],
@@ -256,23 +265,23 @@
                             $specs[] = ['bi-geo-alt', 'Manzil', $post->fullLocation() ?: '—'];
                         @endphp
                         @foreach($specs as [$icon, $label, $value])
-                            <div class="flex flex-col gap-0.5 rounded-[10px] border border-line bg-surface px-3 py-[9px]">
-                                <span class="text-[11px] font-semibold tracking-wide text-muted uppercase"><i class="bi {{ $icon }} mr-1"></i> {{ $label }}</span>
-                                <span class="text-sm font-bold text-ink">{{ $value }}</span>
+                            <div class="flex min-w-0 flex-col gap-0.5 rounded-[10px] border border-line bg-surface px-3 py-2">
+                                <span class="text-xs font-semibold tracking-wide text-muted uppercase"><i class="bi {{ $icon }} mr-1"></i> {{ $label }}</span>
+                                <span class="text-sm font-bold break-words text-ink">{{ $value }}</span>
                             </div>
                         @endforeach
                     </div>
                 </div>
 
                 {{-- Seller --}}
-                <div class="{{ $panel }}">
+                <div class="{{ $panel }} order-6 lg:order-none">
                     <div class="flex items-center gap-3">
                         <div class="grid size-11 shrink-0 place-items-center rounded-full border-[1.5px] border-brand/40 bg-brand-tint text-lg font-bold text-brand">
                             {{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}
                         </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2">
-                                <h6 class="text-[15px] font-bold text-ink">{{ $post->user->name }}</h6>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-x-2">
+                                <h6 class="min-w-0 text-[15px] font-bold break-words text-ink">{{ $post->user->name }}</h6>
                                 <span class="rounded-full border border-brand/30 bg-brand/12 px-1.5 py-px text-[11px] font-bold text-brand">Sotuvchi</span>
                             </div>
                             <div class="text-xs text-muted">Ro'yxatdan o'tgan: {{ $post->user->created_at->format('d.m.Y') }}</div>
@@ -280,14 +289,14 @@
                     </div>
 
                     @if($post->user->phone || $post->user->telegram_username)
-                        <div class="mt-3 flex gap-2 border-t border-line pt-3">
+                        <div class="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
                             @if($post->user->phone)
-                                <a href="tel:{{ $post->user->phone }}" class="inline-flex h-[38px] flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-brand/35 bg-brand/12 text-[13px] font-semibold text-brand transition hover:bg-brand hover:font-bold hover:text-white">
+                                <a href="tel:{{ $post->user->phone }}" class="inline-flex h-11 min-w-32 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-brand/35 bg-brand/12 text-[13px] font-semibold text-brand transition hover:bg-brand hover:font-bold hover:text-white">
                                     <i class="bi bi-telephone-fill"></i><span>{{ $post->user->phone }}</span>
                                 </a>
                             @endif
                             @if($post->user->telegram_username)
-                                <a href="https://t.me/{{ ltrim($post->user->telegram_username, '@') }}" target="_blank" class="inline-flex h-[38px] flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-male/35 bg-male/12 text-[13px] font-semibold text-male transition hover:bg-male hover:font-bold hover:text-white">
+                                <a href="https://t.me/{{ ltrim($post->user->telegram_username, '@') }}" target="_blank" class="inline-flex h-11 min-w-32 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-male/35 bg-male/12 text-[13px] font-semibold text-male transition hover:bg-male hover:font-bold hover:text-white">
                                     <i class="bi bi-telegram"></i><span>Telegram</span>
                                 </a>
                             @endif
@@ -296,7 +305,7 @@
                 </div>
 
                 {{-- Actions --}}
-                <div class="mt-1 flex flex-col gap-2">
+                <div class="order-7 mt-1 flex min-w-0 flex-col gap-2 lg:order-none">
                     @if($isBuyer)
                         @if($hasPurchaseRequest)
                             <a href="{{ route('user.purchase-requests.index') }}" class="inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-[14px] border border-brand/40 bg-brand/10 text-[15px] font-extrabold text-brand transition hover:bg-brand/18">
@@ -361,9 +370,9 @@
                     @guest
                         <div class="rounded-lg border border-dashed border-line bg-white/75 p-4 text-center">
                             <div class="mb-2 text-sm text-muted">Hayvonni sotib olish yoki sotuvchi bilan bog'lanish uchun tizimga kiring:</div>
-                            <div class="flex justify-center gap-2">
-                                <a href="{{ route('login', ['next' => route('posts.show', $post, false)]) }}" class="rounded-full border border-brand px-3 py-1 text-sm font-semibold text-brand hover:bg-brand hover:text-white">Kirish</a>
-                                <a href="{{ route('register', ['next' => route('posts.show', $post, false)]) }}" class="rounded-full bg-ok px-3 py-1 text-sm font-semibold text-white hover:brightness-95">Ro'yxatdan o'tish</a>
+                            <div class="flex flex-wrap justify-center gap-2">
+                                <a href="{{ route('login', ['next' => route('posts.show', $post, false)]) }}" class="inline-flex min-h-11 items-center rounded-full border border-brand px-5 text-sm font-semibold text-brand hover:bg-brand hover:text-white">Kirish</a>
+                                <a href="{{ route('register', ['next' => route('posts.show', $post, false)]) }}" class="inline-flex min-h-11 items-center rounded-full bg-brand px-5 text-sm font-semibold text-white hover:bg-brand-dark">Ro'yxatdan o'tish</a>
                             </div>
                         </div>
                     @endguest
@@ -376,25 +385,54 @@
     @if($similar->isNotEmpty())
         <section class="mt-12" id="oxshash">
             <h2 class="mb-5 text-xl font-extrabold text-ink md:text-2xl">O'xshash e'lonlar</h2>
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4">
                 @include('partials.post-cards', ['posts' => $similar])
             </div>
         </section>
     @endif
 </div>
 
+
+{{-- Phone-only bottom bar: price, call, and the one action that fits this visitor (replaces the tab bar on this page) --}}
+<div class="fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t border-line bg-white px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-6px_20px_rgba(0,0,0,.08)] md:hidden">
+    <div class="min-w-0 flex-1 leading-tight">
+        <div class="truncate text-lg font-extrabold text-brand">{{ number_format((float) $post->price, 0, '.', ' ') }} <small class="text-xs font-semibold text-ink/75">{{ $post->currency }}</small></div>
+        <div class="truncate text-xs text-muted">{{ $post->is_negotiable ? 'Kelishiladi' : '1 ta uchun' }}</div>
+    </div>
+    @if($post->user->phone)
+        <a href="tel:{{ $post->user->phone }}" aria-label="Sotuvchiga qo'ng'iroq qilish" class="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl border border-brand/35 bg-brand/10 px-3 text-sm font-bold text-brand"><i class="bi bi-telephone-fill"></i><span class="max-[360px]:sr-only">Qo'ng'iroq</span></a>
+    @endif
+    @if($isBuyer && $chat)
+        <a href="{{ route('chats.show', $chat) }}" class="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-brand px-4 text-sm font-bold text-white"><i class="bi bi-chat-dots-fill"></i> Xabar</a>
+    @elseif($isBuyer && $hasPurchaseRequest)
+        <a href="{{ route('user.purchase-requests.index') }}" class="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-brand px-4 text-sm font-bold text-white"><i class="bi bi-bag-check"></i> So'rovim</a>
+    @elseif($isBuyer && ! $post->isSoldOut())
+        <button type="button" data-dialog-open="buyModalDetail" class="inline-flex h-11 min-w-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-brand px-4 text-sm font-bold text-white"><i class="bi bi-cart-check-fill"></i> Sotib olish</button>
+    @elseif($isOwner && ! $post->isArchived())
+        <a href="{{ route('posts.edit', $post) }}" class="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-brand px-4 text-sm font-bold text-white"><i class="bi bi-pencil-square"></i> Tahrirlash</a>
+    @elseif(! auth()->check())
+        <a href="{{ route('login', ['next' => route('posts.show', $post, false)]) }}" class="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-xl bg-brand px-4 text-sm font-bold text-white"><i class="bi bi-box-arrow-in-right"></i> Kirish</a>
+    @endif
+</div>
+
+{{-- Full-screen photo --}}
+<dialog id="galleryZoom" aria-label="Rasm" class="m-0 h-dvh max-h-none w-screen max-w-none bg-black/95 p-0 backdrop:bg-black">
+    <button type="button" data-dialog-close aria-label="Yopish" class="absolute top-3 right-3 z-10 grid size-11 cursor-pointer place-items-center rounded-full bg-white/15 text-xl text-white hover:bg-white/30"><i class="bi bi-x-lg"></i></button>
+    <img id="galleryZoomImg" src="" alt="" class="size-full object-contain">
+</dialog>
+
 {{-- Buy dialog: pick how many males and females to request --}}
 @if($isBuyer && ! $hasPurchaseRequest && ! $post->isSoldOut())
     <dialog id="buyModalDetail" aria-labelledby="buyModalLabel"
-            class="m-auto w-[min(500px,calc(100vw-32px))] rounded-2xl border border-line bg-white p-0 text-ink shadow-[0_20px_60px_rgba(0,0,0,.12)] backdrop:bg-black/50">
-        <div class="flex items-center justify-between px-6 pt-5">
+            class="m-auto max-h-[90dvh] w-[min(500px,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-2xl border border-line bg-white p-0 text-ink shadow-[0_20px_60px_rgba(0,0,0,.12)] backdrop:bg-black/50 max-md:mt-auto max-md:mb-0 max-md:w-full max-md:max-w-full max-md:rounded-b-none">
+        <div class="flex items-center justify-between px-4 pt-4 md:px-6 md:pt-5">
             <h5 class="text-lg font-bold text-ink" id="buyModalLabel"><i class="bi bi-cart-check-fill mr-2 text-brand"></i> Sotib olish so'rovi</h5>
-            <button type="button" data-dialog-close aria-label="Yopish" class="grid size-8 cursor-pointer place-items-center rounded-lg text-muted hover:bg-soft hover:text-ink"><i class="bi bi-x-lg"></i></button>
+            <button type="button" data-dialog-close aria-label="Yopish" class="grid size-11 cursor-pointer place-items-center rounded-lg text-muted hover:bg-soft hover:text-ink"><i class="bi bi-x-lg"></i></button>
         </div>
         <form action="{{ route('purchase-requests.store') }}" method="POST" id="buyerPurchaseForm">
             @csrf
             <input type="hidden" name="animal_id" value="{{ $post->id }}">
-            <div class="flex flex-col gap-4 p-6">
+            <div class="flex flex-col gap-4 p-4 md:p-6">
 
                 {{-- Post summary --}}
                 <div class="rounded-xl border border-line bg-surface px-3.5 py-3">
@@ -409,7 +447,7 @@
                 {{-- Step 1: how many of each gender --}}
                 <div>
                     <span class="mb-2 block text-sm font-bold text-ink">{{ $usesGender ? '1. Har bir jinsdan nechta kerakligini tanlang:' : '1. Nechta kerakligini tanlang:' }}</span>
-                    @php $stepBtn = 'flex h-full w-10 cursor-pointer items-center justify-center text-lg font-bold text-brand transition hover:bg-brand/15 disabled:cursor-not-allowed disabled:opacity-25'; @endphp
+                    @php $stepBtn = 'flex h-full w-11 cursor-pointer items-center justify-center text-lg font-bold text-brand transition hover:bg-brand/15 disabled:cursor-not-allowed disabled:opacity-25'; @endphp
                     <div class="flex flex-col gap-2">
                         @foreach($usesGender
                             ? [['male', $maleAvail, 'bi-gender-male text-male', 'Erkak ♂'], ['female', $femaleAvail, 'bi-gender-female text-danger', "Urg'ochi ♀"]]
@@ -422,7 +460,7 @@
                                         <span @class(['block text-xs font-semibold', $avail > 0 ? 'text-brand' : 'text-danger'])>{{ $avail > 0 ? $avail . ' ta mavjud' : 'Tugagan' }}</span>
                                     </span>
                                 </label>
-                                <div class="flex h-10 items-center overflow-hidden rounded-lg border border-line bg-white">
+                                <div class="flex h-11 items-center overflow-hidden rounded-lg border border-line bg-white">
                                     <button type="button" class="{{ $stepBtn }}" data-qty-step="-1" data-qty-target="buyerQty_{{ $value }}" aria-label="{{ $label }}: kamaytirish"><i class="bi bi-dash-lg"></i></button>
                                     <input type="number" name="{{ $value }}_quantity" id="buyerQty_{{ $value }}" data-qty-input
                                            class="h-full w-12 bg-transparent text-center text-base font-extrabold text-ink outline-none"
@@ -450,7 +488,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex gap-2 px-6 pb-6">
+            <div class="sticky bottom-0 flex gap-2 border-t border-line bg-white px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] md:static md:border-0 md:px-6 md:pt-0 md:pb-6">
                 <button type="button" data-dialog-close class="btn flex-1 rounded-full border-field bg-white text-muted hover:border-muted hover:text-ink">Bekor qilish</button>
                 <button type="submit" class="btn btn-primary flex-1 rounded-full disabled:bg-slate-500 disabled:text-slate-300" id="btnSubmitOrder">
                     <i class="bi bi-send-check"></i> So'rov yuborish
@@ -461,17 +499,33 @@
 @endif
 
 <script>
-// Gallery: thumbnails swap the main image, its blurred backdrop and the counter.
-document.querySelectorAll('[data-gallery-thumb]').forEach(btn => btn.addEventListener('click', () => {
-    const mainImg = document.getElementById('mainImg');
-    const src = btn.dataset.src;
-    mainImg.style.opacity = '0';
-    setTimeout(() => { mainImg.src = src; mainImg.style.opacity = '1'; }, 120);
-    document.getElementById('ambientBackdrop').style.backgroundImage = `url('${src}')`;
-    document.getElementById('galleryCounter').textContent = `${btn.dataset.galleryThumb} / {{ max(1, count($allImages)) }}`;
-    document.querySelectorAll('[data-gallery-thumb]').forEach(b => b.removeAttribute('aria-current'));
-    btn.setAttribute('aria-current', 'true');
-}));
+// Gallery: swiping (or a thumbnail) moves between slides; counter, thumbnail and blurred backdrop follow.
+const slides = document.getElementById('gallerySlides');
+if (slides) {
+    const thumbs = [...document.querySelectorAll('[data-gallery-thumb]')];
+    const total = slides.children.length;
+    let current = 0;
+    const show = i => {
+        current = i;
+        document.getElementById('galleryCounter').textContent = `${i + 1} / ${total}`;
+        thumbs.forEach((b, n) => n === i ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current'));
+        const src = slides.children[i].dataset.galleryZoom;
+        const backdrop = document.getElementById('ambientBackdrop');
+        if (backdrop) backdrop.style.backgroundImage = `url('${src}')`;
+        thumbs[i]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+    };
+    slides.addEventListener('scroll', () => {
+        const i = Math.round(slides.scrollLeft / slides.clientWidth);
+        if (i !== current && i >= 0 && i < total) show(i);
+    }, { passive: true });
+    thumbs.forEach((btn, i) => btn.addEventListener('click', () => slides.scrollTo({ left: i * slides.clientWidth, behavior: 'smooth' })));
+    slides.addEventListener('click', e => {
+        const slide = e.target.closest('[data-gallery-zoom]');
+        if (!slide) return;
+        document.getElementById('galleryZoomImg').src = slide.dataset.galleryZoom;
+        document.getElementById('galleryZoom').showModal();
+    });
+}
 
 document.addEventListener('DOMContentLoaded', function () {
     const qtyInputs = Array.from(document.querySelectorAll('[data-qty-input]'));

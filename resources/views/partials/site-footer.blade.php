@@ -1,13 +1,13 @@
 @php
     $zmFooterTitle = "relative mb-4 pb-2.5 text-xl font-extrabold after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-10 after:bg-white after:content-['']";
-    $zmFooterList = 'grid list-disc gap-2.5 pl-[18px] font-semibold [&_a]:hover:underline';
+    $zmFooterList = 'grid list-disc gap-0.5 pl-5 font-semibold md:gap-1.5 [&_a]:inline-flex [&_a]:min-h-11 [&_a]:min-w-11 [&_a]:items-center [&_a]:hover:underline md:[&_a]:min-h-8';
 @endphp
 <footer id="zmFooter" class="relative mt-auto overflow-hidden bg-brand text-white">
     <span class="absolute -top-20 -right-[60px] size-[360px] rounded-full border-[70px] border-white/[.07]" aria-hidden="true"></span>
     <div class="wrap relative">
-        <div class="grid grid-cols-1 gap-7 pt-[52px] pb-10 md:grid-cols-[1.3fr_1fr_1fr] md:gap-10">
+        <div class="grid grid-cols-1 gap-7 pt-10 pb-8 md:grid-cols-[1.3fr_1fr_1fr] md:gap-10 md:pt-[52px] md:pb-10">
             <div>
-                <a href="{{ route('home') }}" class="mb-[26px] inline-block rounded-xl bg-white px-3 py-2" aria-label="Faunara — bosh sahifa"><img src="{{ asset('brand/logo.png') }}" alt="Faunara — jonivorlar olami" width="481" height="168" class="h-12 w-auto"></a>
+                <a href="{{ route('home') }}" class="mb-[26px] inline-block rounded-xl bg-white px-3 py-2" aria-label="Faunara — bosh sahifa"><img src="{{ asset('brand/logo.png') }}" alt="Faunara — jonivorlar olami" width="553" height="168" class="h-12 w-auto"></a>
                 <h5 class="{{ $zmFooterTitle }}">Biz bilan bog'lanish</h5>
                 @foreach([['bi-whatsapp', 'WhatsApp', '+998 90 000 00 00'], ['bi-telephone', "Qo'ng'iroq qiling", '+998 71 200 00 00']] as [$icon, $label, $phone])
                     <div class="mb-3.5 flex items-center gap-3">
@@ -18,7 +18,7 @@
                 <h5 class="{{ $zmFooterTitle }} mt-6">Ilovani yuklab oling</h5>
                 <div class="mt-1.5 flex flex-wrap gap-2.5">
                     @foreach([['bi-apple', 'Download on the', 'App Store'], ['bi-google-play', 'GET IT ON', 'Google Play']] as [$icon, $small, $store])
-                        <a href="#" class="inline-flex items-center gap-2 rounded-lg border border-white/40 bg-black px-3.5 py-[7px]">
+                        <a href="#" class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/40 bg-black px-3.5 py-1.5">
                             <i class="bi {{ $icon }} text-2xl"></i>
                             <span><small class="block text-[10px] leading-none opacity-80">{{ $small }}</small><b class="text-[15px] leading-tight">{{ $store }}</b></span>
                         </a>
