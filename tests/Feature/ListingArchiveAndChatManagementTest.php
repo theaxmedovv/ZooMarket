@@ -54,6 +54,7 @@ class ListingArchiveAndChatManagementTest extends TestCase
             'age' => '1 yosh',
             'price' => 500000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
         ]);
@@ -167,6 +168,7 @@ class ListingArchiveAndChatManagementTest extends TestCase
             'age' => '2 yosh',
             'price' => 1200000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Samarqand',
             'status' => 'sold',
         ]);
@@ -215,6 +217,7 @@ class ListingArchiveAndChatManagementTest extends TestCase
             'age' => '6 oylik',
             'price' => 100000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Buxoro',
             'status' => 'active',
         ]);
@@ -266,6 +269,7 @@ class ListingArchiveAndChatManagementTest extends TestCase
             'age' => '1 yosh',
             'price' => 300000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'sold',
         ]);

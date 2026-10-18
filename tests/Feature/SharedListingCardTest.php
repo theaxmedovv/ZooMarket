@@ -45,6 +45,7 @@ class SharedListingCardTest extends TestCase
             'age' => '3 oy',
             'price' => 100000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
             'moderation_status' => 'approved',
@@ -61,7 +62,7 @@ class SharedListingCardTest extends TestCase
                 ->assertOk()
                 // Pieces of the /posts card: author, breed chip, stock pill, Batafsil + Xarid buttons
                 ->assertSee('Sardor')
-                ->assertSee('title="Zot"', false)
+                ->assertSee('title="Turi"', false)
                 ->assertSee('2 ta')
                 ->assertSee('Batafsil')
                 ->assertSee('href="' . route('posts.show', $this->post) . '#buy"', false)

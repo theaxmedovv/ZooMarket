@@ -12,6 +12,7 @@ use App\Services\GroqModerationService;
 use App\Support\ListingFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class PostController extends Controller
 {
@@ -80,10 +81,15 @@ class PostController extends Controller
             'price' => 'required|numeric|min:0',
             'currency' => 'required|in:UZS,USD,EUR,RUB',
             'is_negotiable' => 'nullable|boolean',
+            'region' => ['required', Rule::in(config('zoomarket.regions'))],
             'location' => 'required|string|max:255',
             'status' => 'required|in:active,reserved,sold',
             'images' => 'nullable|array|max:3',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ], [
+            'region.required' => 'Viloyatni tanlang.',
+            'region.in' => 'Ro\'yxatdagi viloyatlardan birini tanlang.',
+            'location.required' => 'Shahar yoki tumanni yozing.',
         ]);
 
         $validator->after(function ($v) use ($request) {
@@ -149,7 +155,7 @@ class PostController extends Controller
         }
 
         return redirect()->route('posts.show', $post)
-            ->with('info', "E'lon qabul qilindi. Admin tekshirib tasdiqlagandan so'ng hammaga ko'rinadi.");
+            ->with('info', "E'lon tekshiruvda. Biroz vaqtdan keyin tasdiqlanadi va hammaga ko'rinadi.");
     }
 
     /**
@@ -253,10 +259,15 @@ class PostController extends Controller
             'price' => 'required|numeric|min:0',
             'currency' => 'required|in:UZS,USD,EUR,RUB',
             'is_negotiable' => 'nullable|boolean',
+            'region' => ['required', Rule::in(config('zoomarket.regions'))],
             'location' => 'required|string|max:255',
             'status' => 'required|in:active,reserved,sold',
             'images' => 'nullable|array|max:3',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+        ], [
+            'region.required' => 'Viloyatni tanlang.',
+            'region.in' => 'Ro\'yxatdagi viloyatlardan birini tanlang.',
+            'location.required' => 'Shahar yoki tumanni yozing.',
         ]);
 
         $validator->after(function ($v) use ($request) {
@@ -324,7 +335,7 @@ class PostController extends Controller
         }
 
         return redirect()->route('posts.show', $post)
-            ->with('info', "E'lon yangilandi va qayta admin tekshiruviga yuborildi. Tasdiqlangach hammaga ko'rinadi.");
+            ->with('info', "E'lon yangilandi va qayta tekshiruvga yuborildi.");
     }
 
     /**

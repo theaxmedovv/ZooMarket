@@ -47,6 +47,7 @@ class HomeSectionsTest extends TestCase
             'age' => '3 oy',
             'price' => 1000000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
             'moderation_status' => 'approved',
@@ -210,6 +211,121 @@ class HomeSectionsTest extends TestCase
         $this->assertStringContainsString('aria-controls="zmCatMore"', $html);
         $this->assertSame(Category::count(), substr_count($html, 'data-overflow-copy'));
         $this->assertStringNotContainsString('rounded-full bg-soft px-4', $html);
+    }
+
+    public function test_katalog_mega_menu_lists_breeds_regions_and_genders_per_category(): void
+    {
+        $dogs = Category::create(['name' => 'Dogs']);
+        foreach (range(1, 6) as $i) {
+            $this->makePost(['category_id' => $dogs->id, 'breed' => "Zot{$i}", 'region' => $i % 2 ? 'Toshkent shahri' : 'Samarqand viloyati', 'location' => "Tuman{$i}"]);
+        }
+        $this->makePost(['category_id' => $dogs->id, 'breed' => 'Zot1', 'status' => 'sold']);          // sold: not counted
+        $this->makePost(['category_id' => $dogs->id, 'breed' => 'Yashirin', 'moderation_status' => 'pending']);
+
+        $html = $this->get(route('home'))->assertOk()->getContent();
+
+        $menu = substr($html, strpos($html, 'data-catalog'), 60000);
+        $panel = substr($menu, strpos($menu, 'data-catalog-panel="' . $dogs->id . '"'));
+        $panel = substr($panel, 0, strpos($panel, '</section>'));
+
+        // Left list links to the category; right panel groups breeds / regions / genders (no cities)
+        $this->assertStringContainsString('data-catalog-tab="' . $dogs->id . '"', $menu);
+        foreach (['Turi', 'Manzil', 'Jinsi', 'Toshkent shahri', 'Samarqand viloyati', 'Erkak', "Urg'ochi"] as $text) {
+            $this->assertStringContainsString(e($text), $panel);
+        }
+        $this->assertStringContainsString('breed=Zot1', $panel);
+        $this->assertStringContainsString('region=Toshkent%20shahri', $panel);
+        $this->assertStringNotContainsString('Tuman1', $panel);
+        $this->assertStringContainsString('gender=male', $panel);
+        $this->assertStringNotContainsString('Yashirin', $panel);
+
+        // 6 breeds: 4 shown, the other 2 behind "Yana 2"
+        $this->assertSame(2, substr_count($panel, 'data-catalog-extra'));
+        $this->assertStringContainsString('Yana 2', $panel);
+    }
+
+    public function test_katalog_panel_of_an_empty_category_says_so(): void
+    {
+        $empty = Category::create(['name' => 'Bosh']);
+
+        $html = $this->get(route('home'))->getContent();
+        $panel = substr($html, strpos($html, 'data-catalog-panel="' . $empty->id . '"'), 1500);
+
+        $this->assertStringContainsString("Bu kategoriyada hozircha e'lon yo'q", $panel);
+    }
+
+    public function test_breed_filter_narrows_results_and_shows_a_chip(): void
+    {
+        $this->makePost(['title' => 'Britan mushuk', 'breed' => 'Britan']);
+        $this->makePost(['title' => 'Sfinks mushuk', 'breed' => 'Sfinks']);
+
+        $this->get(route('home', ['breed' => 'Britan']))
+            ->assertOk()
+            ->assertSee('Britan mushuk')
+            ->assertDontSee('Sfinks mushuk')
+            ->assertSee('Turi: Britan');
+    }
+
+    public function test_category_page_has_a_filter_sidebar_with_breeds_and_regions(): void
+    {
+        foreach (range(1, 8) as $i) {
+            $this->makePost(['breed' => "Zot{$i}", 'region' => $i === 1 ? 'Toshkent shahri' : 'Xorazm viloyati', 'location' => "Shahar{$i}"]);
+        }
+
+        $html = $this->get(route('home', ['category_id' => $this->category->id]))->assertOk()->getContent();
+
+        $this->assertStringContainsString('data-autosubmit', $html);
+        foreach (['Saralash', 'Turi', 'Narx', 'Jinsi', 'Manzil'] as $title) {
+            $this->assertStringContainsString('>' . $title . '</h3>', $html);
+        }
+        // With a category chosen, its types replace the category list
+        $this->assertStringNotContainsString('>Kategoriya</h3>', $html);
+        $this->assertStringNotContainsString('>Zot</h3>', $html);
+        $this->assertStringContainsString('name="price_min"', $html);
+        $this->assertStringContainsString('name="breed" value="Zot1"', $html);
+        $this->assertStringContainsString('name="region" value="Toshkent shahri"', $html);
+        $this->assertStringNotContainsString('name="location"', $html);
+        $this->assertStringContainsString('name="category_id" value="' . $this->category->id . '"', $html);
+        // 8 breeds: 6 shown, 2 behind "Yana 2"
+        $this->assertStringContainsString('Yana 2', $html);
+
+        // The listing grid is four across next to the sidebar, with no title or result count above it
+        $this->assertStringContainsString('min-[1180px]:grid-cols-4', $html);
+        $this->assertStringNotContainsString('ta e&#039;lon</p>', $html);
+    }
+
+    public function test_search_without_a_category_lists_categories_in_the_sidebar(): void
+    {
+        $this->makePost(['title' => 'Oq mushuk']);
+
+        $html = $this->get(route('home', ['q' => 'mushuk']))->assertOk()->getContent();
+
+        $this->assertStringContainsString('>Kategoriya</h3>', $html);
+        $this->assertStringNotContainsString('>Turi</h3>', $html);
+    }
+
+    public function test_sidebar_filters_combine(): void
+    {
+        $this->makePost(['title' => 'Arzon urg ochi', 'gender' => 'female', 'male_quantity' => 0, 'female_quantity' => 1, 'price' => 100000, 'location' => 'Toshkent']);
+        $this->makePost(['title' => 'Qimmat urg ochi', 'gender' => 'female', 'male_quantity' => 0, 'female_quantity' => 1, 'price' => 900000, 'location' => 'Toshkent']);
+        $this->makePost(['title' => 'Arzon erkak', 'gender' => 'male', 'price' => 100000, 'location' => 'Toshkent']);
+        $this->makePost(['title' => 'Arzon samarqand', 'gender' => 'female', 'male_quantity' => 0, 'female_quantity' => 1, 'price' => 100000, 'location' => 'Samarqand']);
+
+        $this->get(route('home', ['category_id' => $this->category->id, 'gender' => 'female', 'price_max' => 500000, 'location' => 'Toshkent']))
+            ->assertOk()
+            ->assertSee('Arzon urg ochi')
+            ->assertDontSee('Qimmat urg ochi')
+            ->assertDontSee('Arzon erkak')
+            ->assertDontSee('Arzon samarqand');
+    }
+
+    public function test_empty_filter_fields_are_ignored(): void
+    {
+        $this->makePost(['title' => 'Oq mushuk']);
+
+        $this->get(route('home', ['category_id' => $this->category->id, 'price_min' => '', 'price_max' => '', 'gender' => '', 'breed' => '', 'location' => '', 'currency' => '', 'sort' => 'latest']))
+            ->assertOk()
+            ->assertSee('Oq mushuk');
     }
 
     public function test_price_sort_compares_currencies_in_soum(): void

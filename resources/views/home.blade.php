@@ -28,29 +28,18 @@
             $slides[] = ['#2d2350', 'Sotmoqchimisiz?', "Bepul e'lon bering.", '<b>' . e($stats['sellers']) . '</b> sotuvchi bizga ishonadi', auth()->check() ? route('posts.create') : route('register'), auth()->check() ? "E'lon berish" : 'Boshlash', '🦜', null];
         }
     } else {
-        $sorts = [
-            'latest' => ['bi-clock', 'Eng yangilari'],
-            'price_asc' => ['bi-arrow-up-circle', 'Narx: arzonroq'],
-            'price_desc' => ['bi-arrow-down-circle', 'Narx: qimmatroq'],
-            'oldest' => ['bi-calendar', 'Eng eskisi'],
-        ];
         $f = $filters;
-        $resultsTitle = match (true) {
-            (bool) $category => $category->name,
-            $f->search !== '' => '"' . $f->search . "\" bo'yicha",
-            default => 'Qidiruv natijalari',
-        };
         // Removable chips: [query keys to drop, label]
         $chips = array_values(array_filter([
             $f->search !== '' ? [['q'], 'Qidiruv: "' . $f->search . '"'] : null,
             $category ? [['category_id'], $category->name] : null,
+            $f->breed !== '' ? [['breed'], 'Turi: ' . $f->breed] : null,
             $f->gender !== '' ? [['gender'], 'Jinsi: ' . ($f->gender === 'male' ? 'Erkak ♂' : "Urg'ochi ♀")] : null,
+            $f->region !== '' ? [['region'], 'Manzil: ' . $f->region] : null,
             $f->location !== '' ? [['location'], 'Manzil: ' . $f->location] : null,
             $f->currency !== '' ? [['currency'], 'Valyuta: ' . $f->currency] : null,
             ($f->priceMin !== null || $f->priceMax !== null) ? [['price_min', 'price_max'], 'Narx: ' . ($f->priceMin ?? '0') . ' — ' . ($f->priceMax ?? '∞')] : null,
         ]));
-        $menu = 'absolute top-[calc(100%+4px)] right-0 z-20 min-w-[170px] rounded-[10px] border border-line bg-white p-1.5 shadow-lg';
-        $menuItem = 'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] text-ink hover:bg-brand/12 hover:text-brand current:bg-brand/12 current:text-brand';
         $chip = 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors';
     }
 @endphp

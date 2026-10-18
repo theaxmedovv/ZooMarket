@@ -53,6 +53,7 @@ class UnifiedAccountTest extends TestCase
             'age' => '3 oy',
             'price' => 100000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
             'moderation_status' => 'approved',

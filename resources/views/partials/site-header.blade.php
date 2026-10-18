@@ -29,6 +29,7 @@
     }
     $zmPending = (int) ($pendingRequestsCount ?? 0);
     $zmModeration = (int) ($pendingModerationCount ?? 0);
+    $zmPendingBanners = (int) ($pendingBannersCount ?? 0);
 
     // Shared class lists for the chrome below.
     $zmBadge = 'grid h-[18px] min-w-[18px] place-items-center rounded-full bg-hot px-[5px] text-[11px] leading-none font-extrabold not-italic text-white';
@@ -58,17 +59,64 @@
             <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="zmCatalog" class="btn btn-primary h-10 gap-1.5 rounded-lg px-3 text-[13px] md:px-4">
                 <i class="bi bi-grid-fill"></i><span class="hidden sm:inline">Katalog</span>
             </button>
-            <div id="zmCatalog" hidden class="absolute top-[calc(100%+10px)] left-0 z-20 max-h-[70vh] w-[260px] overflow-y-auto rounded-[14px] border border-line bg-white p-2 shadow-[0_16px_36px_rgba(0,0,0,.12)]">
-                @foreach($zmCategories as $category)
-                    <a href="{{ route('home', ['category_id' => $category->id]) }}" @if($zmActiveCategory === $category->id) aria-current="page" @endif class="{{ $zmMenuItem }} current:text-brand">{{ $category->name }}</a>
-                @endforeach
+            {{-- Mega menu: categories on the left; hovering one shows its breeds, cities and genders on the right
+                 (counts come from listings on sale). Narrow screens get just the category list. --}}
+            <div id="zmCatalog" hidden data-catalog class="absolute top-[calc(100%+10px)] left-0 z-20 w-[min(980px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-line bg-white shadow-[0_16px_36px_rgba(0,0,0,.12)]">
+                <div class="grid md:grid-cols-[272px_1fr]">
+                    <ul class="max-h-[70vh] overflow-y-auto p-2 md:border-r md:border-line">
+                        @foreach($zmCategories as $category)
+                            <li>
+                                <a href="{{ route('home', ['category_id' => $category->id]) }}" data-catalog-tab="{{ $category->id }}" @if($zmActiveCategory === $category->id) aria-current="page" @endif
+                                   class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-ink hover:bg-soft aria-selected:bg-soft current:text-brand">
+                                    <span>{{ $category->name }}</span><i class="bi bi-chevron-right hidden text-xs text-faint md:inline"></i>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    @foreach($zmCategories as $category)
+                        @php
+                            $zmData = $catalogData[$category->id] ?? [];
+                            $zmGroups = array_filter([
+                                'Turi' => ['param' => 'breed', 'items' => $zmData['breeds'] ?? []],
+                                'Manzil' => ['param' => 'region', 'items' => $zmData['regions'] ?? []],
+                                'Jinsi' => ['param' => 'gender', 'items' => $zmData ? [['name' => 'male', 'label' => 'Erkak'], ['name' => 'female', 'label' => "Urg'ochi"]] : []],
+                            ], fn ($g) => count($g['items']) > 0);
+                        @endphp
+                        <section data-catalog-panel="{{ $category->id }}" hidden class="hidden max-h-[70vh] overflow-y-auto p-6 md:block">
+                            <a href="{{ route('home', ['category_id' => $category->id]) }}" class="mb-5 inline-flex items-center gap-1.5 text-lg font-extrabold text-ink hover:text-brand">{{ $category->name }} <i class="bi bi-chevron-right text-sm"></i></a>
+
+                            @if($zmGroups)
+                                <div class="grid grid-cols-3 gap-x-8 gap-y-6">
+                                    @foreach($zmGroups as $zmTitle => $zmGroup)
+                                        <div>
+                                            <h4 class="mb-2.5 text-sm font-extrabold text-ink">{{ $zmTitle }}</h4>
+                                            <ul class="flex flex-col gap-1.5">
+                                                @foreach($zmGroup['items'] as $zmItem)
+                                                    <li @if($loop->index >= 4) data-catalog-extra hidden @endif>
+                                                        <a href="{{ route('home', ['category_id' => $category->id, $zmGroup['param'] => $zmItem['name']]) }}" class="text-sm text-muted hover:text-brand">{{ $zmItem['label'] ?? $zmItem['name'] }}</a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                            @if(count($zmGroup['items']) > 4)
+                                                <button type="button" data-catalog-more class="mt-1.5 inline-flex cursor-pointer items-center gap-1 text-sm text-muted hover:text-brand">Yana {{ count($zmGroup['items']) - 4 }} <i class="bi bi-chevron-down text-xs"></i></button>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-sm text-muted">Bu kategoriyada hozircha e'lon yo'q.</p>
+                            @endif
+                        </section>
+                    @endforeach
+                </div>
             </div>
         </div>
 
         <form id="zmSearchForm" action="{{ $zmMine ? route('posts.mine') : route('home') }}" method="GET" role="search"
               class="relative order-last flex h-11 min-w-0 basis-full items-center gap-3 rounded-xl border border-transparent bg-brand-soft pr-1.5 pl-4 transition focus-within:border-brand focus-within:bg-white md:order-none md:h-10 md:max-w-[560px] md:flex-1 md:basis-auto">
             <button type="submit" aria-label="Qidirish" class="cursor-pointer leading-none"><i class="bi bi-search text-base text-brand"></i></button>
-            <input class="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-faint focus-visible:outline-none" type="search" name="q" value="{{ ($zmOnListing || $zmMine) ? request('q') : '' }}" placeholder="{{ $zmMine ? "E'lonlaringiz ichidan qidiring..." : "Hayvon, zot yoki shahar bo'yicha qidiring..." }}" aria-label="Qidirish">
+            <input class="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-faint focus-visible:outline-none" type="search" name="q" value="{{ ($zmOnListing || $zmMine) ? request('q') : '' }}" placeholder="{{ $zmMine ? "E'lonlaringiz ichidan qidiring..." : "Hayvon, tur yoki shahar bo'yicha qidiring..." }}" aria-label="Qidirish">
             @if($zmOnListing && request('sort'))
                 <input type="hidden" name="sort" value="{{ request('sort') }}">
             @endif
@@ -83,6 +131,7 @@
                     </a>
                     <a href="{{ route('banners.index') }}" @if(request()->routeIs('banners.*')) aria-current="page" @endif class="{{ $zmAction }}" aria-label="Bosh sahifa bannerlari">
                         <i class="bi bi-images {{ $zmActionIcon }}"></i><span class="hidden lg:inline">Bannerlar</span>
+                        @if($zmPendingBanners > 0)<em class="{{ $zmBadge }} absolute top-0.5 left-[26px]">{{ $zmPendingBanners > 99 ? '99+' : $zmPendingBanners }}</em>@endif
                     </a>
                 @else
                     {{-- The one and only "new listing" entry point --}}
@@ -116,6 +165,7 @@
                             <a href="{{ route('admin.purchase-requests.index') }}" class="{{ $zmMenuItem }}"><i class="bi bi-inbox text-base text-brand"></i>Kelgan so'rovlar
                                 @if($zmPending > 0)<em class="{{ $zmBadge }} ml-auto">{{ $zmPending > 99 ? '99+' : $zmPending }}</em>@endif</a>
                             <a href="{{ route('admin.archive.index') }}" class="{{ $zmMenuItem }}"><i class="bi bi-archive text-base text-brand"></i>Arxiv</a>
+                            <a href="{{ route('banners.index') }}" class="{{ $zmMenuItem }}"><i class="bi bi-images text-base text-brand"></i>Mening bannerlarim</a>
                         @endunless
                         <hr class="my-1.5 border-line">
                         <form action="{{ route('logout') }}" method="POST">

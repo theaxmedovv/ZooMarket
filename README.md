@@ -72,6 +72,29 @@ Ro'yxatdan o'ting (yoki Google orqali kiring). Bosh admin hisobi: `php artisan a
 
 Login sahifasi: `http://localhost:8000/login`
 
+### Parolni tiklash (Gmail orqali xat yuborish)
+
+Login sahifasidagi **«Parolni unutdingizmi?»** havolasi: email kiritiladi → emailga 6 xonali kod yuboriladi (10 daqiqa amal qiladi, 5 ta urinish) → kod tasdiqlangach yangi parol o'rnatiladi.
+
+Xat yuborish uchun Gmail sozlang:
+
+1. Google hisobingizda **2 bosqichli tasdiqlash**ni yoqing: <https://myaccount.google.com/security>
+2. **App password** yarating: <https://myaccount.google.com/apppasswords> (16 belgili parol; odatiy Gmail parolingiz ishlamaydi).
+3. `.env` faylida (namuna: `.env.example`):
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=sizning@gmail.com
+MAIL_PASSWORD=app-parol-16-belgi
+MAIL_FROM_ADDRESS="sizning@gmail.com"
+```
+
+4. `php artisan migrate` va `php artisan config:clear`.
+
+Lokal sinov uchun `MAIL_MAILER=log` qoldirilsa, kod xat o'rniga `storage/logs/laravel.log` fayliga yoziladi.
+
 ### Rollar va Permissions
 
 - **User**: bitta hisob bilan ham sotadi, ham sotib oladi — e'lon joylash/tahrirlash/o'chirish (faqat o'z e'lonlari), kelgan so'rovlarni boshqarish, buyurtma yuborish, sevimlilar, chat

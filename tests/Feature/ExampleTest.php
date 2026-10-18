@@ -51,6 +51,7 @@ class ExampleTest extends TestCase
             'description' => 'Sog\'lom kuchukcha',
             'price' => 1500000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
             'moderation_status' => 'approved',
@@ -98,7 +99,6 @@ class ExampleTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Katalog');
-        $response->assertSee('Narx: arzonroq');
     }
 
     public function test_post_detail_page_loads_with_modern_marketplace_layout(): void
@@ -117,6 +117,7 @@ class ExampleTest extends TestCase
             'price' => 1500000,
             'currency' => 'UZS',
             'is_negotiable' => true,
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
             'content' => 'Juda chiroyli va sog\'lom kuchukcha',
@@ -157,6 +158,7 @@ class ExampleTest extends TestCase
             'price' => 2500,
             'currency' => 'UZS',
             'is_negotiable' => true,
+            'region' => 'Toshkent shahri',
             'location' => 'Tashkent',
             'status' => 'active',
             'content' => 'Healthy pet',

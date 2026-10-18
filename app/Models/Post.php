@@ -25,6 +25,7 @@ class Post extends Model
         'price',
         'currency',
         'is_negotiable',
+        'region',
         'location',
         'status',
         'moderation_status',
@@ -78,6 +79,14 @@ class Post extends Model
     public function isRejected(): bool
     {
         return $this->moderation_status === 'rejected';
+    }
+
+    /**
+     * "Chilonzor tumani, Toshkent shahri": the exact place the owner typed, then the region they chose.
+     */
+    public function fullLocation(): string
+    {
+        return collect([$this->location, $this->region])->filter()->implode(', ');
     }
 
     public function scopeApproved($query)

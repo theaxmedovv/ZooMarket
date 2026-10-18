@@ -259,7 +259,7 @@ class GroqModerationService
         $age = $post->age ?? '';
         $color = $post->color ?? '';
         $price = $post->price ? "{$post->price} {$post->currency}" : 'Kelishilgan';
-        $location = $post->location ?? '';
+        $location = $post->fullLocation();
         $description = $post->description ?? $post->content ?? '';
 
         return <<<TEXT

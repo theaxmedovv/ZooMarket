@@ -53,6 +53,7 @@ class PageRenderTest extends TestCase
             'female_quantity' => 1,
             'price' => 900000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
             'moderation_status' => 'approved',

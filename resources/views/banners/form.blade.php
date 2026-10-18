@@ -7,9 +7,10 @@
     $label = 'field-label';
     $hint = 'mt-1 text-xs text-muted';
     $color = old('color', $banner->color);
+    $isAdmin = auth()->user()->hasRole('admin');
 @endphp
 <div class="page">
-    <x-page-head :title="$editing ? 'Bannerni tahrirlash' : 'Yangi banner'" subtitle="Banner bosh sahifadagi almashib turadigan slaydlar orasida ko'rsatiladi." />
+    <x-page-head :title="$editing ? 'Bannerni tahrirlash' : 'Yangi banner'" subtitle="{{ $isAdmin ? 'Banner bosh sahifadagi almashib turadigan slaydlar orasida ko\'rsatiladi.' : 'Banner tasdiqlangach bosh sahifada ko\'rinadi. Tahrirlansa, qayta tekshiriladi.' }}" />
 
     <div class="card max-w-[880px] p-5 md:p-8">
         <form action="{{ $editing ? route('banners.update', $banner) : route('banners.store') }}" method="POST" enctype="multipart/form-data">
@@ -86,11 +87,13 @@
                     <p class="{{ $hint }}">Rasm yuklanmagan bo'lsa, bannerning o'ng tomonida katta qilib ko'rsatiladi.</p>
                 </div>
 
-                <div>
-                    <label for="sort_order" class="{{ $label }}">Tartib raqami</label>
-                    <input type="number" name="sort_order" id="sort_order" value="{{ old('sort_order', $banner->sort_order ?? 0) }}" class="{{ $field }}" min="0" max="999">
-                    <p class="{{ $hint }}">Kichik raqamli banner birinchi chiqadi.</p>
-                </div>
+                @if($isAdmin)
+                    <div>
+                        <label for="sort_order" class="{{ $label }}">Tartib raqami</label>
+                        <input type="number" name="sort_order" id="sort_order" value="{{ old('sort_order', $banner->sort_order ?? 0) }}" class="{{ $field }}" min="0" max="999">
+                        <p class="{{ $hint }}">Kichik raqamli banner birinchi chiqadi.</p>
+                    </div>
+                @endif
                 <div class="flex items-center">
                     <label class="flex cursor-pointer items-center gap-3 text-sm font-semibold text-ink">
                         <input type="hidden" name="is_active" value="0">

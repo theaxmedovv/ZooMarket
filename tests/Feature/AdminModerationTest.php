@@ -52,6 +52,7 @@ class AdminModerationTest extends TestCase
             'description' => 'Sog\'lom, emlangan kuchukcha.',
             'price' => 300000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
         ]);
@@ -67,7 +68,7 @@ class AdminModerationTest extends TestCase
 
         $this->actingAs($this->seller)->get(route('posts.show', $post))
             ->assertOk()
-            ->assertSee('admin tekshiruvida', false);
+            ->assertSee('tekshiruvda. Biroz vaqtdan keyin tasdiqlanadi', false);
 
         $this->actingAs($this->buyer)->get(route('posts.show', $post))->assertNotFound();
         $this->actingAs($this->buyer)->get(route('home'))->assertDontSee('Labrador kuchukcha');
@@ -144,6 +145,7 @@ class AdminModerationTest extends TestCase
             'description' => 'Yangilangan tavsif.',
             'price' => 350000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
         ]);

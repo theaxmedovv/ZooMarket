@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with(once(function () {
                 $pendingRequestsCount = 0;
                 $pendingModerationCount = 0;
+                $pendingBannersCount = 0;
                 $unread = 0;
                 $favoritesCount = 0;
 
@@ -46,7 +47,15 @@ class AppServiceProvider extends ServiceProvider
 
                     if (auth()->user()->hasRole('admin')) {
                         $pendingModerationCount = \App\Models\Post::where('moderation_status', 'pending')->count();
+                        $pendingBannersCount = \App\Models\Banner::where('moderation_status', 'pending')->count();
                     }
+                }
+
+                // Katalog menu: per category, the most common breeds and cities among listings on sale
+                try {
+                    $catalog = \App\Support\Catalog::stats();
+                } catch (\Throwable $e) {
+                    $catalog = [];
                 }
 
                 try {
@@ -59,6 +68,8 @@ class AppServiceProvider extends ServiceProvider
                     'globalUnreadCount' => $unread,
                     'pendingRequestsCount' => $pendingRequestsCount,
                     'pendingModerationCount' => $pendingModerationCount,
+                    'pendingBannersCount' => $pendingBannersCount,
+                    'catalogData' => $catalog,
                     'navCategories' => $navCategories,
                     'favoritesCount' => $favoritesCount,
                 ];

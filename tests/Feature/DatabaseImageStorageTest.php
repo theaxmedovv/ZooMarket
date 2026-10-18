@@ -117,6 +117,7 @@ class DatabaseImageStorageTest extends TestCase
             'age' => '1 yosh',
             'price' => 2000000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
             'images' => [$img1, $img2],

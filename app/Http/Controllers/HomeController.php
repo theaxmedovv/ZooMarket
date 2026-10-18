@@ -6,6 +6,7 @@ use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Post;
 use App\Models\User;
+use App\Support\Catalog;
 use App\Support\ListingFilters;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,8 +31,11 @@ class HomeController extends Controller
             $results = $filters->apply($this->listed())->paginate(self::PER_PAGE, page: 1);
             $moreUrl = $this->moreUrl($request, 'results', $results);
             $category = $filters->categoryId ? Category::find($filters->categoryId) : null;
+            $categories = Category::orderBy('name')->get();
+            // Breed and city choices of the chosen category, for the filter sidebar
+            $facets = $category ? (Catalog::stats()[$category->id] ?? []) : [];
 
-            return view('home', compact('filters', 'results', 'moreUrl', 'category', 'likedPostIds'));
+            return view('home', compact('filters', 'results', 'moreUrl', 'category', 'categories', 'facets', 'likedPostIds'));
         }
 
         $popular = $this->popular()->paginate(self::PER_PAGE, page: 1);
@@ -50,7 +54,7 @@ class HomeController extends Controller
             'sellers' => User::whereHas('posts', fn ($q) => $q->listed())->count(),
         ];
 
-        $banners = Banner::active()->ordered()->get();
+        $banners = Banner::shown()->ordered()->get();
 
         return view('home', compact('filters', 'popular', 'moreUrl', 'cheapest', 'stats', 'banners', 'likedPostIds'));
     }

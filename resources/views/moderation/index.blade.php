@@ -43,11 +43,11 @@
 
                     <div class="mt-2 flex flex-wrap gap-1.5">
                         <span class="{{ $chip }}"><i class="bi bi-tag"></i>{{ $post->category?->name ?? '—' }}</span>
-                        <span class="{{ $chip }}">Zot: {{ $post->breed }}</span>
+                        <span class="{{ $chip }}">Turi: {{ $post->breed }}</span>
                         <span class="{{ $chip }}">Yosh: {{ $post->age }}</span>
                         @if($post->color)<span class="{{ $chip }}">Rang: {{ $post->color }}</span>@endif
                         <span class="{{ $chip }}"><i class="bi bi-box-seam"></i>{{ $post->quantity }} ta ({{ $post->male_quantity }} ♂ / {{ $post->female_quantity }} ♀)</span>
-                        <span class="{{ $chip }}"><i class="bi bi-geo-alt"></i>{{ $post->location }}</span>
+                        <span class="{{ $chip }}"><i class="bi bi-geo-alt"></i>{{ $post->fullLocation() }}</span>
                     </div>
 
                     <p class="mt-3 line-clamp-6 text-sm whitespace-pre-line text-ink">{{ $post->description }}</p>

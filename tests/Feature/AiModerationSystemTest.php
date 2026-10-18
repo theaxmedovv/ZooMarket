@@ -84,6 +84,7 @@ class AiModerationSystemTest extends TestCase
             'description' => 'Sog\'lom, barcha emlashlari qilingan mehribon mushukcha.',
             'price' => 500000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
         ]);
@@ -136,6 +137,7 @@ class AiModerationSystemTest extends TestCase
             'description' => 'Tog\'dan olib kelingan yovvoyi bars bolasi.',
             'price' => 50000000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
         ]);
@@ -183,6 +185,7 @@ class AiModerationSystemTest extends TestCase
             'age' => '1',
             'price' => 100000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
             'moderation_status' => 'rejected',
@@ -224,6 +227,7 @@ class AiModerationSystemTest extends TestCase
             'description' => 'Haqiqiy toza qonli fors mushugi, barcha hujjatlari bor.',
             'price' => 1200000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
         ]);
@@ -254,6 +258,7 @@ class AiModerationSystemTest extends TestCase
             'age' => '2 oylik',
             'price' => 80000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Samarqand',
             'status' => 'active',
             'moderation_status' => 'pending',
@@ -270,7 +275,7 @@ class AiModerationSystemTest extends TestCase
         // Seller CAN see with pending status
         $sellerShow = $this->actingAs($this->seller)->get(route('posts.show', $post));
         $sellerShow->assertStatus(200);
-        $sellerShow->assertSee('admin tekshiruvida', false);
+        $sellerShow->assertSee('tekshiruvda. Biroz vaqtdan keyin tasdiqlanadi', false);
     }
 
     /**
@@ -290,6 +295,7 @@ class AiModerationSystemTest extends TestCase
             'age' => '1',
             'price' => 10000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
             'moderation_status' => 'rejected',
@@ -326,6 +332,7 @@ class AiModerationSystemTest extends TestCase
             'description' => 'Juda chiroyli kuchukcha',
             'price' => 200000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
         ]);
@@ -359,6 +366,7 @@ class AiModerationSystemTest extends TestCase
             'description' => 'Gapiradigan chiroyli to\'tiqush',
             'price' => 150000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Samarqand',
             'status' => 'active',
         ]);

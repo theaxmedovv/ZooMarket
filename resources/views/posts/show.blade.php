@@ -68,14 +68,12 @@
                 </div>
             </div>
         @elseif($post->moderation_status === 'pending')
-            <div class="mb-6 flex items-center gap-3 rounded-2xl border border-amber-400/50 bg-amber-400/8 p-4 shadow-sm">
-                <div class="grid size-11 shrink-0 place-items-center rounded-full bg-amber-400/25 text-amber-500"><i class="bi bi-hourglass-split text-xl"></i></div>
-                <div class="flex-1">
-                    <h6 class="font-bold text-amber-600"><i class="bi bi-shield-check mr-1"></i> E'lon admin tekshiruvida</h6>
-                    <small class="text-ink/70">Hozircha e'lonni faqat siz ko'rasiz. Admin tasdiqlagandan so'ng u hammaga ko'rinadi.</small>
-                </div>
-                <span class="rounded-md bg-amber-400 px-2 py-1 text-xs font-bold text-ink">Tekshirilmoqda</span>
-            </div>
+            {{-- A small toast that fades away on its own; right after posting, the redirect's own toast already says this --}}
+            @unless(session('info'))
+                <script>
+                    addEventListener('DOMContentLoaded', () => window.zmToast(@json("E'lon tekshiruvda. Biroz vaqtdan keyin tasdiqlanadi va hammaga ko'rinadi."), 'warning'));
+                </script>
+            @endunless
         @endif
     @endif
 
@@ -199,7 +197,7 @@
                             <span class="{{ $chip }}"><i class="bi bi-award text-brand"></i> {{ $post->breed }}</span>
                         @endif
                         @if($post->location)
-                            <span class="{{ $chip }}"><i class="bi bi-geo-alt text-accent"></i> {{ $post->location }}</span>
+                            <span class="{{ $chip }}"><i class="bi bi-geo-alt text-accent"></i> {{ $post->fullLocation() }}</span>
                         @endif
                     </div>
                 </div>
@@ -247,11 +245,11 @@
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         @foreach([
                             ['bi-tag', 'Kategoriya', $post->category?->name ?? '—'],
-                            ['bi-award', 'Zot', $post->breed ?: '—'],
+                            ['bi-award', 'Turi', $post->breed ?: '—'],
                             ['bi-gender-ambiguous', 'Jinsi', match ($post->gender) { 'mixed' => 'Aralash (Mixed)', 'female' => "Urg'ochi ♀", default => 'Erkak ♂' }],
                             ['bi-calendar3', 'Yoshi', $post->age ?: '—'],
                             ['bi-palette', 'Rangi', $post->color ?: '—'],
-                            ['bi-geo-alt', 'Manzil', $post->location ?: '—'],
+                            ['bi-geo-alt', 'Manzil', $post->fullLocation() ?: '—'],
                         ] as [$icon, $label, $value])
                             <div class="flex flex-col gap-0.5 rounded-[10px] border border-line bg-surface px-3 py-[9px]">
                                 <span class="text-[11px] font-semibold tracking-wide text-muted uppercase"><i class="bi {{ $icon }} mr-1"></i> {{ $label }}</span>
@@ -375,7 +373,7 @@
                 {{-- Post summary --}}
                 <div class="rounded-xl border border-line bg-surface px-3.5 py-3">
                     <div class="font-bold text-ink">{{ $post->title }}</div>
-                    <div class="text-sm text-muted">{{ $post->breed }} &bull; {{ $post->location }}</div>
+                    <div class="text-sm text-muted">{{ $post->breed }} &bull; {{ $post->fullLocation() }}</div>
                     <div class="mt-1 font-bold text-brand">
                         {{ number_format((float) $post->price, 0, '.', ' ') }} {{ $post->currency }}
                         <span class="text-sm font-normal text-muted">/ 1 ta uchun</span>

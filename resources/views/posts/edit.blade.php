@@ -30,7 +30,7 @@
                     <div class="text-sm">
                         <strong class="block text-base text-danger">E'lon avval {{ $post->moderated_by ? 'admin' : 'avtomatik tekshiruv' }} tomonidan rad etilgan</strong>
                         <div class="mt-1 text-muted"><strong>Rad etilish sababi:</strong> {{ $post->moderation_reason }}</div>
-                        <div class="mt-1 text-muted">E'lon ma'lumotlari yoki fotosuratlarini to'g'rilab saqlasangiz, u qayta admin tekshiruviga yuboriladi.</div>
+                        <div class="mt-1 text-muted">O'zgartirib saqlasangiz, e'lon qayta tekshiriladi.</div>
                     </div>
                 </div>
             @endif
@@ -50,7 +50,7 @@
                     </select>
                 </div>
                 <div class="col-span-2">
-                    <label for="breed" class="{{ $label }}">Zot</label>
+                    <label for="breed" class="{{ $label }}">Turi</label>
                     <input type="text" name="breed" id="breed" value="{{ old('breed', $post->breed) }}" class="{{ $field }}" required>
                 </div>
                 <div class="col-span-2">
@@ -108,8 +108,17 @@
                         <option value="sold" @selected(old('status', $post->status) === 'sold')>Sotilgan</option>
                     </select>
                 </div>
-                <div class="col-span-full">
-                    <label for="location" class="{{ $label }}">Joylashuv</label>
+                <div class="col-span-2">
+                    <label for="region" class="{{ $label }}">Viloyat</label>
+                    <select name="region" id="region" class="{{ $field }}" required>
+                        <option value="">Viloyatni tanlang</option>
+                        @foreach(config('zoomarket.regions') as $region)
+                            <option value="{{ $region }}" @selected(old('region', $post->region) === $region)>{{ $region }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label for="location" class="{{ $label }}">Shahar / tuman (aniq joy)</label>
                     <input type="text" name="location" id="location" value="{{ old('location', $post->location) }}" class="{{ $field }}" required>
                 </div>
                 <label for="is_negotiable" class="col-span-full inline-flex cursor-pointer items-center gap-2 text-sm text-ink">

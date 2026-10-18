@@ -99,10 +99,10 @@
         {{-- Breed, location, gender --}}
         <div class="mb-3 flex flex-wrap gap-1.5">
             @if($post->breed)
-                <span class="{{ $metaChip }}" title="Zot"><i class="bi bi-award text-brand"></i> {{ Str::limit($post->breed, 15) }}</span>
+                <span class="{{ $metaChip }}" title="Turi"><i class="bi bi-award text-brand"></i> {{ Str::limit($post->breed, 15) }}</span>
             @endif
             @if($post->location)
-                <span class="{{ $metaChip }}" title="Manzil"><i class="bi bi-geo-alt text-accent"></i> {{ Str::limit($post->location, 14) }}</span>
+                <span class="{{ $metaChip }}" title="{{ $post->fullLocation() }}"><i class="bi bi-geo-alt text-accent"></i> {{ Str::limit($post->location, 14) }}</span>
             @endif
             <span class="{{ $metaChip }}" title="Jinsi">
                 @if($post->gender === 'mixed')

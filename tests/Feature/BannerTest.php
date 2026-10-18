@@ -115,21 +115,170 @@ class BannerTest extends TestCase
         $this->assertSame(0, DatabaseImage::count());
     }
 
-    public function test_only_admin_can_manage_banners(): void
+    private function user(string $name = 'Ali'): User
     {
-        $seller = User::factory()->create();
-        $seller->syncRoles(['user']);
-        $buyer = User::factory()->create();
-        $buyer->syncRoles(['user']);
+        $user = User::factory()->create(['name' => $name]);
+        $user->syncRoles(['user']);
 
-        foreach ([$seller, $buyer] as $user) {
-            $this->actingAs($user)->get(route('banners.index'))->assertForbidden();
-            $this->actingAs($user)->post(route('banners.store'), $this->payload())->assertForbidden();
-        }
+        return $user;
+    }
 
+    public function test_any_user_can_add_a_banner_but_it_waits_for_the_admin(): void
+    {
+        $owner = $this->user();
+
+        $this->actingAs($owner)->get(route('banners.create'))->assertOk();
+        $this->actingAs($owner)->post(route('banners.store'), $this->payload(['sort_order' => 5]))
+            ->assertRedirect(route('banners.index'))
+            ->assertSessionHas('info');
+
+        $banner = Banner::firstOrFail();
+        $this->assertSame($owner->id, $banner->created_by);
+        $this->assertSame('pending', $banner->moderation_status);
+        $this->assertSame(0, $banner->sort_order, 'Only the admin sets the order');
+
+        // Not on the home page yet, for anyone
+        auth()->logout();
+        $this->get(route('home'))->assertOk()->assertDontSee('Itlar uchun ozuqa');
+    }
+
+    public function test_admin_banner_needs_no_review(): void
+    {
+        $this->actingAs($this->admin)->post(route('banners.store'), $this->payload());
+
+        $banner = Banner::firstOrFail();
+        $this->assertSame('approved', $banner->moderation_status);
+        $this->assertSame($this->admin->id, $banner->moderated_by);
+    }
+
+    public function test_admin_approval_puts_the_banner_on_the_home_page(): void
+    {
+        $owner = $this->user();
+        $this->actingAs($owner)->post(route('banners.store'), $this->payload());
+        $banner = Banner::firstOrFail();
+
+        $this->actingAs($this->admin)->post(route('banners.approve', $banner))->assertRedirect();
+
+        $banner->refresh();
+        $this->assertSame('approved', $banner->moderation_status);
+        $this->assertSame($this->admin->id, $banner->moderated_by);
+
+        auth()->logout();
+        $this->get(route('home'))->assertOk()->assertSee('Itlar uchun ozuqa');
+    }
+
+    public function test_rejection_needs_a_reason_and_the_owner_sees_it(): void
+    {
+        $owner = $this->user();
+        $this->actingAs($owner)->post(route('banners.store'), $this->payload());
+        $banner = Banner::firstOrFail();
+
+        $this->actingAs($this->admin)->post(route('banners.reject', $banner), ['reason' => ''])->assertSessionHasErrors('reason');
+        $this->assertSame('pending', $banner->fresh()->moderation_status);
+
+        $this->actingAs($this->admin)->post(route('banners.reject', $banner), ['reason' => 'Rasm sifatsiz'])->assertRedirect();
+        $this->assertSame('rejected', $banner->fresh()->moderation_status);
+
+        $this->actingAs($owner)->get(route('banners.index'))->assertOk()->assertSee('Rasm sifatsiz')->assertSee('Rad etilgan');
+
+        auth()->logout();
+        $this->get(route('home'))->assertDontSee('Itlar uchun ozuqa');
+    }
+
+    public function test_editing_an_approved_banner_sends_it_back_for_review(): void
+    {
+        $owner = $this->user();
+        $banner = Banner::create($this->payload() + ['created_by' => $owner->id]);
+        $this->assertSame('approved', $banner->fresh()->moderation_status);
+
+        $this->actingAs($owner)->put(route('banners.update', $banner), $this->payload(['title' => 'Yangi sarlavha']))
+            ->assertRedirect(route('banners.index'));
+
+        $banner->refresh();
+        $this->assertSame('pending', $banner->moderation_status);
+        $this->assertNull($banner->moderated_by);
+
+        auth()->logout();
+        $this->get(route('home'))->assertDontSee('Yangi sarlavha');
+    }
+
+    public function test_admin_edit_keeps_the_banner_approved(): void
+    {
+        $owner = $this->user();
+        $banner = Banner::create($this->payload() + ['created_by' => $owner->id]);
+
+        $this->actingAs($this->admin)->put(route('banners.update', $banner), $this->payload(['title' => 'Admin tahriri', 'sort_order' => 3]));
+
+        $banner->refresh();
+        $this->assertSame('approved', $banner->moderation_status);
+        $this->assertSame(3, $banner->sort_order);
+    }
+
+    public function test_user_only_sees_and_manages_their_own_banners(): void
+    {
+        $alice = $this->user('Alice');
+        $bob = $this->user('Bob');
+        $alices = Banner::create($this->payload(['title' => 'Alisaning banneri']) + ['created_by' => $alice->id]);
+        Banner::create($this->payload(['title' => 'Bobning banneri']) + ['created_by' => $bob->id]);
+
+        $this->actingAs($alice)->get(route('banners.index'))
+            ->assertOk()
+            ->assertSee('Alisaning banneri')
+            ->assertDontSee('Bobning banneri');
+
+        $bobs = Banner::where('created_by', $bob->id)->first();
+        $this->actingAs($alice)->get(route('banners.edit', $bobs))->assertForbidden();
+        $this->actingAs($alice)->put(route('banners.update', $bobs), $this->payload())->assertForbidden();
+        $this->actingAs($alice)->patch(route('banners.toggle', $bobs))->assertForbidden();
+        $this->actingAs($alice)->delete(route('banners.destroy', $bobs))->assertForbidden();
+        $this->assertDatabaseCount('banners', 2);
+
+        $this->actingAs($alice)->delete(route('banners.destroy', $alices))->assertRedirect(route('banners.index'));
+        $this->assertDatabaseCount('banners', 1);
+    }
+
+    public function test_only_the_admin_can_approve_or_reject(): void
+    {
+        $owner = $this->user();
+        $banner = Banner::create($this->payload() + ['created_by' => $owner->id, 'moderation_status' => 'pending']);
+
+        $this->actingAs($owner)->post(route('banners.approve', $banner))->assertForbidden();
+        $this->actingAs($owner)->post(route('banners.reject', $banner), ['reason' => 'Mening bannerim'])->assertForbidden();
+        auth()->logout();
+        $this->post(route('banners.approve', $banner))->assertRedirect(route('login'));
+
+        $this->assertSame('pending', $banner->fresh()->moderation_status);
+    }
+
+    public function test_admin_sees_every_banner_with_review_controls(): void
+    {
+        $owner = $this->user('Valijon');
+        Banner::create($this->payload(['title' => 'Kutilayotgan banner']) + ['created_by' => $owner->id, 'moderation_status' => 'pending']);
+
+        $this->actingAs($this->admin)->get(route('banners.index'))
+            ->assertOk()
+            ->assertSee('Kutilayotgan banner')
+            ->assertSee('Valijon')
+            ->assertSee('Tasdiqlash')
+            ->assertSee('Rad etish');
+
+        $this->actingAs($this->admin)->get(route('banners.index', ['status' => 'approved']))->assertDontSee('Kutilayotgan banner');
+    }
+
+    public function test_admin_header_shows_pending_banner_count(): void
+    {
+        $owner = $this->user();
+        Banner::create($this->payload() + ['created_by' => $owner->id, 'moderation_status' => 'pending']);
+        Banner::create($this->payload() + ['created_by' => $owner->id, 'moderation_status' => 'pending']);
+
+        $html = $this->actingAs($this->admin)->get(route('banners.index'))->getContent();
+        $this->assertMatchesRegularExpression('#Bannerlar</span>\s*<em[^>]*>2</em>#', $html);
+    }
+
+    public function test_guests_cannot_reach_banner_pages(): void
+    {
+        $this->get(route('banners.index'))->assertRedirect(route('login'));
+        $this->post(route('banners.store'), $this->payload())->assertRedirect(route('login'));
         $this->assertDatabaseCount('banners', 0);
-
-        $this->actingAs($this->admin)->get(route('banners.index'))->assertOk();
-        $this->actingAs($this->admin)->get(route('banners.create'))->assertOk();
     }
 }

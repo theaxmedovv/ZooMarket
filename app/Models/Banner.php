@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * A home page hero slide placed by the main admin.
+ * A home page hero slide. Any user can place one; it is shown only after the main admin approves it.
  */
 class Banner extends Model
 {
@@ -34,11 +34,16 @@ class Banner extends Model
         'sort_order',
         'is_active',
         'created_by',
+        'moderation_status',
+        'moderation_reason',
+        'moderated_at',
+        'moderated_by',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'moderated_at' => 'datetime',
     ];
 
     public function creator(): BelongsTo
@@ -46,9 +51,27 @@ class Banner extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function moderator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'moderated_by');
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true);
+    }
+
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $query->where('moderation_status', 'approved');
+    }
+
+    /**
+     * What the home page shows: switched on by the owner and approved by the admin.
+     */
+    public function scopeShown(Builder $query): Builder
+    {
+        return $query->active()->approved();
     }
 
     public function scopeOrdered(Builder $query): Builder

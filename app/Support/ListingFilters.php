@@ -20,6 +20,8 @@ class ListingFilters
         public string $search = '',
         public ?int $categoryId = null,
         public string $gender = '',
+        public string $breed = '',
+        public string $region = '',
         public string $location = '',
         public string $currency = '',
         public ?float $priceMin = null,
@@ -44,6 +46,8 @@ class ListingFilters
             search: trim((string) $request->query('q', '')),
             categoryId: $categoryId,
             gender: in_array($gender, ['male', 'female'], true) ? $gender : '',
+            breed: trim((string) $request->query('breed', '')),
+            region: in_array($request->query('region'), config('zoomarket.regions'), true) ? $request->query('region') : '',
             location: trim((string) $request->query('location', '')),
             currency: in_array($currency, self::CURRENCIES, true) ? $currency : '',
             priceMin: is_numeric($priceMin) ? (float) $priceMin : null,
@@ -57,7 +61,7 @@ class ListingFilters
      */
     public function active(): bool
     {
-        return $this->search !== '' || $this->categoryId || $this->gender !== '' || $this->location !== ''
+        return $this->search !== '' || $this->categoryId || $this->gender !== '' || $this->breed !== '' || $this->region !== '' || $this->location !== ''
             || $this->currency !== '' || $this->priceMin !== null || $this->priceMax !== null || $this->sort !== 'latest';
     }
 
@@ -66,6 +70,8 @@ class ListingFilters
         $query
             ->when($this->categoryId, fn ($q) => $q->where('category_id', $this->categoryId))
             ->when($this->gender !== '', fn ($q) => $q->where('gender', $this->gender))
+            ->when($this->breed !== '', fn ($q) => $q->where('breed', $this->breed))
+            ->when($this->region !== '', fn ($q) => $q->where('region', $this->region))
             ->when($this->location !== '', fn ($q) => $q->where('location', 'like', "%{$this->location}%"))
             ->when($this->currency !== '', fn ($q) => $q->where('currency', $this->currency))
             ->when($this->priceMin !== null, fn ($q) => $q->where('price', '>=', $this->priceMin))
@@ -103,6 +109,8 @@ class ListingFilters
         return [
             'category_id' => $this->categoryId,
             'gender' => $this->gender,
+            'breed' => $this->breed,
+            'region' => $this->region,
             'location' => $this->location,
             'currency' => $this->currency,
             'price_min' => $this->priceMin,

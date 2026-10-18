@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\FavoriteController;
@@ -28,6 +29,15 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+
+    // Forgot password: email -> code mailed via Gmail -> new password
+    Route::get('/forgot-password', [PasswordResetController::class, 'showEmailForm'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendCode'])->name('password.email');
+    Route::get('/forgot-password/code', [PasswordResetController::class, 'showCodeForm'])->name('password.code');
+    Route::post('/forgot-password/code', [PasswordResetController::class, 'verifyCode'])->name('password.verify');
+    Route::post('/forgot-password/resend', [PasswordResetController::class, 'resendCode'])->name('password.resend');
+    Route::get('/reset-password', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
 
     Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle'])->name('auth.google.redirect');
     Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
@@ -132,7 +142,13 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/moderation/posts/{post}/approve', [ModerationController::class, 'approve'])->name('moderation.approve');
     Route::post('/moderation/posts/{post}/reject', [ModerationController::class, 'reject'])->name('moderation.reject');
 
-    // Rotating hero slides on the home page
+    // Banner review (the banners themselves are managed by their owners, below)
+    Route::post('/banners/{banner}/approve', [BannerController::class, 'approve'])->name('banners.approve');
+    Route::post('/banners/{banner}/reject', [BannerController::class, 'reject'])->name('banners.reject');
+});
+
+// Rotating hero slides on the home page: any user places their own, the admin sees and reviews all
+Route::middleware(['auth', 'role:user|admin'])->group(function () {
     Route::resource('banners', BannerController::class)->except('show');
     Route::patch('/banners/{banner}/toggle', [BannerController::class, 'toggle'])->name('banners.toggle');
 });

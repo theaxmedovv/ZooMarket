@@ -11,10 +11,13 @@
         <x-auth-input id="login_password" label="Parol" icon="bi-lock" :password="true" type="password" name="password"
                       :aria-invalid="$errors->has('password') ? 'true' : false" placeholder="••••••••" required autocomplete="current-password" />
 
-        <label class="mb-6 inline-flex cursor-pointer items-center gap-2 text-[13px] text-muted select-none" for="remember">
-            <input class="size-4 cursor-pointer accent-brand" type="checkbox" name="remember" id="remember">
-            <span>Meni eslab qol</span>
-        </label>
+        <div class="mb-6 flex items-center justify-between gap-3 text-[13px]">
+            <label class="inline-flex cursor-pointer items-center gap-2 text-muted select-none" for="remember">
+                <input class="size-4 cursor-pointer accent-brand" type="checkbox" name="remember" id="remember">
+                <span>Meni eslab qol</span>
+            </label>
+            <a href="{{ route('password.request') }}" class="font-semibold text-brand hover:text-brand-dark hover:underline">Parolni unutdingizmi?</a>
+        </div>
 
         <button type="submit" class="btn btn-primary mb-6 h-12 w-full rounded-xl text-[15px] font-bold shadow-[0_4px_14px_rgba(0,142,204,.2)] hover:-translate-y-px hover:shadow-[0_8px_22px_rgba(0,142,204,.35)]">
             <span>Kirish</span> <i class="bi bi-box-arrow-in-right"></i>

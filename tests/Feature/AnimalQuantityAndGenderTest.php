@@ -49,6 +49,7 @@ class AnimalQuantityAndGenderTest extends TestCase
             'age' => '6 oy',
             'price' => 1500000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Toshkent',
             'status' => 'active',
         ]);
@@ -127,6 +128,7 @@ class AnimalQuantityAndGenderTest extends TestCase
             'age' => '2 oy',
             'price' => 2000000,
             'currency' => 'UZS',
+            'region' => 'Toshkent shahri',
             'location' => 'Samarqand',
             'status' => 'active',
         ]);

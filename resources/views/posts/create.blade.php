@@ -28,17 +28,6 @@
         </div>
     @endif
 
-    {{-- AI moderation notice --}}
-    <div class="mb-6 flex items-center gap-3 rounded-2xl border border-brand/25 bg-brand/5 p-4">
-        <div class="grid size-11 shrink-0 place-items-center rounded-full bg-brand/12 text-xl text-brand"><i class="bi bi-robot"></i></div>
-        <div class="text-sm">
-            <strong class="block text-brand">Sun'iy Intellekt (Groq AI) Moderatsiyasi</strong>
-            <span class="text-ink/70">
-                Har bir e'lonning matni va fotosuratlari xavfsizlik, soxta e'lonlar va taqiqlangan turlarga qarshi Groq AI orqali avtomatik tekshiriladi. Faqat mezonlarga javob beradigan e'lonlar ommaga e'lon qilinadi.
-            </span>
-        </div>
-    </div>
-
     <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data" id="createPostForm">
         @csrf
 
@@ -47,7 +36,7 @@
             <div class="flex flex-col gap-6 lg:col-span-2">
 
                 {{-- Section 1: basics --}}
-                <x-form-section icon="bi-info-circle-fill" title="Asosiy ma'lumotlar" desc="E'lonning nomi, kategoriyasi va zotini belgilang">
+                <x-form-section icon="bi-info-circle-fill" title="Asosiy ma'lumotlar" desc="E'lonning nomi, kategoriyasi va turini belgilang">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="md:col-span-2">
                             <label for="title" class="{{ $label }}">E'lon sarlavhasi {!! $required !!}</label>
@@ -76,7 +65,7 @@
                         </div>
 
                         <div>
-                            <label for="breed" class="{{ $label }}">Zot (Breed) {!! $required !!}</label>
+                            <label for="breed" class="{{ $label }}">Turi {!! $required !!}</label>
                             <div class="{{ $iconWrap }}">
                                 <i class="bi bi-tag-fill {{ $icon }}"></i>
                                 <input type="text" name="breed" id="breed" value="{{ old('breed') }}" class="{{ $field }}"
@@ -209,11 +198,24 @@
                             </label>
                         </div>
 
-                        <div class="md:col-span-3">
-                            <label for="location" class="{{ $label }}">Manzil / Joylashuv {!! $required !!}</label>
+                        <div class="md:col-span-1">
+                            <label for="region" class="{{ $label }}">Viloyat {!! $required !!}</label>
+                            <div class="{{ $iconWrap }}">
+                                <i class="bi bi-map-fill {{ $icon }}"></i>
+                                <select name="region" id="region" class="{{ $field }} cursor-pointer" required>
+                                    <option value="">Viloyatni tanlang</option>
+                                    @foreach(config('zoomarket.regions') as $region)
+                                        <option value="{{ $region }}" @selected(old('region') === $region)>{{ $region }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label for="location" class="{{ $label }}">Shahar / tuman (aniq joy) {!! $required !!}</label>
                             <div class="{{ $iconWrap }}">
                                 <i class="bi bi-geo-alt-fill {{ $icon }}"></i>
-                                <input type="text" name="location" id="location" value="{{ old('location') }}" class="{{ $field }}" placeholder="Masalan: Toshkent shahar, Yunusobod tumani" required>
+                                <input type="text" name="location" id="location" value="{{ old('location') }}" class="{{ $field }}" placeholder="Masalan: Chilonzor tumani yoki Qarshi shahri" required>
                             </div>
                         </div>
                     </div>
@@ -318,7 +320,7 @@
                             <p class="line-clamp-2 text-sm text-muted" id="liveDesc">Hayvon haqidagi qisqacha tavsif bu yerda aks ettiriladi...</p>
 
                             <div class="flex items-center justify-between text-sm text-muted">
-                                <span class="inline-flex items-center gap-1"><i class="bi bi-tag text-brand"></i> <span id="liveBreed">Zot ko'rsatilmagan</span></span>
+                                <span class="inline-flex items-center gap-1"><i class="bi bi-tag text-brand"></i> <span id="liveBreed">Turi ko'rsatilmagan</span></span>
                                 <span class="inline-flex items-center gap-1"><i class="bi bi-geo-alt text-accent"></i> <span id="liveLocation">Manzil</span></span>
                             </div>
                             <div class="flex items-center justify-between text-sm text-muted">
@@ -369,6 +371,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const priceInput = document.getElementById('price');
     const currencySelect = document.getElementById('currency');
     const locationInput = document.getElementById('location');
+    const regionSelect = document.getElementById('region');
     const negotiableCheckbox = document.getElementById('is_negotiable');
     const descTextarea = document.getElementById('description');
     const statusSelect = document.getElementById('status');
@@ -451,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function () {
         liveCategoryBadge.textContent = (selectedCatOption && selectedCatOption.value) ? selectedCatOption.text.trim() : "Kategoriya";
 
         // Breed
-        liveBreed.textContent = breedInput.value.trim() || "Zot ko'rsatilmagan";
+        liveBreed.textContent = breedInput.value.trim() || "Turi ko'rsatilmagan";
 
         // Quantity & gender
         const total = parseInt(qtyInput ? qtyInput.value : 1) || 1;
@@ -473,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function () {
         livePrice.querySelector('small').textContent = currencySelect.value;
 
         // Location & description
-        liveLocation.textContent = locationInput.value.trim() || "Manzil";
+        liveLocation.textContent = [locationInput.value.trim(), regionSelect.value].filter(Boolean).join(', ') || "Manzil";
         liveDesc.textContent = descTextarea.value.trim() || "Hayvon haqidagi qisqacha tavsif bu yerda aks ettiriladi...";
 
         // Negotiable & status
@@ -482,7 +485,7 @@ document.addEventListener('DOMContentLoaded', function () {
         liveStatusBadge.textContent = { active: 'Aktiv', reserved: 'Rezerv' }[statusSelect.value] || 'Sotilgan';
     }
 
-    [titleInput, categorySelect, breedInput, priceInput, currencySelect, locationInput, descTextarea, statusSelect].forEach(el => {
+    [titleInput, categorySelect, breedInput, priceInput, currencySelect, locationInput, regionSelect, descTextarea, statusSelect].forEach(el => {
         if (el) {
             el.addEventListener('input', updatePreview);
             el.addEventListener('change', updatePreview);

@@ -197,6 +197,53 @@ if (hero) {
     go(0);
 }
 
+// ---- Katalog mega menu --------------------------------------------------------
+// Hovering (or focusing) a category on the left shows its panel on the right; "Yana N" reveals the rest of a list.
+document.querySelectorAll('[data-catalog]').forEach(menu => {
+    const tabs = [...menu.querySelectorAll('[data-catalog-tab]')];
+    const panels = [...menu.querySelectorAll('[data-catalog-panel]')];
+
+    const show = id => {
+        tabs.forEach(tab => tab.setAttribute('aria-selected', tab.dataset.catalogTab === id));
+        // `hidden` keeps the panel out on narrow screens (md:block would otherwise show it)
+        panels.forEach(panel => (panel.hidden = panel.dataset.catalogPanel !== id));
+    };
+
+    tabs.forEach(tab => {
+        tab.addEventListener('mouseenter', () => show(tab.dataset.catalogTab));
+        tab.addEventListener('focus', () => show(tab.dataset.catalogTab));
+    });
+    show((menu.querySelector('[data-catalog-tab][aria-current]') ?? tabs[0])?.dataset.catalogTab);
+});
+
+// "Yana N": reveals the folded items next to it (Katalog menu lists and the filter sidebar).
+document.addEventListener('click', e => {
+    const more = e.target.closest('[data-catalog-more]');
+    if (!more) return;
+    more.parentElement.querySelectorAll('[data-catalog-extra]').forEach(item => (item.hidden = false));
+    more.remove();
+});
+
+// ---- Filter sidebar ------------------------------------------------------------
+// data-autosubmit: any change reloads the results; empty fields are left out of the URL.
+document.addEventListener('change', e => e.target.closest('form[data-autosubmit]')?.requestSubmit());
+document.addEventListener('submit', e => {
+    if (!e.target.matches('form[data-autosubmit]')) return;
+    [...e.target.elements].forEach(el => {
+        if (el.name && el.value === '' && el.type !== 'submit') el.disabled = true;
+    });
+    // Back/forward restores the page from cache: don't leave fields disabled
+    addEventListener('pageshow', () => [...e.target.elements].forEach(el => (el.disabled = false)), { once: true });
+});
+
+// The filter panel is always open on wide screens and folded behind a button on phones.
+document.querySelectorAll('[data-filter-details]').forEach(details => {
+    const wide = matchMedia('(min-width: 1024px)');
+    const sync = () => { if (wide.matches) details.open = true; };
+    sync();
+    wide.addEventListener('change', sync);
+});
+
 // ---- Category row: links that don't fit go under "Yana" ----------------------
 // The row holds every link and the "Yana" menu a hidden copy of each; on every resize
 // the first link that runs past the row's edge and all after it swap to their copy.
