@@ -41,7 +41,7 @@
 {{-- Top bar: information only (every destination lives in the header or tab row) --}}
 <div class="bg-soft text-[13px] text-muted">
     <div class="wrap flex h-10 items-center justify-center gap-4 lg:justify-between">
-        <span class="hidden lg:inline">ZooMarket'ga xush kelibsiz — uy hayvonlari bozori!</span>
+        <span class="hidden lg:inline">Faunara'ga xush kelibsiz — jonivorlar olami!</span>
         <div class="flex items-center divide-x divide-[#d9d9d9] whitespace-nowrap *:inline-flex *:items-center *:gap-1.5 *:px-2.5 md:*:px-4 [&>:first-child]:pl-0 [&>:last-child]:pr-0 [&_.bi]:text-[15px] [&_.bi]:text-brand">
             <span><i class="bi bi-shield-check"></i>Har bir e'lon moderatsiyadan o'tadi</span>
             <a href="tel:+998712000000" class="hover:text-brand max-md:hidden"><i class="bi bi-telephone"></i>+998 71 200 00 00</a>
@@ -52,7 +52,7 @@
 {{-- Header --}}
 <header id="zmHeader" class="sticky top-0 z-30 border-b border-line bg-white">
     <div class="wrap flex flex-wrap items-center gap-3 py-3 md:h-16 md:flex-nowrap md:gap-4 md:py-0">
-        <a href="{{ route('home') }}" class="shrink-0 text-2xl leading-none font-black tracking-tight text-brand md:text-2xl">ZooMarket</a>
+        <a href="{{ route('home') }}" class="shrink-0" aria-label="Faunara — bosh sahifa"><img src="{{ asset('brand/logo.png') }}" alt="Faunara — jonivorlar olami" width="481" height="168" class="h-9 w-auto md:h-11"></a>
 
         {{-- Katalog (category menu) sits left of the one search form for the whole site --}}
         <div class="relative order-2 shrink-0 md:order-none">

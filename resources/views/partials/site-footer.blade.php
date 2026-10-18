@@ -7,7 +7,7 @@
     <div class="wrap relative">
         <div class="grid grid-cols-1 gap-7 pt-[52px] pb-10 md:grid-cols-[1.3fr_1fr_1fr] md:gap-10">
             <div>
-                <a href="{{ route('home') }}" class="mb-[26px] inline-block text-[32px] leading-none font-black tracking-tight">ZooMarket</a>
+                <a href="{{ route('home') }}" class="mb-[26px] inline-block rounded-xl bg-white px-3 py-2" aria-label="Faunara — bosh sahifa"><img src="{{ asset('brand/logo.png') }}" alt="Faunara — jonivorlar olami" width="481" height="168" class="h-12 w-auto"></a>
                 <h5 class="{{ $zmFooterTitle }}">Biz bilan bog'lanish</h5>
                 @foreach([['bi-whatsapp', 'WhatsApp', '+998 90 000 00 00'], ['bi-telephone', "Qo'ng'iroq qiling", '+998 71 200 00 00']] as [$icon, $label, $phone])
                     <div class="mb-3.5 flex items-center gap-3">
@@ -46,5 +46,5 @@
             </div>
         </div>
     </div>
-    <div class="relative bg-brand-dark p-4 text-center text-sm font-semibold">&copy; {{ date('Y') }} ZooMarket. Barcha huquqlar himoyalangan.</div>
+    <div class="relative bg-brand-dark p-4 text-center text-sm font-semibold">&copy; {{ date('Y') }} Faunara. Barcha huquqlar himoyalangan.</div>
 </footer>

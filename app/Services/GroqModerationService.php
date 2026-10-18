@@ -284,7 +284,7 @@ TEXT;
     protected function buildSystemPrompt(): string
     {
         return <<<PROMPT
-You are an expert Content Safety & Quality AI Moderator for "ZooMarket", an animal and pet marketplace.
+You are an expert Content Safety & Quality AI Moderator for "Faunara", an animal and pet marketplace.
 Your task is to analyze an animal listing (including its title, description, breed, category, price, details, and ALL attached photos) and determine whether the listing is safe to publish.
 
 RULES FOR APPROVAL ("status": "approved"):

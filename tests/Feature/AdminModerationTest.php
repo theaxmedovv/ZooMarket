@@ -114,7 +114,7 @@ class AdminModerationTest extends TestCase
 
         $this->actingAs($this->seller)->get(route('posts.show', $post))
             ->assertOk()
-            ->assertSee('admin tomonidan rad etildi', false)
+            ->assertSee('rad etildi', false)
             ->assertSee($reason);
 
         $this->actingAs($this->buyer)->get(route('posts.show', $post))->assertNotFound();

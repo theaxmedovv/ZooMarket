@@ -163,7 +163,7 @@ class AiModerationSystemTest extends TestCase
         // Verify seller CAN view their own rejected post with the rejection reason
         $sellerDetailResponse = $this->actingAs($this->seller)->get(route('posts.show', $post));
         $sellerDetailResponse->assertStatus(200);
-        $sellerDetailResponse->assertSee("avtomatik tekshiruvdan o'tmadi", false);
+        $sellerDetailResponse->assertSee('avtomatik tekshiruvdan o&#039;tmadi', false);
         $sellerDetailResponse->assertSee('Qizil kitobga kiritilgan yovvoyi hayvonlarni sotish taqiqlanadi.', false);
     }
 

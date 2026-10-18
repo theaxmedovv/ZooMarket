@@ -42,30 +42,19 @@
         <x-moderation-panel :post="$post" class="mb-6" />
     @elseif($canModerate)
         @if($post->moderation_status === 'rejected')
-            <div class="mb-6 flex items-start gap-3 rounded-2xl border border-danger/50 bg-danger/8 p-6 shadow-sm">
-                <div class="grid size-12 shrink-0 place-items-center rounded-full bg-danger/25 text-danger"><i class="bi bi-shield-x text-2xl"></i></div>
-                <div class="flex-1">
-                    <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
-                        <h5 class="text-lg font-bold text-danger">
-                            @if($post->moderated_by)
-                                <i class="bi bi-person-badge mr-1"></i> E'lon admin tomonidan rad etildi
-                            @else
-                                <i class="bi bi-robot mr-1"></i> E'lon avtomatik tekshiruvdan o'tmadi
-                            @endif
-                        </h5>
-                        <span class="rounded-md bg-danger px-2 py-1 text-xs font-bold text-white">Ommaga ko'rsatilmaydi</span>
-                    </div>
-                    <p class="mb-2 text-sm text-ink">
-                        Quyidagi sababni to'g'rilab, e'lonni tahrirlang — u qayta tekshiruvga yuboriladi.
+            {{-- Compact: the outcome, the reason, one way to fix it --}}
+            <div class="mb-5 flex items-start gap-3 rounded-xl border border-danger/30 bg-danger/5 px-4 py-3">
+                <i class="bi bi-shield-x mt-0.5 text-lg text-danger"></i>
+                <div class="min-w-0 flex-1 text-[13px] leading-snug">
+                    <p class="font-bold text-danger">
+                        {{ $post->moderated_by ? "E'lon rad etildi" : "E'lon avtomatik tekshiruvdan o'tmadi" }}
+                        <span class="font-normal text-muted">· ommaga ko'rinmaydi</span>
                     </p>
-                    <div class="mb-3 rounded-lg border-l-[3px] border-danger bg-black/5 p-3">
-                        <strong class="mb-1 block text-sm text-danger"><i class="bi bi-info-circle-fill mr-1"></i> Rad etilish sababi:</strong>
-                        <span class="whitespace-pre-line text-ink">{{ $post->moderation_reason ?? 'Tavsif yoki rasm xavfsizlik talablariga mos kelmadi.' }}</span>
-                    </div>
-                    <a href="{{ route('posts.edit', $post) }}" class="inline-flex items-center gap-1 rounded-md border border-danger px-2.5 py-1 text-sm font-semibold text-danger hover:bg-danger hover:text-white">
-                        <i class="bi bi-pencil-square"></i> E'lonni tahrirlash va qayta topshirish
-                    </a>
+                    <p class="mt-1 whitespace-pre-line text-ink/80">{{ $post->moderation_reason ?? 'Tavsif yoki rasm xavfsizlik talablariga mos kelmadi.' }}</p>
                 </div>
+                <a href="{{ route('posts.edit', $post) }}" class="inline-flex shrink-0 items-center gap-1 rounded-md border border-danger/40 px-2.5 py-1 text-xs font-semibold text-danger hover:bg-danger hover:text-white">
+                    <i class="bi bi-pencil-square"></i> Tahrirlash
+                </a>
             </div>
         @elseif($post->moderation_status === 'pending')
             {{-- A small toast that fades away on its own; right after posting, the redirect's own toast already says this --}}
@@ -355,6 +344,16 @@
             </div>
         </div>
     </div>
+
+    {{-- Similar listings: same category, four across --}}
+    @if($similar->isNotEmpty())
+        <section class="mt-12" id="oxshash">
+            <h2 class="mb-5 text-xl font-extrabold text-ink md:text-2xl">O'xshash e'lonlar</h2>
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                @include('partials.post-cards', ['posts' => $similar])
+            </div>
+        </section>
+    @endif
 </div>
 
 {{-- Buy dialog: pick how many males and females to request --}}

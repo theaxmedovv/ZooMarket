@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ZooMarket — uy hayvonlari bozori</title>
-    <meta name="description" content="ZooMarket — O'zbekistondagi uy hayvonlari e'lonlari: itlar, mushuklar, qushlar va boshqalar.">
+    <title>Faunara — jonivorlar olami</title>
+    <meta name="description" content="Faunara — O'zbekistondagi uy hayvonlari e'lonlari: itlar, mushuklar, qushlar va boshqalar.">
     @include('partials.head')
 </head>
 <body class="flex min-h-dvh flex-col text-[15px] leading-[1.45]">

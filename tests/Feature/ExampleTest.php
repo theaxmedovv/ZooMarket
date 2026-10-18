@@ -32,7 +32,7 @@ class ExampleTest extends TestCase
         $response = $this->get('/');
 
         $response->assertStatus(200);
-        $response->assertSee('ZooMarket');
+        $response->assertSee('Faunara');
     }
 
     /**

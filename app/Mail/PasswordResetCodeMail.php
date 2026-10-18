@@ -15,7 +15,7 @@ class PasswordResetCodeMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'ZooMarket: parolni tiklash kodi');
+        return new Envelope(subject: 'Faunara: parolni tiklash kodi');
     }
 
     public function content(): Content

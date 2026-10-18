@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<x-auth-card title="Xush kelibsiz!" subtitle="Tizimga kirish uchun hisob ma'lumotlaringizni kiriting" note="ZooMarket xavfsiz autentifikatsiya tizimi">
+<x-auth-card title="Xush kelibsiz!" subtitle="Tizimga kirish uchun hisob ma'lumotlaringizni kiriting" note="Faunara xavfsiz autentifikatsiya tizimi">
     <form action="{{ route('login.post') }}" method="POST">
         @csrf
 

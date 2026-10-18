@@ -211,7 +211,22 @@ class PostController extends Controller
                 })->first();
         }
 
-        return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest', 'chat'));
+        // Same category, same breed first, then the newest; the listing itself is left out
+        $similar = Post::with(['user', 'category'])
+            ->listed()
+            ->where('category_id', $post->category_id)
+            ->whereKeyNot($post->id)
+            ->orderByRaw('breed = ? desc', [(string) $post->breed])
+            ->latest()
+            ->latest('id')
+            ->take(8)
+            ->get();
+
+        $likedPostIds = auth()->check()
+            ? auth()->user()->likedPosts()->pluck('posts.id')->all()
+            : [];
+
+        return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest', 'chat', 'similar', 'likedPostIds'));
     }
 
     /**
