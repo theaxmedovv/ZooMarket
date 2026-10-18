@@ -14,6 +14,7 @@
         <x-status-tab :href="route('user.purchase-requests.index', ['status' => 'pending'])" :active="($status ?? '') === 'pending'" :count="$stats['pending'] ?? 0" :highlight="($stats['pending'] ?? 0) > 0"><i class="bi bi-clock-history mr-1 text-accent"></i> Kutilmoqda</x-status-tab>
         <x-status-tab :href="route('user.purchase-requests.index', ['status' => 'approved'])" :active="($status ?? '') === 'approved'" :count="$stats['approved'] ?? 0"><i class="bi bi-check-circle-fill mr-1 text-brand"></i> Tasdiqlangan</x-status-tab>
         <x-status-tab :href="route('user.purchase-requests.index', ['status' => 'rejected'])" :active="($status ?? '') === 'rejected'" :count="$stats['rejected'] ?? 0"><i class="bi bi-x-circle-fill mr-1 text-muted"></i> Rad etilgan</x-status-tab>
+        <x-status-tab :href="route('user.purchase-requests.index', ['status' => 'cancelled'])" :active="($status ?? '') === 'cancelled'" :count="$stats['cancelled'] ?? 0"><i class="bi bi-slash-circle mr-1 text-muted"></i> Bekor qilingan</x-status-tab>
     </div>
 
     {{-- Orders --}}
@@ -108,6 +109,7 @@
                             'approved' => ['text-brand', 'bi-check-circle-fill', "Sotuvchi so'rovingizni tasdiqladi! Chat orqali to'g'ridan-to'g'ri bog'lanishingiz mumkin."],
                             'sold' => ['text-brand', 'bi-bag-check-fill', "Siz tanlagan hayvonlar sotildi. So'rov \"Sold\" holatiga o'tdi."],
                             'rejected' => ['text-muted', 'bi-info-circle', "Ushbu so'rov rad etilgan. Boshqa mavjud e'lonlarni ko'rib chiqishingiz mumkin."],
+                            'cancelled' => ['text-muted', 'bi-slash-circle', "Siz bu so'rovni bekor qildingiz. Hayvonlar yana sotuvga qaytdi."],
                             default => ['text-accent', 'bi-hourglass-split', "Sotuvchi so'rovingizni ko'rib chiqmoqda. Tez orada javob olasiz."],
                         };
                     @endphp
@@ -121,6 +123,17 @@
                             <a href="{{ route('posts.show', $request->animal) }}" class="{{ $action }} border border-line text-ink hover:border-brand/45 hover:bg-brand/6 hover:text-brand">
                                 <i class="bi bi-eye"></i> E'lonni ko'rish
                             </a>
+                        @endif
+
+                        {{-- The buyer can take a waiting or approved request back (not once it is sold) --}}
+                        @if(in_array($request->status, ['pending', 'approved'], true))
+                            <form action="{{ route('user.purchase-requests.cancel', $request) }}" method="POST" class="max-md:w-full"
+                                  onsubmit="return confirm('So\'rovni bekor qilasizmi? Tanlangan hayvonlar yana sotuvga qaytadi{{ $request->status === 'approved' ? ', sotuvchi bilan suhbat esa yopiladi' : '' }}.')">
+                                @csrf
+                                <button type="submit" class="{{ $action }} w-full cursor-pointer border border-danger/35 bg-white text-danger hover:border-danger hover:bg-danger hover:text-white">
+                                    <i class="bi bi-x-circle"></i> So'rovni bekor qilish
+                                </button>
+                            </form>
                         @endif
 
                         @if(($request->status === 'approved' || $request->status === 'sold') && $request->chat)

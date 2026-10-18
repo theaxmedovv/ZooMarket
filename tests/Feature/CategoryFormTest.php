@@ -222,7 +222,9 @@ class CategoryFormTest extends TestCase
         $this->actingAs($buyer)->get(route('user.purchase-requests.index'))->assertOk()->assertSee('Soni: 5')->assertDontSee('Erkak ♂');
 
         // The buy dialog asks for a single count
-        $dialog = $this->actingAs($buyer)->get(route('posts.show', $post))->assertOk()->getContent();
+        $other = User::factory()->create();
+        $other->assignRole('user');
+        $dialog = $this->actingAs($other)->get(route('posts.show', $post))->assertOk()->getContent();
         $this->assertStringContainsString('1. Nechta kerakligini tanlang:', $dialog);
         $this->assertStringNotContainsString('buyerQty_female', $dialog);
     }

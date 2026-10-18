@@ -89,6 +89,38 @@ class User extends Authenticatable
         return $this->hasMany(Chat::class, 'seller_id');
     }
 
+    /**
+     * Listings this user has a waiting or approved purchase request for. Read once per HTTP request
+     * (kept on the request, so a page full of cards asks the database a single time).
+     *
+     * @return list<int>
+     */
+    public function activeRequestedAnimalIds(): array
+    {
+        return array_keys($this->activeRequestsByAnimal());
+    }
+
+    /**
+     * The same open requests as [listing id => request id], so a card can offer "cancel" too.
+     *
+     * @return array<int, int>
+     */
+    public function activeRequestsByAnimal(): array
+    {
+        $attributes = request()->attributes;
+        $key = 'active_requests_by_animal.' . $this->getKey();
+
+        if (! $attributes->has($key)) {
+            $attributes->set($key, $this->purchaseRequests()
+                ->whereIn('status', ['pending', 'approved'])
+                ->latest('id')
+                ->pluck('id', 'animal_id')
+                ->all());
+        }
+
+        return $attributes->get($key);
+    }
+
     public function avatarUrl(): ?string
     {
         return $this->avatar ? route('images.show', ['path' => $this->avatar]) : null;

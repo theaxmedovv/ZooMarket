@@ -20,7 +20,7 @@ class PurchaseRequestController extends Controller
         $query = PurchaseRequest::with(['animal' => fn($q) => $q->withTrashed()->with(['category', 'user']), 'chat'])
             ->where('user_id', $userId);
 
-        if (in_array($status, ['pending', 'approved', 'sold', 'rejected'], true)) {
+        if (in_array($status, ['pending', 'approved', 'sold', 'rejected', 'cancelled'], true)) {
             $query->where('status', $status);
         }
 
@@ -32,6 +32,7 @@ class PurchaseRequestController extends Controller
             'approved' => PurchaseRequest::where('user_id', $userId)->where('status', 'approved')->count(),
             'sold' => PurchaseRequest::where('user_id', $userId)->where('status', 'sold')->count(),
             'rejected' => PurchaseRequest::where('user_id', $userId)->where('status', 'rejected')->count(),
+            'cancelled' => PurchaseRequest::where('user_id', $userId)->where('status', 'cancelled')->count(),
         ];
 
         return view('profile.purchase-requests', compact('requests', 'stats', 'status'));
@@ -89,6 +90,15 @@ class PurchaseRequestController extends Controller
                     throw new \RuntimeException("O'zingizning e'loningizga sotib olish so'rovini yubora olmaysiz.");
                 }
 
+                $alreadyRequested = PurchaseRequest::where('user_id', $user->id)
+                    ->where('animal_id', $animal->id)
+                    ->whereIn('status', ['pending', 'approved'])
+                    ->exists();
+
+                if ($alreadyRequested) {
+                    throw new \RuntimeException("Siz bu e'longa allaqachon so'rov yuborgansiz. Yangisini yuborishdan oldin avvalgisini «Buyurtmalarim» sahifasida bekor qiling.");
+                }
+
                 if ($animal->moderation_status !== 'approved' || in_array($animal->status, ['sold', 'archived'], true) || $animal->totalAvailableCount() <= 0) {
                     throw new \RuntimeException("Ushbu hayvon sotuvda mavjud emas yoki hali tasdiqlanmagan.");
                 }
@@ -138,7 +148,7 @@ class PurchaseRequestController extends Controller
                 $q->withTrashed()->where('user_id', $userId);
             });
 
-        if (in_array($status, ['pending', 'approved', 'sold', 'rejected'], true)) {
+        if (in_array($status, ['pending', 'approved', 'sold', 'rejected', 'cancelled'], true)) {
             $query->where('status', $status);
         }
 
@@ -150,6 +160,7 @@ class PurchaseRequestController extends Controller
             'approved' => PurchaseRequest::where('status', 'approved')->whereHas('animal', fn($q) => $q->withTrashed()->where('user_id', $userId))->count(),
             'sold' => PurchaseRequest::where('status', 'sold')->whereHas('animal', fn($q) => $q->withTrashed()->where('user_id', $userId))->count(),
             'rejected' => PurchaseRequest::where('status', 'rejected')->whereHas('animal', fn($q) => $q->withTrashed()->where('user_id', $userId))->count(),
+            'cancelled' => PurchaseRequest::where('status', 'cancelled')->whereHas('animal', fn($q) => $q->withTrashed()->where('user_id', $userId))->count(),
         ];
 
         return view('admin.purchase-requests', compact('requests', 'stats', 'status'));
@@ -168,9 +179,25 @@ class PurchaseRequestController extends Controller
             return back()->withErrors(['purchase_request' => 'Ushbu amalni bajarish uchun ruxsat yo\'q.']);
         }
 
-        DB::transaction(function () use ($purchaseRequest) {
-            $purchaseRequest->update(['status' => 'approved']);
-        });
+        try {
+            DB::transaction(function () use ($purchaseRequest) {
+                // Re-read under a lock: the buyer may be cancelling at this very moment
+                $locked = PurchaseRequest::lockForUpdate()->findOrFail($purchaseRequest->id);
+
+                if ($locked->status !== 'pending') {
+                    throw new \RuntimeException(match ($locked->status) {
+                        'cancelled' => "Xaridor bu so'rovni bekor qilgan.",
+                        'approved' => "Bu so'rov allaqachon tasdiqlangan.",
+                        'sold' => "Bu so'rov bo'yicha hayvonlar sotilgan.",
+                        default => "Bu so'rov rad etilgan, uni tasdiqlab bo'lmaydi.",
+                    });
+                }
+
+                $locked->update(['status' => 'approved']);
+            });
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['purchase_request' => $e->getMessage()]);
+        }
 
         Chat::firstOrCreate(
             ['purchase_request_id' => $purchaseRequest->id],
@@ -196,28 +223,11 @@ class PurchaseRequestController extends Controller
             return back()->withErrors(['purchase_request' => 'Faqat faol so\'rovni sotilgan deb belgilash mumkin.']);
         }
 
-        $archived = DB::transaction(function () use ($purchaseRequest, $animal) {
-            $animal = Post::withTrashed()->where('id', $animal->id)->lockForUpdate()->first();
-
-            // Only the animals selected in this request are sold; their stock was
-            // already deducted when the request was made
-            $purchaseRequest->update(['status' => 'sold']);
-            $purchaseRequest->chat?->update(['closed_at' => now()]);
-
-            // Archive the listing only once nothing remains: no stock left and
-            // no other open request still holding a reservation
-            $hasOpenRequests = PurchaseRequest::query()
-                ->where('animal_id', $animal->id)
-                ->whereIn('status', ['pending', 'approved'])
-                ->exists();
-
-            if (! $animal->isArchived() && $animal->totalAvailableCount() <= 0 && ! $hasOpenRequests) {
-                $animal->update(['status' => 'sold']);
-                return true;
-            }
-
-            return false;
-        });
+        try {
+            $archived = $this->sell($purchaseRequest, $animal);
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['purchase_request' => $e->getMessage()]);
+        }
 
         if ($archived) {
             return back()->with('success', 'So\'rov sotilgan deb belgilandi. E\'londagi barcha hayvonlar sotilgani uchun e\'lon arxivga o\'tkazildi.');
@@ -238,19 +248,103 @@ class PurchaseRequestController extends Controller
             return back()->with('success', 'Bu so\'rov allaqachon rad etilgan.');
         }
 
-        if ($purchaseRequest->status === 'sold') {
-            return back()->withErrors(['purchase_request' => 'Sotilgan so\'rovni rad etib bo\'lmaydi.']);
+        try {
+            $this->release($purchaseRequest, 'rejected');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['purchase_request' => $e->getMessage()]);
         }
 
-        DB::transaction(function () use ($purchaseRequest, $animal) {
+        return back()->with('success', 'So\'rov rad etildi.');
+    }
+
+    /**
+     * Mark a request as sold. Returns true when that emptied the listing and it was archived.
+     *
+     * @throws \RuntimeException when the request was cancelled or closed in the meantime
+     */
+    private function sell(PurchaseRequest $purchaseRequest, Post $animal): bool
+    {
+        return DB::transaction(function () use ($purchaseRequest, $animal) {
+            // Re-read under a lock: the buyer may be cancelling at this very moment
+            $locked = PurchaseRequest::lockForUpdate()->findOrFail($purchaseRequest->id);
+
+            if (! in_array($locked->status, ['pending', 'approved'], true)) {
+                throw new \RuntimeException($locked->status === 'cancelled'
+                    ? "Xaridor bu so'rovni bekor qilgan."
+                    : "Faqat faol so'rovni sotilgan deb belgilash mumkin.");
+            }
+
             $animal = Post::withTrashed()->where('id', $animal->id)->lockForUpdate()->first();
 
-            // Return the reserved animals to the listing, unless it is archived or deleted
+            // Only the animals selected in this request are sold; their stock was
+            // already deducted when the request was made
+            $locked->update(['status' => 'sold']);
+            $locked->chat?->update(['closed_at' => now()]);
+
+            // Archive the listing only once nothing remains: no stock left and
+            // no other open request still holding a reservation
+            $hasOpenRequests = PurchaseRequest::query()
+                ->where('animal_id', $animal->id)
+                ->whereIn('status', ['pending', 'approved'])
+                ->exists();
+
+            if (! $animal->isArchived() && $animal->totalAvailableCount() <= 0 && ! $hasOpenRequests) {
+                $animal->update(['status' => 'sold']);
+                return true;
+            }
+
+            return false;
+        });
+    }
+
+    /**
+     * The buyer takes their request back (it was pending or already approved). The reserved animals
+     * return to the listing and the chat closes, exactly as when the seller rejects it.
+     */
+    public function cancel(Request $request, PurchaseRequest $purchaseRequest): RedirectResponse
+    {
+        abort_unless($purchaseRequest->user_id === $request->user()->id, 403);
+
+        if ($purchaseRequest->status === 'cancelled') {
+            return back()->with('success', "Bu so'rov allaqachon bekor qilingan.");
+        }
+
+        try {
+            $this->release($purchaseRequest, 'cancelled');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['purchase_request' => $e->getMessage()]);
+        }
+
+        return back()->with('success', "So'rovingiz bekor qilindi.");
+    }
+
+    /**
+     * End a pending or approved request without a sale ($to: rejected by the seller, cancelled by the buyer):
+     * give the animals back to the listing (unless it is archived or deleted) and close the chat.
+     *
+     * @throws \RuntimeException when the request can no longer be ended (already sold, rejected or cancelled)
+     */
+    private function release(PurchaseRequest $purchaseRequest, string $to): void
+    {
+        DB::transaction(function () use ($purchaseRequest, $to) {
+            // Re-read under a lock: the other side may be acting on the same request right now
+            $locked = PurchaseRequest::lockForUpdate()->findOrFail($purchaseRequest->id);
+
+            if (! in_array($locked->status, ['pending', 'approved'], true)) {
+                throw new \RuntimeException(match ($locked->status) {
+                    'sold' => $to === 'cancelled' ? "Sotilgan so'rovni bekor qilib bo'lmaydi." : "Sotilgan so'rovni rad etib bo'lmaydi.",
+                    'cancelled' => "Xaridor bu so'rovni allaqachon bekor qilgan.",
+                    default => "Bu so'rov allaqachon yopilgan.",
+                });
+            }
+
+            $animal = Post::withTrashed()->where('id', $locked->animal_id)->lockForUpdate()->first();
+
             if ($animal && ! $animal->isArchived()) {
                 $wasFullyReserved = $animal->totalAvailableCount() <= 0;
 
-                $animal->male_quantity += (int) $purchaseRequest->male_quantity;
-                $animal->female_quantity += (int) $purchaseRequest->female_quantity;
+                $animal->male_quantity += (int) $locked->male_quantity;
+                $animal->female_quantity += (int) $locked->female_quantity;
                 $animal->quantity = $animal->male_quantity + $animal->female_quantity;
 
                 if ($wasFullyReserved && $animal->status === 'reserved' && $animal->quantity > 0) {
@@ -259,14 +353,8 @@ class PurchaseRequestController extends Controller
                 $animal->save();
             }
 
-            $purchaseRequest->update(['status' => 'rejected']);
-
-            // Close chat for this rejected request if exists
-            if ($purchaseRequest->chat) {
-                $purchaseRequest->chat->update(['closed_at' => now()]);
-            }
+            $locked->update(['status' => $to]);
+            $locked->chat?->update(['closed_at' => now()]);
         });
-
-        return back()->with('success', 'So\'rov rad etildi.');
     }
 }

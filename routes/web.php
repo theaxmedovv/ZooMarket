@@ -108,6 +108,10 @@ Route::post('/purchase-requests', [PurchaseRequestController::class, 'store'])
     ->middleware(['auth', 'role:user'])
     ->name('purchase-requests.store');
 
+Route::post('/user/purchase-requests/{purchaseRequest}/cancel', [PurchaseRequestController::class, 'cancel'])
+    ->middleware(['auth', 'role:user'])
+    ->name('user.purchase-requests.cancel');
+
 Route::get('/user/purchase-requests', [PurchaseRequestController::class, 'userIndex'])
     ->middleware(['auth', 'role:user'])
     ->name('user.purchase-requests.index');

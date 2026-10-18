@@ -7,7 +7,8 @@
     $showModeration = $showModeration ?? false;
     $canLike = $isUser && ! $isOwn;
     // "Xarid" opens the listing's buy dialog (#buy); guests land on the listing, which asks them to log in.
-    $canBuy = ! $post->isSoldOut() && (auth()->guest() || $canLike);
+    $alreadyRequested = $canLike && in_array($post->id, auth()->user()->activeRequestedAnimalIds(), true);
+    $canBuy = ! $post->isSoldOut() && ! $alreadyRequested && (auth()->guest() || $canLike);
 
     $menu = 'absolute top-[calc(100%+4px)] right-0 z-20 min-w-[140px] rounded-[10px] border border-line bg-white p-1.5 shadow-lg';
     $menuItem = 'flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] text-ink hover:bg-brand/12 hover:text-brand';
@@ -141,6 +142,17 @@
                 <a class="inline-flex h-9 items-center justify-center gap-1 rounded-[10px] bg-brand px-3 text-xs font-bold text-white transition hover:-translate-y-px hover:bg-brand-dark hover:shadow-[0_4px_12px_rgba(0,142,204,.25)]" href="{{ route('posts.show', $post) }}#buy" title="Sotib olish">
                     <i class="bi bi-cart-check-fill"></i> Xarid
                 </a>
+            @elseif($alreadyRequested)
+                <a class="inline-flex h-9 items-center justify-center gap-1 rounded-[10px] border border-brand/35 bg-brand/10 px-3 text-xs font-bold text-brand transition hover:bg-brand/18" href="{{ route('user.purchase-requests.index') }}" title="So'rov yuborilgan — buyurtmalarim">
+                    <i class="bi bi-check-circle-fill"></i> So'rov yuborilgan
+                </a>
+                <form action="{{ route('user.purchase-requests.cancel', auth()->user()->activeRequestsByAnimal()[$post->id]) }}" method="POST"
+                      onsubmit="return confirm('So\'rovni bekor qilasizmi? Tanlangan hayvonlar yana sotuvga qaytadi.')">
+                    @csrf
+                    <button type="submit" class="inline-flex h-9 cursor-pointer items-center justify-center rounded-[10px] border border-danger/35 bg-white px-2.5 text-xs font-bold text-danger transition hover:border-danger hover:bg-danger hover:text-white" title="So'rovni bekor qilish" aria-label="So'rovni bekor qilish">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </form>
             @endif
         </div>
     </div>

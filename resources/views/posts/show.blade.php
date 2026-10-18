@@ -298,7 +298,18 @@
                 {{-- Actions --}}
                 <div class="mt-1 flex flex-col gap-2">
                     @if($isBuyer)
-                        @if($post->isSoldOut() && $post->status === 'reserved' && ! $post->isArchived())
+                        @if($hasPurchaseRequest)
+                            <a href="{{ route('user.purchase-requests.index') }}" class="inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-[14px] border border-brand/40 bg-brand/10 text-[15px] font-extrabold text-brand transition hover:bg-brand/18">
+                                <i class="bi bi-check-circle-fill"></i> So'rov yuborilgan — buyurtmalarim
+                            </a>
+                            <form action="{{ route('user.purchase-requests.cancel', $activeRequestId) }}" method="POST"
+                                  onsubmit="return confirm('So\'rovni bekor qilasizmi? Tanlangan hayvonlar yana sotuvga qaytadi.')">
+                                @csrf
+                                <button type="submit" class="inline-flex h-[44px] w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] border border-danger/35 bg-white text-[14px] font-bold text-danger transition hover:border-danger hover:bg-danger hover:text-white">
+                                    <i class="bi bi-x-circle"></i> So'rovni bekor qilish
+                                </button>
+                            </form>
+                        @elseif($post->isSoldOut() && $post->status === 'reserved' && ! $post->isArchived())
                             <button class="inline-flex h-[50px] w-full cursor-not-allowed items-center justify-center gap-2 rounded-[14px] border border-accent/40 bg-accent/10 text-[15px] font-extrabold text-accent" disabled>
                                 <i class="bi bi-hourglass-split"></i> Barcha hayvonlar band qilingan
                             </button>
@@ -351,8 +362,8 @@
                         <div class="rounded-lg border border-dashed border-line bg-white/75 p-4 text-center">
                             <div class="mb-2 text-sm text-muted">Hayvonni sotib olish yoki sotuvchi bilan bog'lanish uchun tizimga kiring:</div>
                             <div class="flex justify-center gap-2">
-                                <a href="{{ route('login') }}" class="rounded-full border border-brand px-3 py-1 text-sm font-semibold text-brand hover:bg-brand hover:text-white">Kirish</a>
-                                <a href="{{ route('register') }}" class="rounded-full bg-ok px-3 py-1 text-sm font-semibold text-white hover:brightness-95">Ro'yxatdan o'tish</a>
+                                <a href="{{ route('login', ['next' => route('posts.show', $post, false)]) }}" class="rounded-full border border-brand px-3 py-1 text-sm font-semibold text-brand hover:bg-brand hover:text-white">Kirish</a>
+                                <a href="{{ route('register', ['next' => route('posts.show', $post, false)]) }}" class="rounded-full bg-ok px-3 py-1 text-sm font-semibold text-white hover:brightness-95">Ro'yxatdan o'tish</a>
                             </div>
                         </div>
                     @endguest
@@ -373,7 +384,7 @@
 </div>
 
 {{-- Buy dialog: pick how many males and females to request --}}
-@if($isBuyer && ! $post->isSoldOut())
+@if($isBuyer && ! $hasPurchaseRequest && ! $post->isSoldOut())
     <dialog id="buyModalDetail" aria-labelledby="buyModalLabel"
             class="m-auto w-[min(500px,calc(100vw-32px))] rounded-2xl border border-line bg-white p-0 text-ink shadow-[0_20px_60px_rgba(0,0,0,.12)] backdrop:bg-black/50">
         <div class="flex items-center justify-between px-6 pt-5">

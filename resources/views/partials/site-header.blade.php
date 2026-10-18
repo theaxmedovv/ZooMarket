@@ -1,7 +1,9 @@
 @php
     $zmUser = auth()->user();
     $zmIsAdmin = $zmUser?->hasRole('admin') ?? false;
-    $zmProfileUrl = $zmUser ? route('profile.show') : route('login');
+    // On a listing page, signing in from the header brings the guest back to that listing
+    $zmNext = request()->routeIs('posts.show') ? ['next' => request()->getPathInfo()] : [];
+    $zmProfileUrl = $zmUser ? route('profile.show') : route('login', $zmNext);
     // The home page is the one storefront: search and category links all show their results there.
     // "My listings" has its own page and searches only the user's own listings.
     $zmMine = request()->routeIs('posts.mine');
@@ -56,7 +58,7 @@
 
         {{-- Katalog (category menu) sits left of the one search form for the whole site --}}
         <div class="relative order-2 shrink-0 md:order-none">
-            <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="zmCatalog" class="btn btn-primary h-10 gap-1.5 rounded-lg px-3 text-[13px] md:px-4">
+            <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="zmCatalog" class="btn btn-soft gap-1.5 text-[13px]">
                 <i class="bi bi-grid-fill"></i><span class="hidden sm:inline">Katalog</span>
             </button>
             {{-- Mega menu: categories on the left; hovering one shows its breeds, cities and genders on the right
@@ -135,7 +137,7 @@
                     </a>
                 @else
                     {{-- The one and only "new listing" entry point --}}
-                    <a href="{{ route('posts.create') }}" @if(request()->routeIs('posts.create')) aria-current="page" @endif class="btn btn-primary mr-1 h-10 rounded-lg px-3 text-[13px] current:bg-brand-dark md:px-4"><i class="bi bi-plus-lg"></i><span class="hidden lg:inline">Yangi e'lon</span></a>
+                    <a href="{{ route('posts.create') }}" @if(request()->routeIs('posts.create')) aria-current="page" @endif class="btn btn-soft mr-1 text-[13px]"><i class="bi bi-plus-lg"></i><span class="hidden lg:inline">Yangi e'lon</span></a>
                     <a href="{{ route('favorites.index') }}" @if(request()->routeIs('favorites.*')) aria-current="page" @endif class="{{ $zmAction }}" aria-label="Sevimlilar">
                         <i class="bi bi-heart {{ $zmActionIcon }}"></i><span class="hidden lg:inline">Sevimlilar</span>
                         <em class="{{ $zmBadge }} absolute top-0.5 left-[26px]" data-favorites-count @if($zmFavorites === 0) hidden @endif>{{ $zmFavorites }}</em>
@@ -179,8 +181,8 @@
                     </div>
                 </div>
             @else
-                <a href="{{ route('login') }}" class="{{ $zmAction }}"><i class="bi bi-person {{ $zmActionIcon }}"></i><span class="hidden lg:inline">Kirish</span></a>
-                <a href="{{ route('register') }}" class="btn ml-1 border-brand bg-white text-brand hover:bg-brand-soft max-[480px]:hidden">Ro'yxatdan o'tish</a>
+                <a href="{{ route('login', $zmNext) }}" class="{{ $zmAction }}"><i class="bi bi-person {{ $zmActionIcon }}"></i><span class="hidden lg:inline">Kirish</span></a>
+                <a href="{{ route('register', $zmNext) }}" class="btn ml-1 border-brand bg-white text-brand hover:bg-brand-soft max-[480px]:hidden">Ro'yxatdan o'tish</a>
             @endauth
         </nav>
     </div>

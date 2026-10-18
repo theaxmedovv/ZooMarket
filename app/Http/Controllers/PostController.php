@@ -131,13 +131,10 @@ class PostController extends Controller
         $isLiked = auth()->check()
             && auth()->user()->likedPosts()->whereKey($post->id)->exists();
 
-        $hasPurchaseRequest = auth()->check()
-            && auth()->user()->hasRole('user')
-            && PurchaseRequest::query()
-                ->where('user_id', auth()->id())
-                ->where('animal_id', $post->id)
-                ->whereIn('status', ['pending', 'approved'])
-                ->exists();
+        $activeRequestId = auth()->check() && auth()->user()->hasRole('user')
+            ? (auth()->user()->activeRequestsByAnimal()[$post->id] ?? null)
+            : null;
+        $hasPurchaseRequest = $activeRequestId !== null;
 
         $chat = null;
         if (auth()->check()) {
@@ -163,7 +160,7 @@ class PostController extends Controller
             ? auth()->user()->likedPosts()->pluck('posts.id')->all()
             : [];
 
-        return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest', 'chat', 'similar', 'likedPostIds'));
+        return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest', 'activeRequestId', 'chat', 'similar', 'likedPostIds'));
     }
 
     /**

@@ -15,8 +15,10 @@ use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
+        $this->rememberNext($request);
+
         return view('auth.login');
     }
 
@@ -38,9 +40,23 @@ class AuthController extends Controller
         return $this->redirectAfterLogin(Auth::user());
     }
 
-    public function showRegisterForm()
+    public function showRegisterForm(Request $request)
     {
+        $this->rememberNext($request);
+
         return view('auth.register');
+    }
+
+    /**
+     * A guest who came from a listing returns to it after signing in or registering (local paths only).
+     */
+    private function rememberNext(Request $request): void
+    {
+        $next = (string) $request->query('next', '');
+
+        if (preg_match('#^/posts/\d+$#', $next) === 1) {
+            $request->session()->put('url.intended', $next);
+        }
     }
 
     public function register(Request $request): RedirectResponse
@@ -155,7 +171,7 @@ class AuthController extends Controller
             return redirect()->route('moderation.index');
         }
 
-        return redirect()->route('home');
+        return redirect()->to(session()->pull('url.intended', route('home', [], false)));
     }
 
     public function logout(Request $request): RedirectResponse

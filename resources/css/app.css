@@ -8,13 +8,36 @@
 @custom-variant current (&[aria-current]:not([aria-current='false']));
 
 /* MegaMart light theme */
-@theme {
+/* Brand colors, defined in one place */
+:root {
+    --primary: #008ecc;
+    --primary-hover: #0073a8;
+    --primary-soft: #eaf2fb;
+    --primary-faint: #f3f9fb;
+    --border: #ededed;
+    --accent: #c9a24a;
+    --accent-hover: #b38d37;
+    --accent-active: #9c7a2e;
+    --text: #222222;
+    --text-muted: #666666;
+    --live: #249b3e;
+}
+
+@theme inline {
     --font-sans: 'Mulish', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    --color-brand: #008ecc;
-    --color-brand-dark: #0073a8;
-    --color-brand-soft: #f3f9fb;
+    /* Palette: the values live once in :root below; Tailwind colors point at them */
+    --color-brand: var(--primary);
+    --color-brand-dark: var(--primary-hover);
+    --color-brand-soft: var(--primary-faint);
     --color-brand-tint: #e5f4fb;
+    --color-gold: var(--accent);
+    --color-gold-dark: var(--accent-hover);
+    --color-gold-deep: var(--accent-active);
+    --color-night: #1b2533;
+    --color-mist: var(--primary-soft);
+    --color-mist-dark: #d9e7f7;
+    --color-live: var(--live);
     --color-navy: #212844;
     --color-accent: #ff6b2b;
     --color-hot: #ff4d2e;
@@ -23,10 +46,10 @@
     --color-danger: #dc3545;
     --color-male: #0a8fb0;
 
-    --color-ink: #222222;
-    --color-muted: #666666;
+    --color-ink: var(--text);
+    --color-muted: var(--text-muted);
     --color-faint: #9a9a9a;
-    --color-line: #ededed;
+    --color-line: var(--border);
     --color-field: #e3e3e3;
     --color-soft: #f5f5f5;
     --color-surface: #f5f7f9;
@@ -95,6 +118,19 @@
 
 @utility btn-primary {
     @apply bg-brand text-white hover:bg-brand-dark;
+}
+
+/* Header pair: "Yangi e'lon" is the main action, "Katalog" the quiet one next to it. Same 44px height and corners. */
+@utility btn-cta {
+    @apply h-11 rounded-[10px] bg-gold px-4 text-night shadow-sm hover:bg-gold-dark active:scale-[.98] active:bg-gold-deep current:bg-gold-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-night;
+}
+
+@utility btn-solid {
+    @apply h-11 rounded-[10px] bg-brand px-4 text-white shadow-sm hover:bg-brand-dark active:scale-[.98] active:bg-brand-dark current:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+}
+
+@utility btn-soft {
+    @apply h-11 rounded-[10px] border-0 bg-mist px-4 text-brand hover:bg-mist-dark active:scale-[.98] active:bg-mist-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
 }
 
 @utility btn-outline {

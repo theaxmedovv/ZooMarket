@@ -17,6 +17,7 @@
         <x-status-tab :href="route('admin.purchase-requests.index', ['status' => 'approved'])" :active="$status === 'approved'" :count="$stats['approved']"><i class="bi bi-check-circle-fill mr-1 text-brand"></i> Tasdiqlangan</x-status-tab>
         <x-status-tab :href="route('admin.purchase-requests.index', ['status' => 'sold'])" :active="$status === 'sold'" :count="$stats['sold'] ?? 0"><i class="bi bi-bag-check-fill mr-1 text-brand"></i> Sotilgan</x-status-tab>
         <x-status-tab :href="route('admin.purchase-requests.index', ['status' => 'rejected'])" :active="$status === 'rejected'" :count="$stats['rejected']"><i class="bi bi-x-circle-fill mr-1 text-muted"></i> Rad etilgan</x-status-tab>
+        <x-status-tab :href="route('admin.purchase-requests.index', ['status' => 'cancelled'])" :active="$status === 'cancelled'" :count="$stats['cancelled'] ?? 0"><i class="bi bi-slash-circle mr-1 text-muted"></i> Bekor qilingan</x-status-tab>
     </div>
 
     <x-data-table>
