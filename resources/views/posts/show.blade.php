@@ -6,6 +6,8 @@
     $maleAvail = $post->availableMaleCount();
     $femaleAvail = $post->availableFemaleCount();
     $defaultGender = $maleAvail > 0 ? 'male' : ($femaleAvail > 0 ? 'female' : 'male');
+    $profile = $post->profile();
+    $usesGender = $profile->usesGender();
     $canModerate = auth()->check() && ((int) auth()->id() === (int) $post->user_id || auth()->user()->hasRole('admin'));
     $isOwner = auth()->check() && (int) auth()->id() === (int) $post->user_id;
     // Any user can buy, just not from their own listing
@@ -194,7 +196,7 @@
                 {{-- Stock & gender breakdown --}}
                 <div class="{{ $panel }}">
                     <div class="mb-2 flex items-center justify-between gap-2">
-                        <span class="text-[13px] font-bold text-ink"><i class="bi bi-boxes mr-1 text-brand"></i> Zaxira va jins taqsimoti:</span>
+                        <span class="text-[13px] font-bold text-ink"><i class="bi bi-boxes mr-1 text-brand"></i> {{ $usesGender ? 'Zaxira va jins taqsimoti:' : 'Zaxira:' }}</span>
                         <span @class(['rounded-full border px-2.5 py-[3px] text-xs font-bold', $post->isSoldOut() ? 'border-red-500/40 bg-red-500/15 text-danger' : 'border-brand/30 bg-brand/14 text-brand'])>
                             {{ $post->isSoldOut() ? ($post->status === 'reserved' && ! $post->isArchived() ? 'Hammasi band qilingan' : 'Tugagan (Sold out)') : 'Jami: ' . $post->totalAvailableCount() . ' ta mavjud' }}
                         </span>
@@ -204,7 +206,15 @@
                         $maleCard = ['bi-gender-male', 'bg-male/12 text-male', $maleAvail];
                         $femaleCard = ['bi-gender-female', 'bg-danger/12 text-danger', $femaleAvail];
                     @endphp
-                    @if($post->gender === 'mixed' || ($post->male_quantity > 0 && $post->female_quantity > 0))
+                    @if(! $usesGender)
+                        <div class="{{ $stockCard }}" @if($maleAvail <= 0) data-depleted @endif>
+                            <div class="{{ $stockIcon }} bg-brand/12 text-brand"><i class="bi bi-hash"></i></div>
+                            <div class="flex flex-1 items-center justify-between">
+                                <div class="text-[13px] font-bold text-ink">{{ $profile->forForm()['quantity_label'] }}</div>
+                                <div @class(['text-xs font-semibold', $maleAvail > 0 ? 'text-brand' : 'text-danger'])>Mavjud: {{ $maleAvail }} ta</div>
+                            </div>
+                        </div>
+                    @elseif($post->gender === 'mixed' || ($post->male_quantity > 0 && $post->female_quantity > 0))
                         <div class="grid grid-cols-2 gap-2">
                             @foreach([[$maleCard, 'Erkak ♂'], [$femaleCard, "Urg'ochi ♀"]] as [[$icon, $iconColors, $avail], $label])
                                 <div class="{{ $stockCard }}" @if($avail <= 0) data-depleted @endif>
@@ -232,14 +242,20 @@
                 <div class="{{ $panel }}">
                     <span class="mb-2 block text-[13px] font-bold text-ink"><i class="bi bi-ui-checks-grid mr-1 text-brand"></i> Asosiy xususiyatlar:</span>
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        @foreach([
-                            ['bi-tag', 'Kategoriya', $post->category?->name ?? '—'],
-                            ['bi-award', 'Turi', $post->breed ?: '—'],
-                            ['bi-gender-ambiguous', 'Jinsi', match ($post->gender) { 'mixed' => 'Aralash (Mixed)', 'female' => "Urg'ochi ♀", default => 'Erkak ♂' }],
-                            ['bi-calendar3', 'Yoshi', $post->age ?: '—'],
-                            ['bi-palette', 'Rangi', $post->color ?: '—'],
-                            ['bi-geo-alt', 'Manzil', $post->fullLocation() ?: '—'],
-                        ] as [$icon, $label, $value])
+                        @php
+                            $specs = array_values(array_filter([
+                                ['bi-tag', 'Kategoriya', $post->category?->name ?? '—'],
+                                ['bi-award', $profile->breedLabel(), $post->breed ?: '—'],
+                                $usesGender ? ['bi-gender-ambiguous', 'Jinsi', match ($post->gender) { 'mixed' => 'Aralash (Mixed)', 'female' => "Urg'ochi ♀", default => 'Erkak ♂' }] : null,
+                                $profile->usesAge() ? ['bi-calendar3', $profile->forForm()['age_label'], $post->age ?: '—'] : null,
+                                $profile->usesColor() ? ['bi-palette', 'Rangi', $post->color ?: '—'] : null,
+                            ]));
+                            foreach ($post->detailRows() as $row) {
+                                $specs[] = ['bi-check2-circle', $row['label'], $row['value']];
+                            }
+                            $specs[] = ['bi-geo-alt', 'Manzil', $post->fullLocation() ?: '—'];
+                        @endphp
+                        @foreach($specs as [$icon, $label, $value])
                             <div class="flex flex-col gap-0.5 rounded-[10px] border border-line bg-surface px-3 py-[9px]">
                                 <span class="text-[11px] font-semibold tracking-wide text-muted uppercase"><i class="bi {{ $icon }} mr-1"></i> {{ $label }}</span>
                                 <span class="text-sm font-bold text-ink">{{ $value }}</span>
@@ -381,10 +397,12 @@
 
                 {{-- Step 1: how many of each gender --}}
                 <div>
-                    <span class="mb-2 block text-sm font-bold text-ink">1. Har bir jinsdan nechta kerakligini tanlang:</span>
+                    <span class="mb-2 block text-sm font-bold text-ink">{{ $usesGender ? '1. Har bir jinsdan nechta kerakligini tanlang:' : '1. Nechta kerakligini tanlang:' }}</span>
                     @php $stepBtn = 'flex h-full w-10 cursor-pointer items-center justify-center text-lg font-bold text-brand transition hover:bg-brand/15 disabled:cursor-not-allowed disabled:opacity-25'; @endphp
                     <div class="flex flex-col gap-2">
-                        @foreach([['male', $maleAvail, 'bi-gender-male text-male', 'Erkak ♂'], ['female', $femaleAvail, 'bi-gender-female text-danger', "Urg'ochi ♀"]] as [$value, $avail, $icon, $label])
+                        @foreach($usesGender
+                            ? [['male', $maleAvail, 'bi-gender-male text-male', 'Erkak ♂'], ['female', $femaleAvail, 'bi-gender-female text-danger', "Urg'ochi ♀"]]
+                            : [['male', $maleAvail, 'bi-hash text-brand', $profile->forForm()['quantity_label']]] as [$value, $avail, $icon, $label])
                             <div @class(['flex items-center justify-between gap-3 rounded-xl border-[1.5px] border-line bg-surface px-3 py-2', 'opacity-40' => $avail <= 0])>
                                 <label for="buyerQty_{{ $value }}" class="flex items-center gap-2">
                                     <i class="bi {{ $icon }} text-xl"></i>

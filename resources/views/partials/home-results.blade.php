@@ -14,6 +14,7 @@
     $option = 'flex cursor-pointer items-center gap-2.5 py-1 text-sm text-ink hover:text-brand';
     $radio = 'size-4 shrink-0 cursor-pointer accent-brand';
     $visible = 6;
+    $filterByGender = ! $category || \App\Support\ListingProfile::forCategory($category)->usesGender();
     $anyFilter = $f->categoryId || $f->gender !== '' || $f->breed !== '' || $f->region !== '' || $f->location !== '' || $f->currency !== ''
         || $f->priceMin !== null || $f->priceMax !== null || $f->sort !== 'latest';
     // Radio groups for the breed / city lists: [form field, heading, options, current value]
@@ -77,12 +78,14 @@
                         </select>
                     </div>
 
+                    @if($filterByGender)
                     <div class="{{ $block }}">
                         <h3 class="{{ $heading }}">Jinsi</h3>
                         @foreach(['' => "Farqi yo'q", 'male' => 'Erkak', 'female' => "Urg'ochi"] as $value => $label)
                             <label class="{{ $option }}"><input type="radio" name="gender" value="{{ $value }}" class="{{ $radio }}" @checked($f->gender === $value)>{{ $label }}</label>
                         @endforeach
                     </div>
+                    @endif
 
                     {{-- Breeds and cities of the chosen category; the long lists fold behind "Yana N" --}}
                     @foreach($groups as [$field, $title, $options, $current])

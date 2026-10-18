@@ -150,7 +150,11 @@
                 </a>
                 <div class="relative ml-1">
                     <button type="button" data-dropdown-toggle aria-expanded="false" aria-controls="zmProfileMenu" aria-label="Hisob menyusi" class="{{ $zmAction }} gap-1 pr-1.5 pl-1 md:pr-1.5 md:pl-1">
-                        <span class="grid size-8 place-items-center rounded-full bg-brand text-sm font-extrabold text-white">{{ mb_strtoupper(mb_substr($zmUser->name, 0, 1)) }}</span><i class="bi bi-chevron-down text-xs"></i>
+                        @if($zmUser->avatar)
+                            <img src="{{ $zmUser->avatarUrl() }}" alt="" class="size-8 rounded-full object-cover">
+                        @else
+                            <span class="grid size-8 place-items-center rounded-full bg-brand text-sm font-extrabold text-white">{{ mb_strtoupper(mb_substr($zmUser->name, 0, 1)) }}</span>
+                        @endif<i class="bi bi-chevron-down text-xs"></i>
                         @if(! $zmIsAdmin && $zmPending > 0)<em class="{{ $zmBadge }} absolute top-0.5 left-[26px]" title="Yangi so'rovlar">{{ $zmPending > 99 ? '99+' : $zmPending }}</em>@endif
                     </button>
                     <div id="zmProfileMenu" hidden class="absolute top-[calc(100%+10px)] right-0 z-10 w-[260px] rounded-[14px] border border-line bg-white p-2 shadow-[0_16px_36px_rgba(0,0,0,.12)]">

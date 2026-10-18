@@ -9,6 +9,9 @@
     $iconWrap = 'group relative flex items-center';
     $icon = 'pointer-events-none absolute left-3.5 text-[15px] text-muted transition-colors group-focus-within:text-brand';
     $field = 'input border-line bg-surface pl-[42px]';
+    // Per-category form wording and switches, for the form script ([data-listing-form])
+    $profileMap = $categories->mapWithKeys(fn ($c) => [$c->id => \App\Support\ListingProfile::forName($c->name)->forForm() + ['name' => $c->name]])->all()
+        + ['default' => \App\Support\ListingProfile::forName(null)->forForm() + ['name' => '']];
 @endphp
 <div class="page">
     <x-page-head title="Yangi e'lon" subtitle="Hayvoningiz haqida aniq ma'lumot va sifatli rasmlar qo'shing — o'ng tomonda e'lon xaridorlarga qanday ko'rinishini kuzatib borasiz." />
@@ -28,7 +31,7 @@
         </div>
     @endif
 
-    <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data" id="createPostForm">
+    <form action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data" id="createPostForm" data-listing-form data-profiles="{{ json_encode($profileMap) }}">
         @csrf
 
         <div class="grid items-start gap-6 lg:grid-cols-3">
@@ -65,22 +68,25 @@
                         </div>
 
                         <div>
-                            <label for="breed" class="{{ $label }}">Turi {!! $required !!}</label>
+                            <label for="breed" class="{{ $label }}"><span data-profile-label="breed">Turi</span> {!! $required !!}</label>
                             <div class="{{ $iconWrap }}">
                                 <i class="bi bi-tag-fill {{ $icon }}"></i>
-                                <input type="text" name="breed" id="breed" value="{{ old('breed') }}" class="{{ $field }}"
+                                <input type="text" name="breed" id="breed" value="{{ old('breed') }}" data-profile-placeholder="breed" class="{{ $field }}"
                                        placeholder="Masalan: Shotland, Nemis ovcharkasi, Kane-korso" required>
                             </div>
                         </div>
                     </div>
                 </x-form-section>
 
+                {{-- Category-specific questions (shown for the chosen category only) --}}
+                @include('posts.partials.category-fields', ['styles' => ['label' => $label, 'field' => $field]])
+
                 {{-- Section 2: parameters --}}
                 <x-form-section icon="bi-sliders" title="Parametrlar va holat" desc="Hayvonning jinsi, yoshi, rangi va e'lon statusi">
                     <div class="grid gap-4 md:grid-cols-12">
                         {{-- Total quantity --}}
                         <div class="md:col-span-5">
-                            <label for="quantity" class="{{ $label }}">Jami hayvonlar soni {!! $required !!}</label>
+                            <label for="quantity" class="{{ $label }}"><span data-profile-label="quantity">Jami hayvonlar soni</span> {!! $required !!}</label>
                             <div class="{{ $iconWrap }}">
                                 <i class="bi bi-hash {{ $icon }}"></i>
                                 <input type="number" name="quantity" id="quantity" value="{{ old('quantity', 1) }}" min="1" max="100"
@@ -90,7 +96,7 @@
                         </div>
 
                         {{-- Gender selector --}}
-                        <div class="md:col-span-7">
+                        <div class="md:col-span-7" data-profile-show="gender">
                             <span class="{{ $label }}">Jinsi {!! $required !!}</span>
                             <div class="flex h-11 gap-[3px] rounded-[10px] border border-line bg-surface p-[3px]">
                                 @foreach([
@@ -110,7 +116,7 @@
                         </div>
 
                         {{-- Mixed gender split (only when gender === 'mixed') --}}
-                        <div class="md:col-span-12" id="mixedBreakdownWrap" @if(old('gender') !== 'mixed') hidden @endif>
+                        <div class="md:col-span-12" id="mixedBreakdownWrap" data-profile-show="gender" @if(old('gender') !== 'mixed') hidden @endif>
                             <div class="mt-1 rounded-xl border border-dashed border-brand/35 bg-surface p-4">
                                 <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                                     <div class="flex items-center gap-2">
@@ -138,15 +144,15 @@
                             </div>
                         </div>
 
-                        <div class="md:col-span-6">
-                            <label for="age" class="{{ $label }}">Yoshi {!! $required !!}</label>
+                        <div class="md:col-span-6" data-profile-show="age">
+                            <label for="age" class="{{ $label }}"><span data-profile-label="age">Yoshi</span> {!! $required !!}</label>
                             <div class="{{ $iconWrap }}">
                                 <i class="bi bi-calendar3 {{ $icon }}"></i>
-                                <input type="text" name="age" id="age" value="{{ old('age') }}" class="{{ $field }}" placeholder="Masalan: 3 oy, 1.5 yosh, 6 haftalik" required>
+                                <input type="text" name="age" id="age" value="{{ old('age') }}" data-profile-placeholder="age" class="{{ $field }}" placeholder="Masalan: 3 oy, 1.5 yosh, 6 haftalik" required>
                             </div>
                         </div>
 
-                        <div class="md:col-span-6">
+                        <div class="md:col-span-6" data-profile-show="color">
                             <label for="color" class="{{ $label }}">Rangi</label>
                             <div class="{{ $iconWrap }}">
                                 <i class="bi bi-palette-fill {{ $icon }}"></i>

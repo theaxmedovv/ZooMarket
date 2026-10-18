@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
+use App\Models\Post;
+use App\Models\User;
 use App\Services\DatabaseImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +24,35 @@ class ProfileController extends Controller
             ->take(5)
             ->get();
 
-        return view('profile.show', compact('user', 'recentPosts'));
+        $admin = $user->hasRole('admin') ? $this->adminOverview($user) : null;
+
+        return view('profile.show', compact('user', 'recentPosts', 'admin'));
+    }
+
+    /**
+     * The main admin's overview: what needs a decision, how the site is doing, and their latest decisions.
+     */
+    private function adminOverview(User $admin): array
+    {
+        $pending = Post::where('moderation_status', 'pending');
+
+        return [
+            'stats' => [
+                'pending_posts' => (clone $pending)->count(),
+                'oldest_pending' => (clone $pending)->min('updated_at'),
+                'pending_banners' => Banner::where('moderation_status', 'pending')->count(),
+                'active_posts' => Post::listed()->count(),
+                'sold_posts' => Post::where('status', 'sold')->count(),
+                'new_today' => Post::whereDate('created_at', today())->count(),
+                'users' => User::whereHas('roles', fn ($q) => $q->where('name', 'user'))->count(),
+            ],
+            'queue' => (clone $pending)->with(['user', 'category'])->oldest('updated_at')->take(5)->get(),
+            'decisions' => Post::with(['user', 'category'])
+                ->where('moderated_by', $admin->id)
+                ->latest('moderated_at')
+                ->take(5)
+                ->get(),
+        ];
     }
 
     public function user()

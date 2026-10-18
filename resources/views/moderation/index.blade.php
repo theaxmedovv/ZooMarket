@@ -44,9 +44,12 @@
                     <div class="mt-2 flex flex-wrap gap-1.5">
                         <span class="{{ $chip }}"><i class="bi bi-tag"></i>{{ $post->category?->name ?? '—' }}</span>
                         <span class="{{ $chip }}">Turi: {{ $post->breed }}</span>
-                        <span class="{{ $chip }}">Yosh: {{ $post->age }}</span>
+                        @if($post->age)<span class="{{ $chip }}">Yosh: {{ $post->age }}</span>@endif
                         @if($post->color)<span class="{{ $chip }}">Rang: {{ $post->color }}</span>@endif
-                        <span class="{{ $chip }}"><i class="bi bi-box-seam"></i>{{ $post->quantity }} ta ({{ $post->male_quantity }} ♂ / {{ $post->female_quantity }} ♀)</span>
+                        <span class="{{ $chip }}"><i class="bi bi-box-seam"></i>{{ $post->quantity }} ta @if($post->usesGender()) ({{ $post->male_quantity }} ♂ / {{ $post->female_quantity }} ♀)@endif</span>
+                        @foreach($post->detailRows() as $row)
+                            <span class="{{ $chip }}">{{ $row['label'] }}: {{ $row['value'] }}</span>
+                        @endforeach
                         <span class="{{ $chip }}"><i class="bi bi-geo-alt"></i>{{ $post->fullLocation() }}</span>
                     </div>
 

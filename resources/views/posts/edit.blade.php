@@ -5,12 +5,15 @@
     $field = 'input h-12 rounded-2xl border-transparent bg-surface px-4 text-base focus:bg-white';
     $label = 'field-label';
     $currentImages = $post->allImages();
+    // Per-category form wording and switches, for the form script ([data-listing-form])
+    $profileMap = $categories->mapWithKeys(fn ($c) => [$c->id => \App\Support\ListingProfile::forName($c->name)->forForm() + ['name' => $c->name]])->all()
+        + ['default' => \App\Support\ListingProfile::forName(null)->forForm() + ['name' => '']];
 @endphp
 <div class="page">
     <x-page-head title="E'lonni tahrirlash" :subtitle="$post->title" />
 
     <div class="card max-w-[880px] p-5 md:p-8">
-        <form action="{{ route('posts.update', $post) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('posts.update', $post) }}" method="POST" enctype="multipart/form-data" data-listing-form data-profiles="{{ json_encode($profileMap) }}">
             @csrf
             @method('PUT')
 
@@ -50,14 +53,14 @@
                     </select>
                 </div>
                 <div class="col-span-2">
-                    <label for="breed" class="{{ $label }}">Turi</label>
-                    <input type="text" name="breed" id="breed" value="{{ old('breed', $post->breed) }}" class="{{ $field }}" required>
+                    <label for="breed" class="{{ $label }}" data-profile-label="breed">Turi</label>
+                    <input type="text" name="breed" id="breed" data-profile-placeholder="breed" value="{{ old('breed', $post->breed) }}" class="{{ $field }}" required>
                 </div>
                 <div class="col-span-2">
-                    <label for="quantityEdit" class="{{ $label }}">Jami soni</label>
+                    <label for="quantityEdit" class="{{ $label }}" data-profile-label="quantity">Jami soni</label>
                     <input type="number" name="quantity" id="quantityEdit" min="1" max="100" value="{{ old('quantity', $post->quantity) }}" class="{{ $field }}" required>
                 </div>
-                <div class="col-span-2">
+                <div class="col-span-2" data-profile-show="gender">
                     <label for="genderEdit" class="{{ $label }}">Jinsi</label>
                     <select name="gender" id="genderEdit" class="{{ $field }}" required>
                         <option value="male" @selected(old('gender', $post->gender) === 'male')>Erkak</option>
@@ -65,7 +68,7 @@
                         <option value="mixed" @selected(old('gender', $post->gender) === 'mixed') id="optMixedEdit">Aralash (Mixed)</option>
                     </select>
                 </div>
-                <div class="col-span-full" id="mixedBoxEdit" @if(old('gender', $post->gender) !== 'mixed') hidden @endif>
+                <div class="col-span-full" id="mixedBoxEdit" data-profile-show="gender" @if(old('gender', $post->gender) !== 'mixed') hidden @endif>
                     <div class="rounded-2xl border border-line bg-surface p-4">
                         <div class="mb-2 text-sm font-semibold text-ink">Aralash jinslar soni taqsimoti:</div>
                         <div class="grid grid-cols-2 gap-2">
@@ -80,11 +83,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-span-2">
-                    <label for="age" class="{{ $label }}">Yoshi</label>
-                    <input type="text" name="age" id="age" value="{{ old('age', $post->age) }}" class="{{ $field }}" required>
+                <div class="col-span-2" data-profile-show="age">
+                    <label for="age" class="{{ $label }}" data-profile-label="age">Yoshi</label>
+                    <input type="text" name="age" id="age" data-profile-placeholder="age" value="{{ old('age', $post->age) }}" class="{{ $field }}" required>
                 </div>
-                <div class="col-span-2">
+                <div class="col-span-2" data-profile-show="color">
                     <label for="color" class="{{ $label }}">Rangi</label>
                     <input type="text" name="color" id="color" value="{{ old('color', $post->color) }}" class="{{ $field }}">
                 </div>
@@ -125,6 +128,11 @@
                     <input type="checkbox" value="1" id="is_negotiable" name="is_negotiable" class="size-4 accent-brand" @checked(old('is_negotiable', $post->is_negotiable))>
                     Narx kelishiladi
                 </label>
+            </div>
+
+            {{-- Category-specific questions (shown for the chosen category only) --}}
+            <div class="mb-6" data-profile-section data-profile-off>
+                @include('posts.partials.category-fields', ['values' => $post->details ?? [], 'styles' => ['label' => $label, 'field' => $field]])
             </div>
 
             <div class="mb-6">

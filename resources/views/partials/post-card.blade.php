@@ -104,6 +104,7 @@
             @if($post->location)
                 <span class="{{ $metaChip }}" title="{{ $post->fullLocation() }}"><i class="bi bi-geo-alt text-accent"></i> {{ Str::limit($post->location, 14) }}</span>
             @endif
+            @if($post->usesGender())
             <span class="{{ $metaChip }}" title="Jinsi">
                 @if($post->gender === 'mixed')
                     <i class="bi bi-gender-male text-male"></i>{{ $post->availableMaleCount() }} <i class="bi bi-gender-female ml-1 text-danger"></i>{{ $post->availableFemaleCount() }}
@@ -113,6 +114,7 @@
                     <i class="bi bi-gender-male text-male"></i> Erkak
                 @endif
             </span>
+            @endif
         </div>
 
         {{-- Price --}}

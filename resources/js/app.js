@@ -197,6 +197,58 @@ if (hero) {
     go(0);
 }
 
+// ---- Listing form: the questions depend on the category -------------------------
+// data-profiles: {categoryId: {breed_label, breed_placeholder, quantity_label, age_label, age_placeholder,
+// gender, age, color, name}, default: {...}}. Picking a category re-labels the basic fields, hides the ones that don't
+// apply (sex for fish, age for beekeeping, ...) and shows that category's own group of extra questions.
+// Everything hidden is also disabled, so it is neither validated by the browser nor submitted.
+document.querySelectorAll('[data-listing-form]').forEach(form => {
+    const profiles = JSON.parse(form.dataset.profiles);
+    const select = form.querySelector('[name="category_id"]');
+    if (!select) return;
+
+    const setOff = (el, off) => {
+        el.toggleAttribute('data-profile-off', off);
+        el.querySelectorAll('input, select, textarea').forEach(input => (input.disabled = off));
+    };
+
+    const apply = () => {
+        const profile = profiles[select.value] ?? profiles.default;
+
+        form.querySelectorAll('[data-profile-label]').forEach(el => {
+            const text = profile[el.dataset.profileLabel + '_label'];
+            if (text) el.textContent = text;
+        });
+        form.querySelectorAll('[data-profile-placeholder]').forEach(el => {
+            const text = profile[el.dataset.profilePlaceholder + '_placeholder'];
+            if (text) el.placeholder = text;
+        });
+        form.querySelectorAll('[data-profile-show]').forEach(el => setOff(el, !profile[el.dataset.profileShow]));
+
+        let anyExtras = false;
+        form.querySelectorAll('[data-profile-extras]').forEach(group => {
+            const on = group.dataset.profileExtras === profile.name;
+            anyExtras ||= on;
+            setOff(group, !on);
+        });
+        // Section wrappers only appear when there is a group to show; their inputs are handled per group above
+        form.querySelectorAll('[data-profile-section]').forEach(section => section.toggleAttribute('data-profile-off', !anyExtras));
+    };
+
+    select.addEventListener('change', apply);
+    apply();
+});
+
+// ---- Profile photo: preview the chosen file before saving ---------------------
+document.querySelectorAll('[data-avatar-input]').forEach(input => input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    const preview = input.closest('form').querySelector('[data-avatar-preview]');
+    if (!file || !preview) return;
+    preview.src = URL.createObjectURL(file);
+    preview.classList.remove('hidden');
+    input.closest('form').querySelector('[data-avatar-initial]')?.remove();
+}));
+
 // ---- Katalog mega menu --------------------------------------------------------
 // Hovering (or focusing) a category on the left shows its panel on the right; "Yana N" reveals the rest of a list.
 document.querySelectorAll('[data-catalog]').forEach(menu => {

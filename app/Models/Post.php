@@ -21,6 +21,7 @@ class Post extends Model
         'female_quantity',
         'age',
         'color',
+        'details',
         'description',
         'price',
         'currency',
@@ -44,6 +45,7 @@ class Post extends Model
             'price' => 'decimal:2',
             'is_negotiable' => 'boolean',
             'images' => 'array',
+            'details' => 'array',
             'quantity' => 'integer',
             'male_quantity' => 'integer',
             'female_quantity' => 'integer',
@@ -79,6 +81,30 @@ class Post extends Model
     public function isRejected(): bool
     {
         return $this->moderation_status === 'rejected';
+    }
+
+    /**
+     * What the form asked for in this listing's category (see config/listing_types.php).
+     */
+    public function profile(): \App\Support\ListingProfile
+    {
+        return \App\Support\ListingProfile::forName($this->category?->name);
+    }
+
+    /**
+     * False for listings that are not sold by sex (fish, beekeeping): they are counted as one group.
+     */
+    public function usesGender(): bool
+    {
+        return $this->profile()->usesGender();
+    }
+
+    /**
+     * The category-specific answers as label/value pairs for the listing page.
+     */
+    public function detailRows(): array
+    {
+        return $this->profile()->detailRows($this->details);
     }
 
     /**

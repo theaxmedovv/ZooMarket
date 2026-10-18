@@ -9,10 +9,13 @@
 @endphp
 <div class="page">
     @include('profile.partials.header', $isAdmin
-        ? ['role' => 'Bosh admin', 'description' => 'Profil sozlamalari.']
+        ? ['role' => 'Bosh admin', 'description' => "Saytni boshqarish va profil sozlamalari."]
         : ['role' => 'Foydalanuvchi', 'description' => "E'lonlaringiz va profil sozlamalari."])
 
-    <div @class(['mb-6 grid gap-6 md:grid-cols-2', 'md:grid-cols-3' => ! $isAdmin])>
+    @if($admin)
+        @include('profile.partials.admin-dashboard', ['admin' => $admin])
+    @else
+    <div class="mb-6 grid gap-6 md:grid-cols-3">
         @unless($isAdmin)
             <x-metric-card icon="bi-postcard-fill" label="E'lonlar" tone="bg-[#5ea4ff]/12 text-[#1a6fd1]">{{ $user->posts_count ?? 0 }} <span class="text-xs font-semibold text-muted">ta</span></x-metric-card>
         @endunless
@@ -56,9 +59,10 @@
         </div>
         @endunless
 
-        <div @class(['xl:col-span-5' => ! $isAdmin, 'xl:col-span-7' => $isAdmin])>
+        <div class="xl:col-span-5">
             @include('profile.partials.settings', ['updateRoute' => route('admin.profile.update'), 'nameLabel' => "To'liq ism"])
         </div>
     </div>
+    @endif
 </div>
 @endsection

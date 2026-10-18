@@ -260,6 +260,7 @@ class GroqModerationService
         $color = $post->color ?? '';
         $price = $post->price ? "{$post->price} {$post->currency}" : 'Kelishilgan';
         $location = $post->fullLocation();
+        $details = collect($post->detailRows())->map(fn ($row) => "- {$row['label']}: {$row['value']}")->implode("\n");
         $description = $post->description ?? $post->content ?? '';
 
         return <<<TEXT
@@ -270,6 +271,7 @@ Hayvon e'loni ma'lumotlari:
 - Jinsi: {$gender}
 - Yoshi: {$age}
 - Rangi: {$color}
+{$details}
 - Narxi: {$price}
 - Manzil: {$location}
 - Batafsil tavsif: {$description}

@@ -1,4 +1,4 @@
-{{-- Profile details + password forms, shared by the seller and buyer profile pages. --}}
+{{-- Profile details + password forms, shared by every account's profile page. --}}
 @php $profileLabel = 'mb-[7px] block text-sm font-semibold text-ink'; @endphp
 <x-panel class="mb-6" title="Profil ma'lumotlari" subtitle="Ism, telefon, telegram va avatar">
     <form action="{{ $updateRoute }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-4">
@@ -17,7 +17,16 @@
         </div>
         <div>
             <label for="avatar" class="{{ $profileLabel }}">Profil rasmi</label>
-            <input type="file" name="avatar" id="avatar" accept="image/*"
+            <div class="mb-2.5 flex items-center gap-3">
+                <div class="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full border border-brand/35 bg-brand/8">
+                    <img src="{{ $user->avatarUrl() }}" alt="" data-avatar-preview class="size-full object-cover @unless($user->avatar) hidden @endunless">
+                    @unless($user->avatar)
+                        <span data-avatar-initial class="text-xl font-extrabold text-brand">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</span>
+                    @endunless
+                </div>
+                <p class="text-xs leading-snug text-muted">JPG, PNG yoki WEBP, 2 MB gacha. Tanlagan rasmingiz saqlashdan oldin shu yerda ko'rinadi.</p>
+            </div>
+            <input type="file" name="avatar" id="avatar" data-avatar-input accept="image/*"
                    class="w-full cursor-pointer rounded-[10px] border border-line text-sm text-muted file:mr-3 file:cursor-pointer file:border-0 file:bg-brand-tint file:px-3 file:py-2.5 file:font-semibold file:text-brand hover:file:bg-brand/20">
         </div>
         <button type="submit" class="btn btn-primary mt-2 h-[38px] w-full rounded-lg text-[13px]">
