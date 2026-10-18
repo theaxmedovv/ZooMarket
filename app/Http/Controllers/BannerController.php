@@ -7,6 +7,7 @@ use App\Services\DatabaseImageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Home page slides (adverts shown in the rotating hero banner).
@@ -79,7 +80,7 @@ class BannerController extends Controller
         $this->authorizeBanner($request, $banner);
 
         $isAdmin = $this->isAdmin($request);
-        $data = $this->validated($request, $isAdmin);
+        $data = $this->validated($request, $isAdmin, $banner);
 
         if ($request->hasFile('image') || $request->boolean('remove_image')) {
             DatabaseImageService::delete($banner->image);
@@ -134,7 +135,7 @@ class BannerController extends Controller
             'moderated_by' => $request->user()->id,
         ]);
 
-        return back()->with('success', "\"{$banner->title}\" tasdiqlandi" . ($banner->is_active ? ' va bosh sahifada ko\'rinadi.' : ', lekin egasi uni o\'chirib qo\'ygan.'));
+        return back()->with('success', "\"{$banner->label()}\" tasdiqlandi" . ($banner->is_active ? ' va bosh sahifada ko\'rinadi.' : ', lekin egasi uni o\'chirib qo\'ygan.'));
     }
 
     public function reject(Request $request, Banner $banner): RedirectResponse
@@ -153,7 +154,7 @@ class BannerController extends Controller
             'moderated_by' => $request->user()->id,
         ]);
 
-        return back()->with('success', "\"{$banner->title}\" rad etildi. Sabab banner egasiga ko'rsatiladi.");
+        return back()->with('success', "\"{$banner->label()}\" rad etildi. Sabab banner egasiga ko'rsatiladi.");
     }
 
     private function isAdmin(Request $request): bool
@@ -169,11 +170,12 @@ class BannerController extends Controller
         abort_unless($this->isAdmin($request) || $banner->created_by === $request->user()->id, 403);
     }
 
-    private function validated(Request $request, bool $isAdmin): array
+    private function validated(Request $request, bool $isAdmin, ?Banner $banner = null): array
     {
         $data = $request->validate([
             'eyebrow' => ['nullable', 'string', 'max:80'],
-            'title' => ['required', 'string', 'max:80'],
+            // Only the main admin may place a picture-only banner; everyone else must write a title
+            'title' => [$isAdmin ? 'nullable' : 'required', 'string', 'max:80'],
             'offer' => ['nullable', 'string', 'max:140'],
             // Site paths ("/?category_id=...") or full http(s) links only — never javascript: and the like.
             'link' => ['nullable', 'string', 'max:255', 'regex:#^(https?://[^\s]+|/(?!/)[^\s]*)$#i'],
@@ -190,6 +192,13 @@ class BannerController extends Controller
         ]);
 
         unset($data['image']);
+
+        // The admin's banners may be just a picture, but an empty banner is useless: it needs a title or a picture
+        $keepsImage = $banner?->image && ! $request->boolean('remove_image');
+        if ($isAdmin && ! filled($data['title'] ?? null) && ! $request->hasFile('image') && ! $keepsImage) {
+            throw ValidationException::withMessages(['title' => "Sarlavha yozing yoki rasm yuklang — banner bo'sh bo'lishi mumkin emas."]);
+        }
+
         $data['is_active'] = $request->boolean('is_active');
 
         // Order on the home page is the admin's call

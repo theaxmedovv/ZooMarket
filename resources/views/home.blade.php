@@ -16,17 +16,11 @@
 
     if (! $isResults) {
         // Slides: [background, eyebrow, heading, offer html, link, button, emoji, image url].
-        // The main admin's banners come first, then the built-in ones.
+        // Only banners approved by the main admin; with none, the hero is left out.
         $slides = $banners->map(fn ($b) => [
             $b->color, $b->eyebrow, $b->title, $b->offerHtml(), $b->link,
-            $b->link ? ($b->button_text ?: 'Batafsil') : null, $b->emoji, $b->imageUrl(),
+            $b->link ? ($b->button_text ?: 'Batafsil') : null, $b->emoji, $b->imageUrl(), $b->isImageOnly(),
         ])->all();
-        $slides[] = ['#212844', "Eng yaxshi e'lonlar onlayn", "Sodiq do'stlar.", $stats['posts'] > 0 ? "Sotuvda — <b>{$stats['posts']}</b> ta e'lon" : "Birinchi e'lonlar <b>tez orada</b>", '#mashhurlar', "Ko'rish", '🐕', null];
-        $slides[] = ['#1f3a5f', "Hamyonbop narxlar", 'Mushuklar olami.', 'Narxlar — <b>kelishiladi</b>', '#eng-arzon', 'Arzonlari', '🐈', null];
-        // Every account can sell: guests are sent to sign up, users straight to a new listing.
-        if (! auth()->user()?->hasRole('admin')) {
-            $slides[] = ['#2d2350', 'Sotmoqchimisiz?', "Bepul e'lon bering.", '<b>' . e($stats['sellers']) . '</b> sotuvchi bizga ishonadi', auth()->check() ? route('posts.create') : route('register'), auth()->check() ? "E'lon berish" : 'Boshlash', '🦜', null];
-        }
     } else {
         $f = $filters;
         // Removable chips: [query keys to drop, label]
@@ -51,12 +45,23 @@
 @if($isResults)
     @include('partials.home-results')
 @else
-    {{-- ============ Hero ============ --}}
+    {{-- ============ Hero (only when there are approved banners) ============ --}}
+    @if($slides)
     <section class="relative mt-2" id="hero">
         {{-- md+: the banner keeps a fixed shape, height = 33.308824% of the width (the padding-bottom trick) --}}
         <div class="relative overflow-hidden rounded-[20px] md:pb-[33.308824%]">
             <div class="flex transition-transform duration-600 ease-[cubic-bezier(.2,.7,.2,1)] md:absolute md:inset-0" data-hero-track>
-                @foreach($slides as [$bg, $eyebrow, $heading, $offer, $href, $cta, $art, $image])
+                @foreach($slides as [$bg, $eyebrow, $heading, $offer, $href, $cta, $art, $image, $imageOnly])
+                    @if($imageOnly)
+                        {{-- Just a picture: shown as it is, the whole banner is the link --}}
+                        <div style="background-color: {{ $bg }}" class="relative min-h-[160px] min-w-full overflow-hidden sm:min-h-[220px]">
+                            <img src="{{ $image }}" alt="" class="absolute inset-0 size-full object-cover" @unless($loop->first) loading="lazy" @endunless>
+                            @if($href)
+                                <a href="{{ $href }}" @if(str_starts_with($href, 'http')) target="_blank" rel="noopener" @endif class="absolute inset-0" aria-label="Batafsil"></a>
+                            @endif
+                        </div>
+                        @continue
+                    @endif
                     <div style="background-color: {{ $bg }}" class="relative grid min-h-[280px] min-w-full grid-cols-1 items-center overflow-hidden px-6 py-8 text-white md:grid-cols-[1.1fr_1fr] md:px-[70px] md:py-9 xl:px-[90px]">
                         @if($image)
                             {{-- Photo banner: the picture fills the slide, a shade keeps the text readable --}}
@@ -67,7 +72,7 @@
                         @endif
                         <div class="relative">
                             @if($eyebrow)<p class="mb-3 text-[17px] font-semibold md:mb-4 md:text-xl">{{ $eyebrow }}</p>@endif
-                            <h2 class="mb-3.5 text-[clamp(34px,5.2vw,68px)] leading-[1.05] md:mb-5 font-black tracking-[.01em] uppercase">{{ $heading }}</h2>
+                            @if($heading)<h2 class="mb-3.5 text-[clamp(34px,5.2vw,68px)] leading-[1.05] md:mb-5 font-black tracking-[.01em] uppercase">{{ $heading }}</h2>@endif
                             @if($offer)<p class="mb-[22px] text-xl font-bold md:mb-7 md:text-2xl [&_b]:text-[#ffd12e]">{!! $offer !!}</p>@endif
                             @if($href)
                                 <a href="{{ $href }}" @if(str_starts_with($href, 'http')) target="_blank" rel="noopener" @endif class="inline-flex items-center gap-2 rounded-lg bg-white px-[22px] py-[11px] text-sm font-extrabold text-navy md:px-7 md:py-3.5 md:text-base hover:bg-brand hover:text-white">{{ $cta }} <i class="bi bi-arrow-right"></i></a>
@@ -85,6 +90,7 @@
         @endforeach
         <div class="mt-4 flex justify-center gap-2" data-hero-dots></div>
     </section>
+    @endif
 
     {{-- ============ Popular: most liked first, 12 more per click ============ --}}
     <x-home-section id="mashhurlar">

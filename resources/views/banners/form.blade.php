@@ -33,8 +33,11 @@
                     <input type="text" name="eyebrow" id="eyebrow" value="{{ old('eyebrow', $banner->eyebrow) }}" class="{{ $field }}" maxlength="80" placeholder="Masalan: Faqat shu hafta">
                 </div>
                 <div>
-                    <label for="title" class="{{ $label }}">Asosiy sarlavha <span class="text-brand">*</span></label>
-                    <input type="text" name="title" id="title" value="{{ old('title', $banner->title) }}" class="{{ $field }}" maxlength="80" required placeholder="Masalan: Itlar uchun ozuqa">
+                    <label for="title" class="{{ $label }}">Asosiy sarlavha @unless($isAdmin)<span class="text-brand">*</span>@endunless</label>
+                    <input type="text" name="title" id="title" value="{{ old('title', $banner->title) }}" class="{{ $field }}" maxlength="80" @unless($isAdmin) required @endunless placeholder="Masalan: Itlar uchun ozuqa">
+                    @if($isAdmin)
+                        <p class="{{ $hint }}">Matn yozish ixtiyoriy: faqat rasm qo'ysangiz ham bo'ladi. Rasm ham, sarlavha ham bo'lmasa, banner saqlanmaydi.</p>
+                    @endif
                 </div>
 
                 <div class="md:col-span-2">
@@ -79,7 +82,13 @@
                     @endif
                     <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/webp"
                            class="w-full cursor-pointer rounded-lg bg-surface text-sm text-muted file:mr-3 file:cursor-pointer file:border-0 file:bg-brand-tint file:px-3 file:py-2.5 file:font-semibold file:text-brand hover:file:bg-brand/20">
-                    <p class="{{ $hint }}">Ixtiyoriy. Rasm butun banner foniga yoyiladi — kengligi 1600px atrofida bo'lsin. Max: 4MB</p>
+                    <p class="{{ $hint }}">
+                        @if($isAdmin)
+                            Rasm butun banner foniga yoyiladi. Faqat rasm qo'yilsa, u o'zgarishsiz ko'rinadi, shuning uchun 3:1 shaklda (masalan, 1600×533 px) tayyorlang. Max: 4MB
+                        @else
+                            Ixtiyoriy. Rasm banner foniga yoyiladi, ustida sarlavhangiz ko'rinadi. Kengligi 1600px atrofida bo'lsin. Max: 4MB
+                        @endif
+                    </p>
                 </div>
                 <div>
                     <label for="emoji" class="{{ $label }}">Emoji (rasm bo'lmasa)</label>

@@ -43,13 +43,14 @@
                     <div class="relative min-w-0 pr-12">
                         @if($banner->eyebrow)<p class="truncate text-[11px] font-semibold">{{ $banner->eyebrow }}</p>@endif
                         <p class="line-clamp-2 text-lg leading-tight font-black uppercase">{{ $banner->title }}</p>
+                        @if($banner->isImageOnly())<p class="text-[11px] font-semibold opacity-90">Faqat rasm</p>@endif
                         @if($banner->offer)<p class="truncate text-xs font-bold [&_b]:text-[#ffd12e]">{!! $banner->offerHtml() !!}</p>@endif
                     </div>
                 </div>
 
                 <div class="min-w-0 text-sm">
                     <div class="flex flex-wrap items-center gap-2">
-                        <h2 class="text-base font-extrabold text-ink">{{ $banner->title }}</h2>
+                        <h2 class="text-base font-extrabold text-ink">{{ $banner->label() }}</h2>
                         @php [$pillClass, $pillIcon, $pillLabel] = $statusPill[$banner->moderation_status] ?? $statusPill['pending']; @endphp
                         <span class="inline-flex items-center gap-1 rounded border px-1.5 py-px text-[11px] font-bold uppercase {{ $pillClass }}"><i class="bi {{ $pillIcon }}"></i>{{ $pillLabel }}</span>
                         @unless($banner->is_active)

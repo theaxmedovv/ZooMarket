@@ -56,8 +56,21 @@ class BannerTest extends TestCase
             ->assertSee('Itlar uchun ozuqa')
             ->assertSee('Barchasiga <b>20% chegirma</b>', false)
             ->assertSee('Xarid qilish')
-            // Built-in slides still rotate after the admin's ones
-            ->assertSee("Sodiq do'stlar.");
+            ->assertSee('id="hero"', false);
+    }
+
+    public function test_home_has_no_hero_without_approved_banners(): void
+    {
+        $owner = $this->user();
+        Banner::create($this->payload(['title' => 'Kutilayotgan banner']) + ['created_by' => $owner->id, 'moderation_status' => 'pending']);
+
+        // No built-in slides any more: nothing approved, nothing to show
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('id="hero"', false)
+            ->assertDontSee("Sodiq do'stlar")
+            ->assertDontSee('Kutilayotgan banner')
+            ->assertSee('Mashhurlar');
     }
 
     public function test_hidden_banner_is_not_shown_on_home(): void
@@ -273,6 +286,103 @@ class BannerTest extends TestCase
 
         $html = $this->actingAs($this->admin)->get(route('banners.index'))->getContent();
         $this->assertMatchesRegularExpression('#Bannerlar</span>\s*<em[^>]*>2</em>#', $html);
+    }
+
+    public function test_banner_can_be_just_a_picture(): void
+    {
+        $this->actingAs($this->admin)->post(route('banners.store'), [
+            'color' => '#212844',
+            'link' => '/?category_id=1',
+            'is_active' => 1,
+            'image' => UploadedFile::fake()->image('poster.jpg', 1600, 533),
+        ])->assertSessionHasNoErrors()->assertRedirect(route('banners.index'));
+
+        $banner = Banner::firstOrFail();
+        $this->assertNull($banner->title);
+        $this->assertTrue($banner->isImageOnly());
+
+        auth()->logout();
+        $html = $this->get(route('home'))->assertOk()->assertSee('id="hero"', false)->getContent();
+
+        // Shown as it is: the picture, one link over the whole banner, no heading, no shade, no button
+        $this->assertStringContainsString($banner->imageUrl(), $html);
+        $this->assertStringContainsString('aria-label="Batafsil"', $html);
+        $hero = substr($html, strpos($html, 'id="hero"'), strpos($html, '</section>', strpos($html, 'id="hero"')) - strpos($html, 'id="hero"'));
+        $this->assertStringNotContainsString('<h2', $hero);
+        $this->assertStringNotContainsString('from-black/75', $hero);
+    }
+
+    public function test_banner_without_text_and_picture_is_refused(): void
+    {
+        $this->actingAs($this->admin)->post(route('banners.store'), ['color' => '#212844', 'title' => '', 'offer' => 'Faqat taklif'])
+            ->assertSessionHasErrors('title');
+
+        $this->assertDatabaseCount('banners', 0);
+    }
+
+    public function test_picture_banner_cannot_lose_its_picture_while_having_no_text(): void
+    {
+        $this->actingAs($this->admin)->post(route('banners.store'), ['color' => '#212844', 'image' => UploadedFile::fake()->image('p.jpg', 1600, 533)]);
+        $banner = Banner::firstOrFail();
+
+        $this->actingAs($this->admin)->put(route('banners.update', $banner), ['color' => '#212844', 'remove_image' => 1])->assertSessionHasErrors('title');
+        $this->assertNotNull($banner->fresh()->image);
+
+        // With a title the picture may go
+        $this->actingAs($this->admin)->put(route('banners.update', $banner), ['color' => '#212844', 'title' => 'Endi matnli', 'remove_image' => 1])->assertSessionHasNoErrors();
+        $this->assertNull($banner->fresh()->image);
+    }
+
+    public function test_text_banners_still_get_a_heading_and_picture_ones_with_text_keep_the_shade(): void
+    {
+        $this->actingAs($this->admin)->post(route('banners.store'), $this->payload([
+            'image' => UploadedFile::fake()->image('p.jpg', 1600, 533),
+        ]));
+
+        auth()->logout();
+        $hero = $this->get(route('home'))->getContent();
+        $hero = substr($hero, strpos($hero, 'id="hero"'), strpos($hero, '</section>', strpos($hero, 'id="hero"')) - strpos($hero, 'id="hero"'));
+
+        $this->assertStringContainsString('<h2', $hero);
+        $this->assertStringContainsString('from-black/75', $hero);
+    }
+
+    public function test_picture_only_banner_is_listed_with_a_name_and_can_be_reviewed(): void
+    {
+        $this->actingAs($this->admin)->post(route('banners.store'), ['color' => '#212844', 'image' => UploadedFile::fake()->image('p.jpg', 1600, 533)])
+            ->assertSessionHasNoErrors();
+        $banner = Banner::firstOrFail();
+
+        $this->actingAs($this->admin)->get(route('banners.index'))->assertOk()->assertSee('Rasmli banner #' . $banner->id)->assertSee('Faqat rasm');
+
+        // The review message names it too
+        $banner->update(['moderation_status' => 'pending']);
+        $this->actingAs($this->admin)->post(route('banners.approve', $banner))
+            ->assertSessionHas('success', fn ($m) => str_contains($m, 'Rasmli banner #' . $banner->id));
+    }
+
+    public function test_only_the_admin_can_place_a_picture_only_banner(): void
+    {
+        $owner = $this->user();
+        $picture = UploadedFile::fake()->image('p.jpg', 1600, 533);
+
+        // A user must write a title, whatever the picture
+        $this->actingAs($owner)->post(route('banners.store'), ['color' => '#212844', 'image' => $picture])->assertSessionHasErrors('title');
+        $this->assertDatabaseCount('banners', 0);
+
+        // With a title and a picture it is fine
+        $this->actingAs($owner)->post(route('banners.store'), ['color' => '#212844', 'title' => 'Mening bannerim', 'image' => UploadedFile::fake()->image('q.jpg', 1600, 533)])
+            ->assertSessionHasNoErrors();
+        $banner = Banner::firstOrFail();
+        $this->assertFalse($banner->isImageOnly());
+
+        // Editing cannot blank the title either
+        $this->actingAs($owner)->put(route('banners.update', $banner), ['color' => '#212844', 'title' => ''])->assertSessionHasErrors('title');
+        $this->assertSame('Mening bannerim', $banner->fresh()->title);
+
+        // The form says so: title is marked required for users, optional for the admin
+        $this->actingAs($owner)->get(route('banners.create'))->assertOk()->assertDontSee('faqat rasm qo&#039;ysangiz', false);
+        $this->actingAs($this->admin)->get(route('banners.create'))->assertOk()->assertSee("faqat rasm qo'ysangiz", false);
     }
 
     public function test_guests_cannot_reach_banner_pages(): void

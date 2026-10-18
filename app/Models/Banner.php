@@ -79,6 +79,22 @@ class Banner extends Model
         return $query->orderBy('sort_order')->latest('id');
     }
 
+    /**
+     * Name for messages and lists: banners may be just a picture, with no title.
+     */
+    public function label(): string
+    {
+        return $this->title ?: "Rasmli banner #{$this->id}";
+    }
+
+    /**
+     * Only a picture, no text: shown clean (no shade, no words) and clickable as a whole.
+     */
+    public function isImageOnly(): bool
+    {
+        return $this->image && ! $this->eyebrow && ! $this->title && ! $this->offer;
+    }
+
     public function imageUrl(): ?string
     {
         return $this->image ? DatabaseImageService::url($this->image) : null;

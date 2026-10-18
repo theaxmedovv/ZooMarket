@@ -48,15 +48,9 @@ class HomeController extends Controller
             ->take(4)
             ->get();
 
-        $stats = [
-            'posts' => Post::listed()->count(),
-            // Anyone can sell, so count the accounts that actually have a listing on sale.
-            'sellers' => User::whereHas('posts', fn ($q) => $q->listed())->count(),
-        ];
-
         $banners = Banner::shown()->ordered()->get();
 
-        return view('home', compact('filters', 'popular', 'moreUrl', 'cheapest', 'stats', 'banners', 'likedPostIds'));
+        return view('home', compact('filters', 'popular', 'moreUrl', 'cheapest', 'banners', 'likedPostIds'));
     }
 
     /**
