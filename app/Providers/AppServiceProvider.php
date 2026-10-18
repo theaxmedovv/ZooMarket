@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
                 }
 
                 try {
-                    $navCategories = \App\Models\Category::query()->orderBy('name')->get();
+                    $navCategories = \App\Models\Category::ordered()->get();
                 } catch (\Throwable $e) {
                     $navCategories = collect();
                 }

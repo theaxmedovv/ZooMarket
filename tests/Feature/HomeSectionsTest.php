@@ -279,7 +279,7 @@ class HomeSectionsTest extends TestCase
             $this->assertStringContainsString('>' . $title . '</h3>', $html);
         }
         // With a category chosen, its types replace the category list
-        $this->assertStringNotContainsString('>Kategoriya</h3>', $html);
+        $this->assertStringNotContainsString('>Kategoriyalar</h3>', $html);
         $this->assertStringNotContainsString('>Zot</h3>', $html);
         $this->assertStringContainsString('name="price_min"', $html);
         $this->assertStringContainsString('name="breed" value="Zot1"', $html);
@@ -300,7 +300,7 @@ class HomeSectionsTest extends TestCase
 
         $html = $this->get(route('home', ['q' => 'mushuk']))->assertOk()->getContent();
 
-        $this->assertStringContainsString('>Kategoriya</h3>', $html);
+        $this->assertStringContainsString('>Kategoriyalar</h3>', $html);
         $this->assertStringNotContainsString('>Turi</h3>', $html);
     }
 

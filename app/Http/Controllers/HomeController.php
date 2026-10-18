@@ -31,7 +31,7 @@ class HomeController extends Controller
             $results = $filters->apply($this->listed())->paginate(self::PER_PAGE, page: 1);
             $moreUrl = $this->moreUrl($request, 'results', $results);
             $category = $filters->categoryId ? Category::find($filters->categoryId) : null;
-            $categories = Category::orderBy('name')->get();
+            $categories = Category::ordered()->get();
             // Breed and city choices of the chosen category, for the filter sidebar
             $facets = $category ? (Catalog::stats()[$category->id] ?? []) : [];
 

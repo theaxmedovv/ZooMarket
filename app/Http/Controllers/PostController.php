@@ -55,7 +55,7 @@ class PostController extends Controller
     {
         abort_unless($this->canCreatePosts(), 403);
 
-        $categories = Category::query()->orderBy('name')->get();
+        $categories = Category::ordered()->get();
 
         return view('posts.create', compact('categories'));
     }
@@ -211,7 +211,7 @@ class PostController extends Controller
                 })->first();
         }
 
-        // Same category, same breed first, then the newest; the listing itself is left out
+        // Same category, same breed first, then the newest (up to 16: four full rows); the listing itself is left out
         $similar = Post::with(['user', 'category'])
             ->listed()
             ->where('category_id', $post->category_id)
@@ -219,7 +219,7 @@ class PostController extends Controller
             ->orderByRaw('breed = ? desc', [(string) $post->breed])
             ->latest()
             ->latest('id')
-            ->take(8)
+            ->take(16)
             ->get();
 
         $likedPostIds = auth()->check()
@@ -242,7 +242,7 @@ class PostController extends Controller
             abort(403, "Arxivlangan yoki sotilgan e'lonlar faqat o'qish uchun (read-only) saqlanadi va ularni tahrirlab bo'lmaydi.");
         }
 
-        $categories = Category::query()->orderBy('name')->get();
+        $categories = Category::ordered()->get();
 
         return view('posts.edit', compact('post', 'categories'));
     }

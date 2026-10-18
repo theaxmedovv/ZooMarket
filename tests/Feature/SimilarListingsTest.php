@@ -74,17 +74,17 @@ class SimilarListingsTest extends TestCase
         $this->assertStringContainsString('lg:grid-cols-4', $section);
     }
 
-    public function test_same_breed_comes_first_and_at_most_eight_are_shown(): void
+    public function test_same_breed_comes_first_and_at_most_sixteen_are_shown(): void
     {
         $post = $this->makePost(['title' => 'Asosiy', 'breed' => 'Britan']);
         $this->makePost(['title' => 'Eski Britan', 'breed' => 'Britan', 'created_at' => now()->subDays(5)]);
-        foreach (range(1, 9) as $i) {
+        foreach (range(1, 20) as $i) {
             $this->makePost(['title' => "Sfinks {$i}", 'breed' => 'Sfinks']);
         }
 
         $section = $this->similarSection($post);
 
-        $this->assertSame(8, substr_count($section, '<article '));
+        $this->assertSame(16, substr_count($section, '<article '));
         // The older Britan still outranks the newer Sfinks listings
         $this->assertStringContainsString('Eski Britan', $section);
     }

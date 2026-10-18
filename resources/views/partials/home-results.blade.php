@@ -47,7 +47,7 @@
                     {{-- Before a category is chosen: pick one here. Afterwards the breeds ("Turi") of that category replace this list. --}}
                     @unless($f->categoryId)
                         <div class="{{ $block }}">
-                            <h3 class="{{ $heading }}">Kategoriya</h3>
+                            <h3 class="{{ $heading }}">Kategoriyalar</h3>
                             <ul class="flex flex-col gap-0.5">
                                 @foreach($categories as $c)
                                     @php $isActive = $f->categoryId === $c->id; @endphp
