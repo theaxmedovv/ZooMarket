@@ -11,6 +11,9 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PurchaseRequestController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SellerController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -95,6 +98,21 @@ Route::get('/posts/{post}', [PostController::class, 'show'])
     ->whereNumber('post')
     ->name('posts.show');
 
+// Seller page: public, with the buyers' reviews
+Route::get('/sellers/{user}', [SellerController::class, 'show'])->whereNumber('user')->name('sellers.show');
+
+Route::middleware(['auth', 'role:user'])->group(function () {
+    Route::post('/sellers/{user}/review', [ReviewController::class, 'store'])->whereNumber('user')->name('reviews.store');
+    Route::post('/posts/{post}/renew', [AdminController::class, 'renewPost'])->whereNumber('post')->name('posts.renew');
+});
+Route::delete('/reviews/{review}', [ReviewController::class, 'destroy'])->middleware('auth')->name('reviews.destroy');
+
+// Reports: any signed-in user flags a listing or a seller
+Route::middleware('auth')->group(function () {
+    Route::post('/posts/{post}/report', [ReportController::class, 'storeForPost'])->whereNumber('post')->name('reports.post');
+    Route::post('/sellers/{user}/report', [ReportController::class, 'storeForUser'])->whereNumber('user')->name('reports.user');
+});
+
 Route::post('/posts/{post}/like', [PostController::class, 'toggleLike'])
     ->middleware(['auth', 'role:user'])
     ->whereNumber('post')
@@ -144,6 +162,10 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/moderation', [ModerationController::class, 'index'])->name('moderation.index');
     Route::post('/moderation/posts/{post}/approve', [ModerationController::class, 'approve'])->name('moderation.approve');
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::post('/reports/{report}/resolve', [ReportController::class, 'resolve'])->name('reports.resolve');
+    Route::post('/reports/{report}/dismiss', [ReportController::class, 'dismiss'])->name('reports.dismiss');
+    Route::post('/reports/{report}/hide-post', [ReportController::class, 'hidePost'])->name('reports.hide-post');
     Route::post('/moderation/posts/{post}/reject', [ModerationController::class, 'reject'])->name('moderation.reject');
 
     // Banner review (the banners themselves are managed by their owners, below)

@@ -281,10 +281,15 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-x-2">
-                                <h6 class="min-w-0 text-[15px] font-bold break-words text-ink">{{ $post->user->name }}</h6>
+                                <h6 class="min-w-0 text-[15px] font-bold break-words text-ink"><a href="{{ route('sellers.show', $post->user) }}" class="hover:text-brand">{{ $post->user->name }}</a></h6>
                                 <span class="rounded-full border border-brand/30 bg-brand/12 px-1.5 py-px text-[11px] font-bold text-brand">Sotuvchi</span>
                             </div>
-                            <div class="text-xs text-muted">Ro'yxatdan o'tgan: {{ $post->user->created_at->format('d.m.Y') }}</div>
+                            <div class="text-xs text-muted">
+                                @if($sellerRatingCount > 0)
+                                    <a href="{{ route('sellers.show', $post->user) }}#sharhlar" class="inline-flex items-center gap-1 hover:text-brand"><x-stars :rating="$sellerRating" /> <b class="text-ink">{{ number_format($sellerRating, 1) }}</b> ({{ $sellerRatingCount }})</a> ·
+                                @endif
+                                <a href="{{ route('sellers.show', $post->user) }}" class="hover:text-brand hover:underline">Barcha e'lonlari</a>
+                            </div>
                         </div>
                     </div>
 
@@ -356,6 +361,15 @@
                     @endif
 
                     @if($isOwner)
+                        @if($post->isRenewable())
+                            <form action="{{ route('posts.renew', $post) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="{{ $subBtn }} w-full border-brand/40 bg-brand/10 text-brand hover:bg-brand hover:text-white">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                    {{ $post->status === 'archived' ? "E'lonni qayta faollashtirish" : "Muddatni uzaytirish (" . $post->daysLeft() . " kun qoldi)" }}
+                                </button>
+                            </form>
+                        @endif
                         @if(! $post->isArchived())
                             <a href="{{ route('posts.edit', $post) }}" class="{{ $subBtn }} w-full border-line bg-black/4 text-muted hover:border-ink hover:text-ink">
                                 <i class="bi bi-pencil-square"></i> E'lonni tahrirlash
@@ -365,6 +379,12 @@
                                 <i class="bi bi-lock-fill mr-1"></i> Ushbu e'lon arxivlangan / sotilgan (Read-only)
                             </div>
                         @endif
+                    @endif
+
+                    @if(auth()->check() && ! $isOwner)
+                        <button type="button" data-dialog-open="reportPost" class="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl text-sm font-semibold text-muted hover:text-danger">
+                            <i class="bi bi-flag"></i> E'londan shikoyat qilish
+                        </button>
                     @endif
 
                     @guest
@@ -420,6 +440,10 @@
     <button type="button" data-dialog-close aria-label="Yopish" class="absolute top-3 right-3 z-10 grid size-11 cursor-pointer place-items-center rounded-full bg-white/15 text-xl text-white hover:bg-white/30"><i class="bi bi-x-lg"></i></button>
     <img id="galleryZoomImg" src="" alt="" class="size-full object-contain">
 </dialog>
+
+@if(auth()->check() && ! $isOwner)
+    @include('partials.report-dialog', ['id' => 'reportPost', 'action' => route('reports.post', $post), 'subject' => "Bu e'lon"])
+@endif
 
 {{-- Buy dialog: pick how many males and females to request --}}
 @if($isBuyer && ! $hasPurchaseRequest && ! $post->isSoldOut())

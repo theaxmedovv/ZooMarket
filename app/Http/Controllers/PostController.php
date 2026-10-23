@@ -160,7 +160,10 @@ class PostController extends Controller
             ? auth()->user()->likedPosts()->pluck('posts.id')->all()
             : [];
 
-        return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest', 'activeRequestId', 'chat', 'similar', 'likedPostIds'));
+        $sellerRatingCount = $post->user->reviewsReceived()->count();
+        $sellerRating = $sellerRatingCount > 0 ? round((float) $post->user->reviewsReceived()->avg('rating'), 1) : null;
+
+        return view('posts.show', compact('post', 'isLiked', 'hasPurchaseRequest', 'activeRequestId', 'chat', 'similar', 'likedPostIds', 'sellerRating', 'sellerRatingCount'));
     }
 
     /**

@@ -45,6 +45,22 @@ class AdminController extends Controller
         return back()->with('success', 'E\'lon arxivga o\'tkazildi.');
     }
 
+    /**
+     * Put an expiring or archived listing back on sale for another period.
+     */
+    public function renewPost(Request $request, Post $post): RedirectResponse
+    {
+        abort_unless($post->user_id === $request->user()->id, 403);
+
+        if (! $post->isRenewable()) {
+            return back()->with('error', "Bu e'lonni yangilab bo'lmaydi.");
+        }
+
+        $post->renew();
+
+        return back()->with('success', "E'lon yangilandi: yana " . config('zoomarket.listing_days') . ' kun sotuvda turadi.');
+    }
+
     public function updateProfile(Request $request): RedirectResponse
     {
         $validated = $request->validate([

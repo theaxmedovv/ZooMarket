@@ -26,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
                 $pendingRequestsCount = 0;
                 $pendingModerationCount = 0;
                 $pendingBannersCount = 0;
+                $openReportsCount = 0;
                 $unread = 0;
                 $favoritesCount = 0;
 
@@ -48,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
                     if (auth()->user()->hasRole('admin')) {
                         $pendingModerationCount = \App\Models\Post::where('moderation_status', 'pending')->count();
                         $pendingBannersCount = \App\Models\Banner::where('moderation_status', 'pending')->count();
+                        $openReportsCount = \App\Models\Report::where('status', 'open')->count();
                     }
                 }
 
@@ -69,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
                     'pendingRequestsCount' => $pendingRequestsCount,
                     'pendingModerationCount' => $pendingModerationCount,
                     'pendingBannersCount' => $pendingBannersCount,
+                    'openReportsCount' => $openReportsCount,
                     'catalogData' => $catalog,
                     'navCategories' => $navCategories,
                     'favoritesCount' => $favoritesCount,

@@ -158,12 +158,20 @@
                         <small class="text-muted">{{ $post->updated_at->format('H:i') }}</small>
                     </td>
 
-                    {{-- Actions (read-only: no restore) --}}
+                    {{-- Actions: sold listings are history; archived ones (expired or by hand) can be put back on sale --}}
                     <td class="text-right">
                         <div class="inline-flex flex-wrap items-center justify-end gap-2">
                             <a href="{{ route('posts.show', $post) }}" class="{{ $action }} border-line text-ink hover:border-brand hover:bg-brand/6 hover:text-brand" title="E'lonni ko'rish (Faqat o'qish)">
                                 <i class="bi bi-eye"></i> Ko'rish
                             </a>
+                            @if($post->isRenewable())
+                                <form action="{{ route('posts.renew', $post) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="{{ $action }} cursor-pointer border-brand/25 bg-brand/10 text-brand hover:bg-brand hover:text-white" title="E'lonni yana {{ config('zoomarket.listing_days') }} kunga sotuvga qaytarish">
+                                        <i class="bi bi-arrow-repeat"></i> Yangilash
+                                    </button>
+                                </form>
+                            @endif
                             @if($primarySold && $primarySold->chat)
                                 <a href="{{ route('chats.show', $primarySold->chat) }}" class="{{ $action }} border-brand/25 bg-brand/10 text-brand hover:bg-brand hover:text-white" title="Chat tarixini ko'rish">
                                     <i class="bi bi-chat-left-text"></i> Chat tarixi

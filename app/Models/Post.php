@@ -33,6 +33,7 @@ class Post extends Model
         'moderation_reason',
         'moderated_at',
         'moderated_by',
+        'expires_at',
         'content',
         'image',
         'images',
@@ -50,12 +51,15 @@ class Post extends Model
             'male_quantity' => 'integer',
             'female_quantity' => 'integer',
             'moderated_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
     }
 
     protected static function booted(): void
     {
         static::creating(function (Post $post) {
+            $post->expires_at ??= now()->addDays((int) config('zoomarket.listing_days', 30));
+
             if (empty($post->content)) {
                 $post->content = $post->description ?? '';
             }
@@ -172,6 +176,43 @@ class Post extends Model
         return in_array($this->status, ['sold', 'archived'], true) || $this->trashed();
     }
 
+    /**
+     * On sale and close to its end date: the owner is offered "Yangilash".
+     */
+    public function isExpiringSoon(): bool
+    {
+        return ! $this->isArchived()
+            && $this->expires_at !== null
+            && $this->expires_at->lte(now()->addDays((int) config('zoomarket.renew_window_days', 7)));
+    }
+
+    /**
+     * Whole days left on sale (0 on the last day), null when there is no end date.
+     */
+    public function daysLeft(): ?int
+    {
+        return $this->expires_at ? max(0, (int) floor(now()->diffInDays($this->expires_at, false))) : null;
+    }
+
+    /**
+     * The owner can put it back on sale for another period: expiring ones and ones that were archived
+     * (by the expiry or by hand). Sold listings are history and stay that way.
+     */
+    public function isRenewable(): bool
+    {
+        return ! $this->trashed()
+            && $this->status !== 'sold'
+            && ($this->status === 'archived' || $this->isExpiringSoon());
+    }
+
+    public function renew(): void
+    {
+        $this->update([
+            'status' => 'active',
+            'expires_at' => now()->addDays((int) config('zoomarket.listing_days', 30)),
+        ]);
+    }
+
     public function isSoldOut(): bool
     {
         return $this->isArchived() || $this->totalAvailableCount() <= 0;
@@ -216,6 +257,11 @@ class Post extends Model
     public function likedByUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'post_likes')->withTimestamps();
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
     }
 
     public function purchaseRequests(): HasMany

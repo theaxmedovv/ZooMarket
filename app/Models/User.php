@@ -74,6 +74,23 @@ class User extends Authenticatable
         return $this->likedPosts()->approved()->whereNotIn('posts.status', ['sold', 'archived']);
     }
 
+    public function reviewsReceived(): HasMany
+    {
+        return $this->hasMany(Review::class, 'seller_id');
+    }
+
+    /**
+     * Only someone whose purchase request to this seller was accepted (or completed) can rate them.
+     */
+    public function canReview(User $seller): bool
+    {
+        return $this->getKey() !== $seller->getKey()
+            && PurchaseRequest::where('user_id', $this->getKey())
+                ->whereIn('status', ['approved', 'sold'])
+                ->whereHas('animal', fn ($q) => $q->withTrashed()->where('user_id', $seller->getKey()))
+                ->exists();
+    }
+
     public function purchaseRequests(): HasMany
     {
         return $this->hasMany(PurchaseRequest::class);

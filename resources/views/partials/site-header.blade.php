@@ -32,6 +32,7 @@
     $zmPending = (int) ($pendingRequestsCount ?? 0);
     $zmModeration = (int) ($pendingModerationCount ?? 0);
     $zmPendingBanners = (int) ($pendingBannersCount ?? 0);
+    $zmReports = (int) ($openReportsCount ?? 0);
 
     // Shared class lists for the chrome below.
     $zmBadge = 'grid h-[18px] min-w-[18px] place-items-center rounded-full bg-hot px-[5px] text-[11px] leading-none font-extrabold not-italic text-white';
@@ -147,6 +148,10 @@
                     <a href="{{ route('moderation.index') }}" @if(request()->routeIs('moderation.*')) aria-current="page" @endif class="{{ $zmAction }} max-md:hidden" aria-label="E'lonlarni tekshirish" title="Tekshiruv">
                         <i class="bi bi-shield-check {{ $zmActionIcon }}"></i><span class="hidden 2xl:inline">Tekshiruv</span>
                         @if($zmModeration > 0)<em class="{{ $zmBadge }} absolute top-0.5 left-[26px]">{{ $zmModeration > 99 ? '99+' : $zmModeration }}</em>@endif
+                    </a>
+                    <a href="{{ route('reports.index') }}" @if(request()->routeIs('reports.*')) aria-current="page" @endif class="{{ $zmAction }} max-md:hidden" aria-label="Shikoyatlar" title="Shikoyatlar">
+                        <i class="bi bi-flag {{ $zmActionIcon }}"></i><span class="hidden 2xl:inline">Shikoyatlar</span>
+                        @if($zmReports > 0)<em class="{{ $zmBadge }} absolute top-0.5 left-[26px]">{{ $zmReports > 99 ? '99+' : $zmReports }}</em>@endif
                     </a>
                     <a href="{{ route('banners.index') }}" @if(request()->routeIs('banners.*')) aria-current="page" @endif class="{{ $zmAction }} max-md:hidden" aria-label="Bosh sahifa bannerlari" title="Bannerlar">
                         <i class="bi bi-images {{ $zmActionIcon }}"></i><span class="hidden 2xl:inline">Bannerlar</span>

@@ -25,6 +25,25 @@ return [
     ],
 
     /*
+    | How long a listing stays on sale before it moves to the archive on its own, and how many days
+    | before that the owner is offered "Yangilash" (renewing starts the period again).
+    */
+    'listing_days' => 30,
+    'renew_window_days' => 7,
+
+    /*
+    | What a report can say. The key is stored, the label is shown.
+    */
+    'report_reasons' => [
+        'fraud' => 'Firibgarlik shubhasi',
+        'fake' => "Soxta e'lon yoki rasm",
+        'spam' => 'Spam yoki reklama',
+        'prohibited' => 'Taqiqlangan hayvon yoki mahsulot',
+        'wrong' => "Noto'g'ri ma'lumot",
+        'other' => 'Boshqa sabab',
+    ],
+
+    /*
     | How many so'm one unit of each listing currency is worth. Only used to compare
     | prices across currencies ("Eng arzon narxlarda", price sorting), never shown.
     | Update them in .env as the rates move.

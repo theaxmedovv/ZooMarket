@@ -41,6 +41,10 @@
                 <span class="{{ $pill }} border border-brand bg-brand/90 text-white"><i class="bi bi-box-seam-fill"></i> {{ $post->totalAvailableCount() }} ta</span>
             @endif
 
+            @if($isOwn && $post->isExpiringSoon())
+                <span class="{{ $pill }} border border-accent bg-accent/90 text-white" title="Muddati tugashiga qoldi"><i class="bi bi-hourglass-split"></i> {{ $post->daysLeft() }} kun qoldi</span>
+            @endif
+
             @if($showModeration)
                 @if($post->moderation_status === 'approved')
                     <span class="{{ $pill }} bg-green-600/85 text-white"><i class="bi bi-shield-check"></i> Tasdiqlangan</span>
@@ -71,7 +75,7 @@
             <div class="flex min-w-0 items-center gap-2">
                 <span class="grid size-[26px] shrink-0 place-items-center rounded-full border border-brand/30 bg-brand-tint text-xs font-bold text-brand">{{ mb_strtoupper(mb_substr($post->user->name, 0, 1)) }}</span>
                 <div class="min-w-0 leading-tight">
-                    <span class="block truncate text-xs font-semibold text-ink">{{ $post->user->name }}</span>
+                    <a href="{{ route('sellers.show', $post->user) }}" class="block truncate text-xs font-semibold text-ink hover:text-brand">{{ $post->user->name }}</a>
                     <small class="text-xs text-muted">{{ $post->created_at->diffForHumans() }}</small>
                 </div>
             </div>
@@ -84,6 +88,12 @@
                     </button>
                     <div id="postMenu{{ $post->id }}" hidden class="{{ $menu }}">
                         <a class="{{ $menuItem }}" href="{{ route('posts.edit', $post) }}"><i class="bi bi-pencil"></i>Tahrirlash</a>
+                        @if($post->isRenewable())
+                            <form action="{{ route('posts.renew', $post) }}" method="POST">
+                                @csrf
+                                <button class="{{ $menuItem }}" type="submit"><i class="bi bi-arrow-repeat"></i>Yangilash</button>
+                            </form>
+                        @endif
                         <form action="{{ route('posts.destroy', $post) }}" method="POST" onsubmit="return confirm('E\'lonni o\'chirishni xohlaysizmi?')">
                             @csrf @method('DELETE')
                             <button class="{{ $menuItem }} text-danger hover:bg-danger/15 hover:text-danger" type="submit"><i class="bi bi-trash"></i>O'chirish</button>
