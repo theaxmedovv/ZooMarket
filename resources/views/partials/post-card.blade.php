@@ -10,12 +10,12 @@
     $alreadyRequested = $canLike && in_array($post->id, auth()->user()->activeRequestedAnimalIds(), true);
     $canBuy = ! $post->isSoldOut() && ! $alreadyRequested && (auth()->guest() || $canLike);
 
-    $menu = 'absolute top-[calc(100%+4px)] right-0 z-20 min-w-[140px] rounded-[10px] border border-line bg-white p-1.5 shadow-lg';
+    $menu = 'absolute top-[calc(100%+4px)] right-0 z-20 min-w-[140px] rounded-[10px] border border-line bg-white p-1.5 ';
     $menuItem = 'flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-left text-[13px] lg:min-h-9 text-ink hover:bg-brand/12 hover:text-brand';
-    $pill = 'inline-flex items-center gap-1 rounded-full px-2.5 py-[3px] text-[11px] font-bold tracking-wide shadow-[0_4px_12px_rgba(0,0,0,.12)] backdrop-blur-md';
+    $pill = 'inline-flex items-center gap-1 rounded-full px-2.5 py-[3px] text-[11px] font-bold tracking-wide  backdrop-blur-md';
     $metaChip = 'inline-flex items-center gap-1 rounded-md border border-black/6 bg-black/[.035] px-[7px] py-0.5 text-xs text-muted';
 @endphp
-<article class="group relative flex h-full flex-col overflow-hidden rounded-[18px] border border-line bg-linear-to-b from-white/70 to-white/95 transition duration-300 ease-[cubic-bezier(.2,0,0,1)] hover:-translate-y-[5px] hover:border-brand/45 hover:shadow-[0_16px_36px_rgba(0,0,0,.12),0_0_0_1px_rgba(0,142,204,.15)]">
+<article class="group relative flex h-full flex-col overflow-hidden rounded-[18px] border border-line bg-linear-to-b from-white/70 to-white/95 transition duration-300 ease-[cubic-bezier(.2,0,0,1)] hover:-translate-y-[5px] hover:border-brand/45 ">
     {{-- Image --}}
     <div class="relative aspect-[4/3] w-full overflow-hidden border-b border-line bg-soft">
         <a href="{{ route('posts.show', $post) }}" class="relative flex size-full items-center justify-center overflow-hidden" aria-label="{{ $post->title }}">
@@ -139,7 +139,7 @@
                 <span>Batafsil</span> <i class="bi bi-arrow-right"></i>
             </a>
             @if($canBuy)
-                <a class="inline-flex h-11 min-w-24 flex-1 items-center justify-center gap-1 rounded-[10px] bg-brand px-3 text-xs font-bold text-white lg:h-9 lg:flex-none transition hover:-translate-y-px hover:bg-brand-dark hover:shadow-[0_4px_12px_rgba(0,142,204,.25)]" href="{{ route('posts.show', $post) }}#buy" title="Sotib olish">
+                <a class="inline-flex h-11 min-w-24 flex-1 items-center justify-center gap-1 rounded-[10px] bg-brand px-3 text-xs font-bold text-white lg:h-9 lg:flex-none transition hover:-translate-y-px hover:bg-brand-dark " href="{{ route('posts.show', $post) }}#buy" title="Sotib olish">
                     <i class="bi bi-cart-check-fill"></i> Xarid
                 </a>
             @elseif($alreadyRequested)

@@ -45,6 +45,7 @@
 @if($isResults)
     @include('partials.home-results')
 @else
+    
     {{-- ============ Hero (only when there are approved banners) ============ --}}
     @if($slides)
     <section class="relative mt-2" id="hero">
@@ -79,16 +80,16 @@
                             @endif
                         </div>
                         @if($art && ! $image)
-                            <div class="absolute right-3 bottom-2 text-[110px] leading-none opacity-45 drop-shadow-[0_18px_30px_rgba(0,0,0,.35)] md:relative md:right-auto md:bottom-auto md:justify-self-center md:text-[170px] md:opacity-100 lg:text-[260px]">{{ $art }}</div>
+                            <div class="absolute right-3 bottom-2 text-[110px] leading-none opacity-45 md:relative md:right-auto md:bottom-auto md:justify-self-center md:text-[170px] md:opacity-100 lg:text-[260px]">{{ $art }}</div>
                         @endif
                     </div>
                 @endforeach
             </div>
         </div>
         @foreach([-1 => ['bi-chevron-left', 'Oldingi', 'left-2.5 min-[1200px]:-left-[22px]'], 1 => ['bi-chevron-right', 'Keyingi', 'right-2.5 min-[1200px]:-right-[22px]']] as $step => [$icon, $label, $side])
-            <button type="button" data-hero-step="{{ $step }}" aria-label="{{ $label }}" class="{{ $side }} absolute top-1/2 z-[2] hidden size-[54px] -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-brand-soft text-xl text-brand shadow-[0_6px_18px_rgba(0,0,0,.12)] hover:bg-brand hover:text-white md:grid"><i class="bi {{ $icon }}"></i></button>
+            <button type="button" data-hero-step="{{ $step }}" aria-label="{{ $label }}" class="{{ $side }} absolute top-1/2 z-[2] hidden size-[54px] -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-brand-soft text-xl text-brand hover:bg-brand hover:text-white md:grid"><i class="bi {{ $icon }}"></i></button>
         @endforeach
-        <div class="mt-4 flex justify-center gap-2" data-hero-dots></div>
+        <div class="flex justify-center" data-hero-dots></div>
     </section>
     @endif
 

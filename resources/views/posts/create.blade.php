@@ -106,7 +106,7 @@
                                 ] as [$optId, $inputId, $value, $genderIcon, $genderLabel, $checked, $isRequired])
                                     <label class="flex-1 cursor-pointer" id="{{ $optId }}" @if($value === 'mixed' && (int) old('quantity', 1) <= 1) hidden @endif>
                                         <input type="radio" name="gender" id="{{ $inputId }}" value="{{ $value }}" class="peer sr-only" @checked($checked) @required($isRequired)>
-                                        <span class="inline-flex size-full items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-muted transition peer-checked:bg-brand peer-checked:font-bold peer-checked:text-white peer-checked:shadow-[0_2px_8px_rgba(0,142,204,.25)] peer-focus-visible:outline-2 peer-focus-visible:outline-brand">
+                                        <span class="inline-flex size-full items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-muted transition peer-checked:bg-brand peer-checked:font-bold peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-brand">
                                             <i class="bi {{ $genderIcon }}"></i> {{ $genderLabel }}
                                         </span>
                                     </label>
@@ -283,7 +283,7 @@
 
                 {{-- Submit bar --}}
                 <div class="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 -mx-4 flex items-center gap-2 border-t border-line bg-white px-4 py-3 md:static md:mx-0 md:flex-wrap md:gap-3 md:border-0 md:bg-transparent md:p-0">
-                    <button type="submit" class="btn btn-primary h-12 min-w-0 flex-1 rounded-xl px-4 text-[15px] md:flex-none md:px-7 shadow-[0_4px_18px_rgba(0,142,204,.25)] hover:-translate-y-0.5" id="submitBtn">
+                    <button type="submit" class="btn btn-primary h-12 min-w-0 flex-1 rounded-xl px-4 text-[15px] md:flex-none md:px-7 hover:-translate-y-0.5" id="submitBtn">
                         <i class="bi bi-cloud-arrow-up-fill"></i> E'lonni chop etish
                     </button>
                     <a href="{{ route('posts.mine') }}" aria-label="Bekor qilish" class="btn h-12 w-12 shrink-0 rounded-xl border-line bg-white px-0 font-semibold text-muted hover:border-ink hover:text-ink sm:w-auto sm:px-5"><i class="bi bi-x-lg sm:hidden"></i><span class="max-sm:hidden">Bekor qilish</span></a>
@@ -293,10 +293,10 @@
             {{-- Sidebar: live preview & selling tips --}}
             <div class="min-w-0 lg:sticky lg:top-24">
                 {{-- Live preview --}}
-                <div class="mb-6 rounded-[18px] border border-line bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,.12)]">
+                <div class="mb-6 rounded-[18px] border border-line bg-white p-4 ">
                     <div class="mb-3.5 flex items-center justify-between border-b border-line pb-2.5">
                         <div class="flex items-center gap-2">
-                            <span class="size-2 animate-pulse-dot rounded-full bg-brand shadow-[0_0_10px_var(--color-brand)]"></span>
+                            <span class="size-2 animate-pulse-dot rounded-full bg-brand "></span>
                             <span class="text-[15px] font-bold text-ink">Jonli ko'rinish</span>
                         </div>
                         <span class="rounded-full bg-black/4 px-2 text-[11px] text-muted">Katalogda</span>

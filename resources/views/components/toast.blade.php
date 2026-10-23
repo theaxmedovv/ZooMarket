@@ -3,7 +3,7 @@
     $icon = ['success' => 'bi-check-circle-fill', 'info' => 'bi-info-circle-fill', 'warning' => 'bi-exclamation-triangle-fill', 'error' => 'bi-x-circle-fill'][$type] ?? 'bi-info-circle-fill';
 @endphp
 <div data-toast="{{ $type }}" role="{{ $type === 'error' ? 'alert' : 'status' }}"
-     class="group pointer-events-auto flex animate-toast-in items-start gap-2.5 rounded-xl border border-l-4 border-line border-l-brand bg-white py-[13px] pr-3 pl-4 text-sm leading-snug font-semibold text-ink shadow-[0_14px_34px_rgba(0,0,0,.14)] transition duration-200
+     class="group pointer-events-auto flex animate-toast-in items-start gap-2.5 rounded-xl border border-l-4 border-line border-l-brand bg-white py-[13px] pr-3 pl-4 text-sm leading-snug font-semibold text-ink transition duration-200
             data-[toast=success]:border-l-ok data-[toast=warning]:border-l-warn data-[toast=error]:border-l-danger
             data-hiding:translate-x-4 data-hiding:opacity-0">
     <i class="bi {{ $icon }} text-lg leading-tight text-brand group-data-[toast=success]:text-ok group-data-[toast=warning]:text-warn group-data-[toast=error]:text-danger"></i>

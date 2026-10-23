@@ -10,7 +10,7 @@
                       class="text-center text-xl font-bold tracking-[.5em]"
                       :aria-invalid="$errors->has('code') ? 'true' : false" />
 
-        <button type="submit" class="btn btn-primary mb-4 h-12 w-full rounded-xl text-[15px] font-bold shadow-[0_4px_14px_rgba(0,142,204,.2)] hover:-translate-y-px hover:shadow-[0_8px_22px_rgba(0,142,204,.35)]">
+        <button type="submit" class="btn btn-primary mb-4 h-12 w-full rounded-xl text-[15px] font-bold hover:-translate-y-px ">
             <span>Tasdiqlash</span> <i class="bi bi-check2-circle"></i>
         </button>
     </form>

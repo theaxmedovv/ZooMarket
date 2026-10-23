@@ -15,7 +15,7 @@
 
     <div class="flex flex-col gap-5">
         @forelse($posts as $post)
-            <article class="grid gap-4 rounded-[20px] border border-line bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,.06)] md:grid-cols-[220px_1fr] md:p-5">
+            <article class="grid gap-4 rounded-[20px] border border-line bg-white p-4 md:grid-cols-[220px_1fr] md:p-5">
                 {{-- Photos: the admin must see every image the seller uploaded --}}
                 <div class="flex flex-col gap-2">
                     @php $images = $post->allImageUrls(); @endphp
@@ -61,7 +61,7 @@
                         <span><i class="bi bi-clock mr-1 text-brand"></i>{{ $post->updated_at->diffForHumans() }}</span>
                     </div>
 
-                    <x-moderation-panel :post="$post" class="mt-4 bg-surface shadow-none" />
+                    <x-moderation-panel :post="$post" class="mt-4 bg-surface" />
                 </div>
             </article>
         @empty

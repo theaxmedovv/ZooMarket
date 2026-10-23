@@ -19,7 +19,7 @@
             <a href="{{ route('password.request') }}" class="inline-flex min-h-11 items-center font-semibold text-brand hover:text-brand-dark hover:underline">Parolni unutdingizmi?</a>
         </div>
 
-        <button type="submit" class="btn btn-primary mb-6 h-12 w-full rounded-xl text-[15px] font-bold shadow-[0_4px_14px_rgba(0,142,204,.2)] hover:-translate-y-px hover:shadow-[0_8px_22px_rgba(0,142,204,.35)]">
+        <button type="submit" class="btn btn-primary mb-6 h-12 w-full rounded-xl text-[15px] font-bold hover:-translate-y-px ">
             <span>Kirish</span> <i class="bi bi-box-arrow-in-right"></i>
         </button>
     </form>

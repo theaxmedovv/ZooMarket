@@ -31,7 +31,7 @@
 
     <div class="flex flex-col gap-4">
         @forelse($banners as $banner)
-            <article @class(['grid gap-4 rounded-[20px] border border-line bg-white p-3 shadow-[0_8px_24px_rgba(0,0,0,.06)] md:grid-cols-[320px_1fr_auto] md:items-center md:p-4', 'opacity-60' => ! $banner->is_active && $banner->moderation_status === 'approved'])>
+            <article @class(['grid gap-4 rounded-[20px] border border-line bg-white p-3  md:grid-cols-[320px_1fr_auto] md:items-center md:p-4', 'opacity-60' => ! $banner->is_active && $banner->moderation_status === 'approved'])>
                 {{-- Small preview of the slide --}}
                 <div style="background-color: {{ $banner->color }}" class="relative flex aspect-[2.5/1] items-center overflow-hidden rounded-xl px-5 text-white">
                     @if($banner->imageUrl())

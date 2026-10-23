@@ -145,7 +145,7 @@
                 @if(!empty($currentImages))
                     <div class="mb-3 flex flex-wrap gap-2">
                         @foreach($currentImages as $img)
-                            <img src="{{ route('images.show', ['path' => $img]) }}" alt="" class="size-20 rounded-lg object-cover shadow-sm">
+                            <img src="{{ route('images.show', ['path' => $img]) }}" alt="" class="size-20 rounded-lg object-cover ">
                         @endforeach
                     </div>
                     <p class="mb-3 text-sm text-muted">Yangi rasmlar yuklasangiz, mavjud rasmlar almashtiriladi.</p>

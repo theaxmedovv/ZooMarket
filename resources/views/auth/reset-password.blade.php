@@ -11,7 +11,7 @@
         <x-auth-input id="new_password_confirmation" label="Parolni tasdiqlang" icon="bi-shield-lock" :password="true" type="password" name="password_confirmation"
                       placeholder="Parolni qayta kiriting" required autocomplete="new-password" />
 
-        <button type="submit" class="btn btn-primary mt-2 mb-6 h-12 w-full rounded-xl text-[15px] font-bold shadow-[0_4px_14px_rgba(0,142,204,.2)] hover:-translate-y-px hover:shadow-[0_8px_22px_rgba(0,142,204,.35)]">
+        <button type="submit" class="btn btn-primary mt-2 mb-6 h-12 w-full rounded-xl text-[15px] font-bold hover:-translate-y-px ">
             <span>Parolni yangilash</span> <i class="bi bi-check-circle-fill"></i>
         </button>
     </form>

@@ -89,7 +89,7 @@
                             <div class="{{ $avatar }} size-7 text-[11px]">{{ mb_strtoupper(mb_substr($msg->sender->name, 0, 1)) }}</div>
                         @endif
                         <div @class([
-                            'max-w-full rounded-2xl border px-3.5 py-2.5 break-words text-ink shadow-[0_4px_12px_rgba(0,0,0,.12)]',
+                            'max-w-full rounded-2xl border px-3.5 py-2.5 break-words text-ink ',
                             $isMine ? 'rounded-br-sm border-brand/25 bg-brand-tint' : 'rounded-bl-sm border-line bg-white',
                         ])>
                             <div class="text-sm leading-normal whitespace-pre-wrap">{{ $msg->body }}</div>
@@ -133,7 +133,7 @@
                                   required
                                   maxlength="2000">{{ old('body') }}</textarea>
                     </div>
-                    <button type="submit" title="Yuborish" class="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-brand text-[17px] text-white shadow-[0_4px_14px_rgba(0,142,204,.25)] transition hover:-translate-y-px hover:bg-brand-dark active:scale-95">
+                    <button type="submit" title="Yuborish" class="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl bg-brand text-[17px] text-white transition hover:-translate-y-px hover:bg-brand-dark active:scale-95">
                         <i class="bi bi-send-fill"></i>
                     </button>
                 </form>

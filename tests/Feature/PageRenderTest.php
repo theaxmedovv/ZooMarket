@@ -119,7 +119,7 @@ class PageRenderTest extends TestCase
         $this->actingAs($this->buyer);
 
         foreach (['/', '/?q=Mushuk', "/posts/{$this->post->id}", '/profile', '/favorites', '/user/purchase-requests', '/chats', "/chats/{$this->chat->id}"] as $url) {
-            $this->get($url)->assertOk()->assertSee('id="zmHeader"', false)->assertSee('aria-label="Buyurtmalar"', false);
+            $this->get($url)->assertOk()->assertSee('id="zmHeader"', false)->assertSee('aria-label="Mening sahifalarim"', false);
         }
     }
 
@@ -145,8 +145,10 @@ class PageRenderTest extends TestCase
         foreach (['/?q=Mushuk', '/my-posts', "/posts/{$this->post->id}", '/profile', '/favorites', '/admin/purchase-requests', '/admin/archive', '/user/purchase-requests', '/chats'] as $url) {
             [$chrome, $main] = $split($this->get($url)->assertOk()->getContent());
             $this->assertSame(1, $count($chrome, '/posts/create'), "{$url}: 'Yangi e'lon' must appear once in the chrome");
+            // Incoming requests, archive, banners live in the account row under the header, not in the profile menu
             $this->assertSame(1, $count($chrome, '/admin/purchase-requests'), "{$url}: 'So'rovlar' must appear once in the chrome");
             $this->assertSame(1, $count($chrome, '/admin/archive'), "{$url}: 'Arxiv' must appear once in the chrome");
+            $this->assertSame(1, $count($chrome, '/banners'), "{$url}: 'Bannerlar' must appear once in the chrome");
             $this->assertSame(1, $count($chrome, '/user/purchase-requests'), "{$url}: 'Buyurtmalar' must appear once in the chrome");
             $this->assertSame(1, $count($chrome, '/favorites'), "{$url}: 'Sevimlilar' must appear once in the chrome");
             $this->assertSame(0, $count($main, '/posts/create'), "{$url}: no extra 'Yangi e'lon' buttons in the page");

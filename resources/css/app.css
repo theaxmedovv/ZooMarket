@@ -122,11 +122,11 @@
 
 /* Header pair: "Yangi e'lon" is the main action, "Katalog" the quiet one next to it. Same 44px height and corners. */
 @utility btn-cta {
-    @apply h-11 rounded-[10px] bg-gold px-4 text-night shadow-sm hover:bg-gold-dark active:scale-[.98] active:bg-gold-deep current:bg-gold-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-night;
+    @apply h-11 rounded-[10px] bg-gold px-4 text-night  hover:bg-gold-dark active:scale-[.98] active:bg-gold-deep current:bg-gold-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-night;
 }
 
 @utility btn-solid {
-    @apply h-11 rounded-[10px] bg-brand px-4 text-white shadow-sm hover:bg-brand-dark active:scale-[.98] active:bg-brand-dark current:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
+    @apply h-11 rounded-[10px] bg-brand px-4 text-white  hover:bg-brand-dark active:scale-[.98] active:bg-brand-dark current:bg-brand-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand;
 }
 
 @utility btn-soft {
@@ -155,7 +155,7 @@
 
 /* Bottom sheet on phones, normal block from `lg` up (filters) or `md` up (profile menu) */
 @utility sheet {
-    @apply fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto overscroll-contain rounded-t-2xl border-t border-line bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-[0_-12px_32px_rgba(0,0,0,.18)];
+    @apply fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto overscroll-contain rounded-t-2xl border-t border-line bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] ;
 }
 
 /* Fade at the edges of a sideways scroller */

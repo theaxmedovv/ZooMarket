@@ -4,7 +4,7 @@
     <div class="mb-4 flex items-center gap-3 text-xs font-semibold text-muted uppercase">
         <span class="h-px flex-1 bg-line"></span> yoki <span class="h-px flex-1 bg-line"></span>
     </div>
-    <a href="{{ $href }}" {{ $attributes->class('flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-line bg-white text-[15px] font-bold text-ink transition hover:-translate-y-px hover:border-brand/40 hover:shadow-[0_6px_18px_rgba(0,0,0,.08)]') }}>
+    <a href="{{ $href }}" {{ $attributes->class('flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-line bg-white text-[15px] font-bold text-ink transition hover:-translate-y-px hover:border-brand/40 ') }}>
         <svg class="size-[18px] shrink-0" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
             <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>

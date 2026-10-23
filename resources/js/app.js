@@ -33,14 +33,6 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') toggles().forEach(btn => setOpen(btn, false));
 });
 
-// Header: a soft shadow once the page has scrolled
-const header = document.getElementById('zmHeader');
-if (header) {
-    const mark = () => header.toggleAttribute('data-scrolled', scrollY > 4);
-    addEventListener('scroll', mark, { passive: true });
-    mark();
-}
-
 // Tab bar "Qidirish": back to the top and into the search field
 document.addEventListener('click', e => {
     if (!e.target.closest('[data-focus-search]')) return;

@@ -6,7 +6,7 @@
     $failedHere = (int) old('post_id') === (int) $post->id && $errors->has('reason');
     $btn = 'inline-flex h-11 cursor-pointer items-center justify-center gap-1.5 rounded-xl px-4 text-sm font-bold whitespace-nowrap transition';
 @endphp
-<div {{ $attributes->class('rounded-2xl border border-line bg-white p-4 shadow-sm') }}>
+<div {{ $attributes->class('rounded-2xl border border-line bg-white p-4 ') }}>
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="min-w-0 text-sm">
             @if($status === 'approved')

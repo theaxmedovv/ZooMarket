@@ -21,7 +21,7 @@
     <div class="flex flex-col gap-[18px]">
         @forelse($requests as $request)
             <div @class([
-                'overflow-hidden rounded-[20px] border border-black/6 bg-white shadow-[0_18px_40px_rgba(0,0,0,.12)] transition hover:-translate-y-0.5 hover:border-brand/40',
+                'overflow-hidden rounded-[20px] border border-black/6 bg-white  transition hover:-translate-y-0.5 hover:border-brand/40',
                 'border-l-4 border-l-brand' => $request->status === 'approved',
                 'border-l-4 border-l-accent' => $request->status === 'pending',
             ])>
@@ -138,7 +138,7 @@
 
                         @if(($request->status === 'approved' || $request->status === 'sold') && $request->chat)
                             @php $unread = $request->chat->unreadCountFor(auth()->id()); @endphp
-                            <a href="{{ route('chats.show', $request->chat) }}" class="{{ $action }} bg-brand text-white shadow-[0_4px_12px_rgba(0,142,204,.25)] hover:-translate-y-px hover:bg-brand-dark">
+                            <a href="{{ route('chats.show', $request->chat) }}" class="{{ $action }} bg-brand text-white hover:-translate-y-px hover:bg-brand-dark">
                                 <i class="bi bi-chat-dots-fill"></i> Sotuvchi bilan chat
                                 @if($unread > 0)
                                     <span class="rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-extrabold text-white">{{ $unread }}</span>

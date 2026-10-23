@@ -14,9 +14,9 @@
     $isBuyer = auth()->check() && auth()->user()->hasRole('user') && ! $isOwner;
     $isAdmin = auth()->check() && auth()->user()->hasRole('admin');
 
-    $panel = 'rounded-[20px] border border-line bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,.12)] md:p-5';
+    $panel = 'rounded-[20px] border border-line bg-white p-4  md:p-5';
     $sectionTitle = 'mb-4 flex items-center gap-2 text-[17px] font-bold text-ink [&_.bi]:text-brand';
-    $glassPill = 'inline-flex items-center gap-1 rounded-full border px-3 py-[5px] text-xs font-bold shadow-[0_4px_14px_rgba(0,0,0,.12)] backdrop-blur-md';
+    $glassPill = 'inline-flex items-center gap-1 rounded-full border px-3 py-[5px] text-xs font-bold  backdrop-blur-md';
     $chip = 'inline-flex items-center gap-1 rounded-lg border border-black/7 bg-black/4 px-[9px] py-[3px] text-xs text-muted';
     $stockCard = 'flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3 py-2.5 transition data-[depleted]:border-[#fff1f0] data-[depleted]:bg-[#fff5f4] data-[depleted]:opacity-45';
     $stockIcon = 'grid size-8 shrink-0 place-items-center rounded-lg text-base';
@@ -76,7 +76,7 @@
         <div class="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-6">
 
             {{-- Gallery --}}
-            <div class="order-1 min-w-0 overflow-hidden rounded-[20px] border border-line bg-white p-2 shadow-[0_10px_30px_rgba(0,0,0,.12)] md:p-3.5 lg:order-none">
+            <div class="order-1 min-w-0 overflow-hidden rounded-[20px] border border-line bg-white p-2 md:p-3.5 lg:order-none">
                 <div class="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-soft lg:aspect-auto lg:h-[460px]">
                     @if(!empty($allImages))
                         <div id="ambientBackdrop" class="pointer-events-none absolute -inset-3.5 scale-115 bg-cover bg-center opacity-90 blur-[24px] brightness-[.24] saturate-[1.4]" style="background-image: url('{{ route('images.show', ['path' => $allImages[0]]) }}');"></div>
@@ -132,7 +132,7 @@
                     <div class="no-scrollbar mt-2 flex gap-2 overflow-x-auto pb-1 md:mt-3 md:gap-2.5">
                         @foreach($allImages as $i => $img)
                             <button type="button" data-gallery-thumb="{{ $i + 1 }}" data-src="{{ route('images.show', ['path' => $img]) }}" @if($i === 0) aria-current="true" @endif
-                                    class="size-16 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 border-line bg-surface transition hover:-translate-y-0.5 hover:border-brand/50 current:border-brand current:shadow-[0_0_14px_rgba(0,142,204,.35)] sm:size-[76px]">
+                                    class="size-16 shrink-0 cursor-pointer overflow-hidden rounded-xl border-2 border-line bg-surface transition hover:-translate-y-0.5 hover:border-brand/50 current:border-brand sm:size-[76px]">
                                 <img src="{{ route('images.show', ['path' => $img]) }}" alt="Rasm {{ $i + 1 }}" class="block size-full object-cover">
                             </button>
                         @endforeach
@@ -327,7 +327,7 @@
                                 <i class="bi bi-x-circle-fill"></i> E'lon sotilgan (Mavjud emas)
                             </button>
                         @else
-                            <button type="button" data-dialog-open="buyModalDetail" class="inline-flex h-[50px] w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] bg-brand text-[15px] font-extrabold text-white shadow-[0_6px_20px_rgba(0,142,204,.28)] transition hover:-translate-y-0.5 hover:bg-brand-dark hover:shadow-[0_8px_26px_rgba(0,142,204,.4)]">
+                            <button type="button" data-dialog-open="buyModalDetail" class="inline-flex h-[50px] w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] bg-brand text-[15px] font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-brand-dark ">
                                 <i class="bi bi-cart-check-fill"></i> Sotib olish so'rovini yuborish
                             </button>
                         @endif
@@ -394,7 +394,7 @@
 
 
 {{-- Phone-only bottom bar: price, call, and the one action that fits this visitor (replaces the tab bar on this page) --}}
-<div class="fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t border-line bg-white px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-6px_20px_rgba(0,0,0,.08)] md:hidden">
+<div class="fixed inset-x-0 bottom-0 z-30 flex items-center gap-2 border-t border-line bg-white px-4 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden">
     <div class="min-w-0 flex-1 leading-tight">
         <div class="truncate text-lg font-extrabold text-brand">{{ number_format((float) $post->price, 0, '.', ' ') }} <small class="text-xs font-semibold text-ink/75">{{ $post->currency }}</small></div>
         <div class="truncate text-xs text-muted">{{ $post->is_negotiable ? 'Kelishiladi' : '1 ta uchun' }}</div>
@@ -424,7 +424,7 @@
 {{-- Buy dialog: pick how many males and females to request --}}
 @if($isBuyer && ! $hasPurchaseRequest && ! $post->isSoldOut())
     <dialog id="buyModalDetail" aria-labelledby="buyModalLabel"
-            class="m-auto max-h-[90dvh] w-[min(500px,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-2xl border border-line bg-white p-0 text-ink shadow-[0_20px_60px_rgba(0,0,0,.12)] backdrop:bg-black/50 max-md:mt-auto max-md:mb-0 max-md:w-full max-md:max-w-full max-md:rounded-b-none">
+            class="m-auto max-h-[90dvh] w-[min(500px,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-2xl border border-line bg-white p-0 text-ink backdrop:bg-black/50 max-md:mt-auto max-md:mb-0 max-md:w-full max-md:max-w-full max-md:rounded-b-none">
         <div class="flex items-center justify-between px-4 pt-4 md:px-6 md:pt-5">
             <h5 class="text-lg font-bold text-ink" id="buyModalLabel"><i class="bi bi-cart-check-fill mr-2 text-brand"></i> Sotib olish so'rovi</h5>
             <button type="button" data-dialog-close aria-label="Yopish" class="grid size-11 cursor-pointer place-items-center rounded-lg text-muted hover:bg-soft hover:text-ink"><i class="bi bi-x-lg"></i></button>

@@ -74,7 +74,7 @@
                     <span class="{{ $label }}">Rasm</span>
                     @if($banner->imageUrl())
                         <div class="mb-3 flex items-center gap-3">
-                            <img src="{{ $banner->imageUrl() }}" alt="" class="h-16 w-40 rounded-lg object-cover shadow-sm">
+                            <img src="{{ $banner->imageUrl() }}" alt="" class="h-16 w-40 rounded-lg object-cover ">
                             <label class="flex cursor-pointer items-center gap-2 text-sm text-muted">
                                 <input type="checkbox" name="remove_image" value="1" class="size-4 accent-danger"> Rasmni olib tashlash
                             </label>

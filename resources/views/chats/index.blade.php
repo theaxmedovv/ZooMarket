@@ -21,7 +21,7 @@
                     $img = $chat->post?->allImages()[0] ?? null;
                 @endphp
                 <a href="{{ route('chats.show', $chat) }}" @class([
-                    'group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-line bg-white px-3.5 py-3 transition hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-[0_8px_24px_rgba(0,0,0,.12)] md:gap-4 md:px-5 md:py-4',
+                    'group relative flex items-center gap-3 overflow-hidden rounded-2xl border border-line bg-white px-3.5 py-3 transition hover:-translate-y-0.5 hover:border-brand/40  md:gap-4 md:px-5 md:py-4',
                     'border-l-4 border-l-brand' => $unread > 0,
                 ])>
                     {{-- Post thumbnail --}}
@@ -71,7 +71,7 @@
                                 @endif
 
                                 @if($unread > 0)
-                                    <span class="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-extrabold text-white shadow-[0_0_10px_rgba(0,142,204,.4)]">{{ $unread }}</span>
+                                    <span class="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand px-1.5 text-[11px] font-extrabold text-white ">{{ $unread }}</span>
                                 @endif
                             </div>
                         </div>

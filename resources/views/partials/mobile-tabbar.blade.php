@@ -22,7 +22,7 @@
             </a>
         @else
             <a href="{{ route('posts.create') }}" aria-label="Yangi e'lon" class="flex h-16 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-semibold text-ink">
-                <span class="-mt-5 grid size-14 place-items-center rounded-full bg-gold text-2xl text-night shadow-[0_6px_16px_rgba(0,0,0,.2)] ring-4 ring-white"><i class="bi bi-plus-lg"></i></span>
+                <span class="-mt-5 grid size-14 place-items-center rounded-full bg-gold text-2xl text-night ring-4 ring-white"><i class="bi bi-plus-lg"></i></span>
                 <span>E'lon</span>
             </a>
         @endif
