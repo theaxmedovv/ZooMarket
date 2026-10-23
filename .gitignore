@@ -22,3 +22,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Browser tests (Dusk) env: holds the app key, points at the test database
+.env.dusk.local
