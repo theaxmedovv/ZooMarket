@@ -288,11 +288,17 @@ class PostController extends Controller
             'location' => 'required|string|max:255',
             'status' => 'required|in:active,reserved,sold',
             'images' => 'nullable|array|max:3',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240|dimensions:min_width=800,min_height=600',
         ] + $profile->detailRules(), [
             'region.required' => 'Viloyatni tanlang.',
             'region.in' => 'Ro\'yxatdagi viloyatlardan birini tanlang.',
             'location.required' => 'Shahar yoki tumanni yozing.',
+            'images.max' => "Ko'pi bilan 3 ta rasm yuklash mumkin.",
+            'images.*.image' => 'Faqat rasm fayllarini yuklang.',
+            'images.*.mimes' => "Rasm JPG, PNG yoki GIF bo'lishi kerak.",
+            'images.*.max' => 'Har bir rasm 10 MB dan oshmasin.',
+            'images.*.dimensions' => "Rasm kamida 800×600 piksel bo'lsin, aks holda xira chiqadi.",
+            'images.*.uploaded' => "Rasm yuklanmadi. Fayl hajmi 10 MB dan oshmasligini tekshiring.",
             'age.required' => 'Yoshini kiriting.',
             'gender.required' => 'Jinsini tanlang.',
         ] + $profile->detailMessages());

@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Post;
 use App\Support\ChannelPostText;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +21,7 @@ use Throwable;
  * and the full text follows as a reply to the album with buttons under it.
  *
  * This is a different bot and channel from the log one (services.telegram_channel, not logging.telegram).
- * It never throws: a Telegram outage must not break approving a listing.
+ * Temporary Telegram errors are retried. It never throws: a Telegram outage must not break approving a listing.
  */
 class TelegramChannelService
 {
@@ -145,9 +147,21 @@ class TelegramChannelService
         return $out;
     }
 
+    /**
+     * Telegram sometimes answers 429 (too many requests) or 5xx, or the connection drops: try again a couple
+     * of times, waiting for as long as Telegram asks.
+     */
     private function client(): PendingRequest
     {
-        return Http::connectTimeout(5)->timeout(30);
+        return Http::connectTimeout(5)->timeout(30)->retry(
+            3,
+            fn (int $attempt, \Throwable $e) => $e instanceof RequestException
+                ? min(10, (int) ($e->response->json('parameters.retry_after') ?? 2)) * 1000
+                : 2000,
+            fn (\Throwable $e) => $e instanceof ConnectionException
+                || ($e instanceof RequestException && in_array($e->response->status(), [429, 500, 502, 503, 504], true)),
+            throw: false,
+        );
     }
 
     private function url(string $method): string

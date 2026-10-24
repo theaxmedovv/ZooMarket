@@ -324,6 +324,34 @@ class TelegramChannelTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_a_rate_limited_request_is_retried(): void
+    {
+        \Illuminate\Support\Sleep::fake();
+        Http::swap(new \Illuminate\Http\Client\Factory());
+        Http::fake(['api.telegram.org/*' => Http::sequence()
+            ->push(['ok' => false, 'description' => 'Too Many Requests', 'parameters' => ['retry_after' => 3]], 429)
+            ->push(['ok' => true, 'result' => [['message_id' => 1]]])]);
+        $this->photo('a.jpg', 300, 300, [10, 10, 10]);
+        $post = $this->listing(['a.jpg']);
+
+        $post->update(['moderation_status' => 'approved']);
+
+        Http::assertSentCount(2);
+        \Illuminate\Support\Sleep::assertSlept(fn ($d) => (int) $d->totalMilliseconds === 3000, 1);
+        $this->assertNotNull($post->fresh()->telegram_posted_at);
+    }
+
+    public function test_a_permanent_error_is_not_retried(): void
+    {
+        Http::swap(new \Illuminate\Http\Client\Factory());
+        Http::fake(['api.telegram.org/*' => Http::response(['ok' => false, 'description' => 'chat not found'], 400)]);
+        $this->photo('a.jpg', 300, 300, [10, 10, 10]);
+
+        $this->listing(['a.jpg'])->update(['moderation_status' => 'approved']);
+
+        Http::assertSentCount(1);
+    }
+
     public function test_telegram_failure_does_not_break_approval(): void
     {
         Http::swap(new \Illuminate\Http\Client\Factory());

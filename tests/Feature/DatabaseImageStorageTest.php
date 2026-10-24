@@ -104,8 +104,8 @@ class DatabaseImageStorageTest extends TestCase
 
     public function test_seller_post_images_are_stored_in_mysql_and_deleted_when_post_is_deleted(): void
     {
-        $img1 = UploadedFile::fake()->image('cat1.jpg', 200, 200);
-        $img2 = UploadedFile::fake()->image('cat2.jpg', 200, 200);
+        $img1 = UploadedFile::fake()->image('cat1.jpg', 800, 600);
+        $img2 = UploadedFile::fake()->image('cat2.jpg', 800, 600);
 
         $response = $this->actingAs($this->seller)->post(route('posts.store'), [
             'title' => 'Fors mushugi',
