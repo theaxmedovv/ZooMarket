@@ -83,6 +83,8 @@ class PostController extends Controller
         $data['moderation_status'] = 'pending';
         $post = $request->user()->posts()->create($data);
 
+        \App\Support\Activity::record('post_created', "#{$post->id} " . ($post->title ?? ''));
+
         // AI pre-check; anything it lets through waits for the main admin
         $moderation = app(GroqModerationService::class)->moderate($post);
 

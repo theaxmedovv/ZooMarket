@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Listings past their end date move to the archive
 Schedule::command('posts:expire')->daily();
+
+// Who logged in/out, posted, errored: sent to Telegram every few hours (needs `php artisan schedule:work` or a cron)
+Schedule::command('telegram:digest')->cron('0 */' . max(1, (int) env('TELEGRAM_DIGEST_HOURS', 3)) . ' * * *');

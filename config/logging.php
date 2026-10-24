@@ -58,6 +58,17 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        // Errors to a Telegram chat or channel. Add "telegram" to LOG_STACK to turn it on (see .env.example).
+        'telegram' => [
+            'driver' => 'custom',
+            'via' => App\Logging\CreateTelegramLogger::class,
+            'token' => env('TELEGRAM_BOT_TOKEN'),
+            'chat_id' => env('TELEGRAM_CHAT_ID'),
+            'level' => env('TELEGRAM_LOG_LEVEL', 'error'),
+            // the same error is sent once per this many seconds
+            'throttle' => (int) env('TELEGRAM_LOG_THROTTLE', 60),
+        ],
+
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),

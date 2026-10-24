@@ -57,6 +57,8 @@ class ReportController extends Controller
             'comment' => trim((string) ($data['comment'] ?? '')) ?: null,
         ]);
 
+        \App\Support\Activity::record('report_sent', $what . ': ' . $data['reason']);
+
         return back()->with('success', "Shikoyatingiz adminga yuborildi. Rahmat!");
     }
 

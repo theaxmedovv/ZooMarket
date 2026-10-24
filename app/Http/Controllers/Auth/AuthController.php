@@ -75,6 +75,7 @@ class AuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+        \App\Support\Activity::record('register', null, $user);
 
         return $this->redirectAfterLogin($user);
     }

@@ -135,6 +135,8 @@ class PurchaseRequestController extends Controller
             return back()->withErrors(['quantity' => $e->getMessage()]);
         }
 
+        \App\Support\Activity::record('request_sent', "e'lon #{$animalId}: {$maleQty} erkak, {$femaleQty} urg'ochi");
+
         return back()->with('success', 'So\'rovingiz muvaffaqiyatli yuborildi!');
     }
 

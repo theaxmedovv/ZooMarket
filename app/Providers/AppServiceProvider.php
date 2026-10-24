@@ -3,6 +3,11 @@
 namespace App\Providers;
 
 use App\Models\Message;
+use App\Support\Activity;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -13,6 +18,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Activity digest sent to Telegram (php artisan telegram:digest)
+        Event::listen(Login::class, fn (Login $e) => Activity::record('login', null, $e->user));
+        Event::listen(Logout::class, fn (Logout $e) => $e->user && Activity::record('logout', null, $e->user));
+        Event::listen(Failed::class, fn (Failed $e) => Activity::record('login_failed', (string) ($e->credentials['email'] ?? '')));
+
         // Site-styled Tailwind pagination (resources/views/pagination/default.blade.php).
         Paginator::defaultView('pagination.default');
 
