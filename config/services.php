@@ -43,6 +43,13 @@ return [
         'timeout' => (int) env('GROQ_TIMEOUT', 15),
     ],
 
+    // Public channel the approved listings are posted to (a different bot from the log one in config/logging.php)
+    'telegram_channel' => [
+        'token' => env('TELEGRAM_CHANNEL_BOT_TOKEN'),
+        'chat_id' => env('TELEGRAM_CHANNEL_ID'),
+        'brand' => env('TELEGRAM_CHANNEL_BRAND', 'Faunara'),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

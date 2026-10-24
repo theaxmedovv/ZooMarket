@@ -137,7 +137,7 @@ class DatabaseImageStorageTest extends TestCase
             // Verify streaming from DB
             $stream = $this->get(route('images.show', ['path' => $imgPath]));
             $stream->assertStatus(200);
-            $stream->assertHeader('Content-Type', 'image/jpeg');
+            $stream->assertHeader('Content-Type', 'image/webp');
         }
 
         // Verify no files on disk

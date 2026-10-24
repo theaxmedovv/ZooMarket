@@ -13,10 +13,15 @@ class DatabaseImage extends Model
         'original_name',
         'mime_type',
         'size',
+        'lqip',
+        'width',
+        'height',
         'data',
     ];
 
     protected $casts = [
         'size' => 'integer',
+        'width' => 'integer',
+        'height' => 'integer',
     ];
 }

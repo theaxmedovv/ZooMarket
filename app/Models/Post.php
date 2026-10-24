@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TelegramChannelService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -62,6 +63,16 @@ class Post extends Model
 
             if (empty($post->content)) {
                 $post->content = $post->description ?? '';
+            }
+        });
+
+        // An approved listing goes to the Telegram channel once, after the response so approving stays fast
+        static::updated(function (Post $post) {
+            if ($post->wasChanged('moderation_status') && $post->isApproved() && ! $post->telegram_posted_at && TelegramChannelService::enabled()) {
+                $id = $post->id;
+                $send = fn () => ($fresh = Post::find($id)) && ! $fresh->telegram_posted_at && app(TelegramChannelService::class)->publish($fresh);
+
+                app()->runningInConsole() ? $send() : dispatch($send)->afterResponse();
             }
         });
 
